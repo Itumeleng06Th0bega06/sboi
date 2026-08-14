@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Member Registration · {{ site_profile.church_name }}{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+    <div class="container auth-wrap">
+        <div class="auth-card">
+            <img src="{% static 'images/home/Logo.png.png' %}" alt="" class="auth-logo">
+            <h1 class="auth-title">Join the Blackboard</h1>
+            <p class="auth-sub">Create an account to access the members portal.</p>
+            <form method="post" action="{% url 'members:register' %}" class="form-stack">
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="form-field">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<small class="form-help">{{ field.help_text|safe }}</small>{% endif %}
+                    {% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-gold btn-block">Create Account</button>
+            </form>
+            <p class="auth-foot">Already have an account? <a href="{% url 'members:login' %}">Login here</a></p>
+        </div>
+    </div>
+</section>
+{% endblock %}

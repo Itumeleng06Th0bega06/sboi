@@ -1,0 +1,373 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ site_profile.church_name|default:'Shekinah Blaze' }} Â· About{% endblock %}
+
+{% block content %}
+
+
+{% if leaders %}
+<section class="section section-navy">
+    <div class="container">
+        <div class="chapter-head reveal">
+            <span class="chapter-badge">{% include 'partials/_icon.html' with icon='crown' %}</span>
+            <span class="eyebrow">Opening</span>
+            <h2 class="section-title light">Visionary Leadership</h2>
+            <p class="section-sub light">Those entrusted with the vision</p>
+            <div class="chapter-rule" aria-hidden="true"></div>
+        </div>
+        <div class="leader-grid">
+            {% for leader in leaders %}
+            <article class="leader-card reveal">
+                <div class="leader-media">
+                    {% if leader.photo %}<img src="{{ leader.photo.url }}" alt="{{ leader.name }}" class="fit-img" data-lightbox loading="lazy">{% endif %}
+                </div>
+                <div class="leader-body">
+                    <h3 class="leader-name">{{ leader.name }}</h3>
+                    <p class="leader-role">{{ leader.role }}</p>
+                    {% if leader.bio %}<p class="leader-bio">{{ leader.bio|linebreaksbr }}</p>{% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if profile.founder_message %}
+<section class="section">
+    <div class="container">
+        <div class="chapter-head reveal">
+            <span class="chapter-badge">01</span>
+            <span class="eyebrow">Chapter One Â· The Founder's Message</span>
+            <div class="chapter-rule" aria-hidden="true"></div>
+        </div>
+        <div class="chapter-body">
+            <div class="founder-card reveal">
+                <h2 class="section-title">Founder's Message</h2>
+                {% if profile.founder_byline %}<p class="founder-byline">{{ profile.founder_byline|linebreaksbr }}</p>{% endif %}
+                {% if profile.founder_scripture %}<p class="vm-scripture">{{ profile.founder_scripture }}</p>{% endif %}
+                <div class="prose">{{ profile.founder_message|linebreaksbr }}</div>
+                {% if profile.founder_signature %}
+                <div class="founder-signature">
+                    <p>{{ profile.founder_signature|linebreaksbr }}</p>
+                </div>
+                {% endif %}
+                {% if profile.founder_tagline %}<p class="founder-tagline">{{ profile.founder_tagline }}</p>{% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if profile.story %}
+<section class="section section-tint">
+    <div class="container">
+        <div class="chapter-head reveal">
+            <span class="chapter-badge">02</span>
+            <span class="eyebrow">Chapter Two Â· Our Story</span>
+            <div class="chapter-rule" aria-hidden="true"></div>
+        </div>
+        <div class="chapter-body">
+            <span class="eyebrow">Our Story</span>
+            <h2 class="section-title">{{ profile.story_subtitle|default:'Our Story' }}</h2>
+        </div>
+        <div class="story-grid">
+            {% for section in story_sections %}
+                {% if section.image %}
+                <figure class="story-img reveal">
+                    <img src="{{ profile.story_image.url }}" alt="Shekinah Blaze family" class="fit-img" data-lightbox loading="lazy">
+                </figure>
+                {% else %}
+                <article class="story-card reveal">
+                    {% if section.title %}<h3 class="story-title">{{ section.title }}</h3>{% endif %}
+                    <div class="prose">{{ section.body|linebreaksbr }}</div>
+                </article>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if profile.vision %}
+<section class="section">
+    <div class="container">
+        <div class="chapter-head reveal">
+            <span class="chapter-badge">03</span>
+            <span class="eyebrow">Chapter Three Â· Our Vision</span>
+            <div class="chapter-rule" aria-hidden="true"></div>
+        </div>
+        <div class="chapter-body">
+            <span class="eyebrow">{{ profile.vision_title|default:'Our Vision' }}</span>
+            <h2 class="section-title">Raising God-Fearing Kingdom Leaders</h2>
+
+            <h3 class="sub-title center">Our Vision Statement</h3>
+            <p class="vm-text lead">{{ profile.vision }}</p>
+            {% if profile.vision_scripture %}<p class="vm-scripture">{{ profile.vision_scripture }}</p>{% endif %}
+
+            {% if profile.vision_intro %}
+            <div class="sub-section">
+                <h3 class="sub-title center">Introduction</h3>
+                <div class="prose reveal">{{ profile.vision_intro|linebreaksbr }}</div>
+            </div>
+            {% endif %}
+
+            {% if pillars %}
+            <div class="sub-section">
+                <h3 class="sub-title center">Understanding Our Vision</h3>
+                {% if profile.vision_components_intro %}<p class="section-sub center">{{ profile.vision_components_intro }}</p>{% endif %}
+                <div class="values-grid">
+                    {% for p in pillars %}
+                    <div class="value-card reveal">
+                        <h4 class="value-title">{{ forloop.counter }}. {{ p.title }}</h4>
+                        {% if p.subtitle %}<p class="value-scripture">{{ p.subtitle }}</p>{% endif %}
+                        {% if p.body %}<p class="value-text">{{ p.body|linebreaksbr }}</p>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if profile.vision_practice %}
+            <div class="sub-section">
+                <h3 class="sub-title center">What Our Vision Looks Like in Practice</h3>
+                {% if practice_intro %}<p class="section-sub center">{{ practice_intro }}</p>{% endif %}
+                <div class="practice-grid">
+                    {% for item in practice_items %}
+                    <div class="practice-chip reveal">
+                        <span class="practice-icon">{% include 'partials/_icon.html' with icon=item.icon %}</span>
+                        <span>{{ item.text }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if practice_closing %}<p class="section-sub center">{{ practice_closing }}</p>{% endif %}
+            </div>
+            {% endif %}
+
+            {% if profile.vision_future %}
+            <div class="sub-section">
+                <h3 class="sub-title center">Our Commitment to Future Generations</h3>
+                <div class="prose center-text reveal">{{ profile.vision_future|linebreaksbr }}</div>
+            </div>
+            {% endif %}
+
+            {% if profile.vision_declaration %}
+            <div class="declaration reveal">
+                <h4>Our Vision Declaration</h4>
+                <p>{{ profile.vision_declaration }}</p>
+            </div>
+            {% endif %}
+
+            {% if profile.vision_key_scripture %}
+            <div class="sub-section">
+                <h3 class="sub-title center">Key Scripture</h3>
+                <p class="vm-scripture reveal">{{ profile.vision_key_scripture|linebreaksbr }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if profile.mission %}
+<section class="section section-tint">
+    <div class="container">
+        <div class="chapter-head reveal">
+            <span class="chapter-badge">04</span>
+            <span class="eyebrow">Chapter Four Â· Our Mission</span>
+            <div class="chapter-rule" aria-hidden="true"></div>
+        </div>
+        <div class="chapter-body">
+            <span class="eyebrow">{{ profile.mission_title|default:'Our Mission' }}</span>
+            <h2 class="section-title">Extending God's Love and Making Disciples</h2>
+
+            <h3 class="sub-title center">Our Mission Statement</h3>
+            <p class="vm-text lead">{{ profile.mission }}</p>
+            {% if profile.mission_scripture %}<p class="vm-scripture">{{ profile.mission_scripture }}</p>{% endif %}
+
+            {% if profile.mission_intro %}
+            <div class="sub-section">
+                <h3 class="sub-title center">Introduction</h3>
+                <div class="prose reveal">{{ profile.mission_intro|linebreaksbr }}</div>
+            </div>
+            {% endif %}
+
+            {% if components %}
+            <div class="sub-section">
+                <h3 class="sub-title center">Understanding Our Mission</h3>
+                {% if profile.mission_components_intro %}<p class="section-sub center">{{ profile.mission_components_intro }}</p>{% endif %}
+                <div class="values-grid">
+                    {% for c in components %}
+                    <div class="value-card reveal">
+                        <h4 class="value-title">{{ forloop.counter }}. {{ c.title }}</h4>
+                        {% if c.subtitle %}<p class="value-scripture">{{ c.subtitle }}</p>{% endif %}
+                        {% if c.body %}<p class="value-text">{{ c.body|linebreaksbr }}</p>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if profile.mission_multiplication %}
+            <div class="sub-section">
+                <h3 class="sub-title center">Empowered to Make Disciples</h3>
+                <p class="vm-scripture reveal">The Principle of Multiplication</p>
+                <div class="prose reveal">{{ profile.mission_multiplication|linebreaksbr }}</div>
+            </div>
+            {% endif %}
+
+            {% if pathway %}
+            <div class="sub-section">
+                <h3 class="sub-title center">Our Discipleship Pathway</h3>
+                {% if profile.pathway_intro %}<p class="section-sub center">{{ profile.pathway_intro }}</p>{% endif %}
+                <div class="pathway">
+                    {% for step in pathway %}
+                    <div class="pathway-step reveal">
+                        <div class="pathway-num">{{ step.step }}</div>
+                        <div>
+                            <h4>{{ step.title }}</h4>
+                            {% if step.description %}<p>{{ step.description }}</p>{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if profile.pathway_closing %}<p class="section-sub center">{{ profile.pathway_closing }}</p>{% endif %}
+            </div>
+            {% endif %}
+
+            {% if actions %}
+            <div class="sub-section">
+                <h3 class="sub-title center">Our Mission in Action</h3>
+                {% if profile.mission_in_action_intro %}<p class="section-sub center">{{ profile.mission_in_action_intro }}</p>{% endif %}
+                <div class="action-grid">
+                    {% for a in actions %}
+                    <div class="action-chip reveal">
+                        <span class="action-chip-main">
+                            {% include 'partials/_icon.html' with icon=a.icon %}
+                            {{ a.title }}
+                        </span>
+                        {% if a.description %}<span class="action-chip-desc">{{ a.description }}</span>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if profile.mission_in_action_closing %}<p class="section-sub center">{{ profile.mission_in_action_closing }}</p>{% endif %}
+            </div>
+            {% endif %}
+
+            {% if profile.mission_commitment %}
+            <div class="sub-section">
+                <h3 class="sub-title center">Our Commitment to the Great Commission</h3>
+                <div class="prose reveal">{{ profile.mission_commitment|linebreaksbr }}</div>
+            </div>
+            {% endif %}
+
+            {% if profile.mission_declaration %}
+            <div class="declaration reveal">
+                <h4>Our Mission Declaration</h4>
+                <p>{{ profile.mission_declaration }}</p>
+            </div>
+            {% endif %}
+
+            {% if profile.mission_key_scripture %}
+            <div class="sub-section">
+                <h3 class="sub-title center">Key Scripture</h3>
+                <p class="vm-scripture reveal">{{ profile.mission_key_scripture|linebreaksbr }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if values %}
+<section class="section">
+    <div class="container">
+        <div class="chapter-head reveal">
+            <span class="chapter-badge">05</span>
+            <span class="eyebrow">Chapter Five Â· Our Core Values</span>
+            <div class="chapter-rule" aria-hidden="true"></div>
+        </div>
+        <div class="chapter-body">
+            <span class="eyebrow">The DNA of Shekinah Blaze Outreach International</span>
+            <h2 class="section-title">Our Core Values</h2>
+
+            {% if profile.values_intro %}
+            <div class="sub-section">
+                <h3 class="sub-title center">Introduction</h3>
+                <div class="prose reveal">{{ profile.values_intro|linebreaksbr }}</div>
+            </div>
+            {% endif %}
+
+            <div class="values-grid">
+                {% for v in values %}
+                <div class="value-card reveal">
+                    <div class="value-icon">{% include 'partials/_icon.html' with icon=v.icon %}</div>
+                    <p class="value-scripture">CORE VALUE {{ forloop.counter }}</p>
+                    <h4 class="value-title">{{ v.title }}</h4>
+                    {% if v.scripture %}<p class="value-scripture">{{ v.scripture|linebreaksbr }}</p>{% endif %}
+                    {% if v.what_we_believe %}
+                    <p class="value-label">What We Believe</p>
+                    <p class="value-text">{{ v.what_we_believe|linebreaksbr }}</p>
+                    {% endif %}
+                    {% if v.what_this_means %}
+                    <p class="value-label">What This Means</p>
+                    <p class="value-text">{{ v.what_this_means|linebreaksbr }}</p>
+                    {% endif %}
+                    {% if v.our_commitment %}
+                    <p class="value-label">Our Commitment</p>
+                    <p class="value-text">{{ v.our_commitment|linebreaksbr }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if profile.culture_statement %}
+            <div class="culture-box reveal">
+                <h3 class="sub-title center">Our Culture Statement</h3>
+                {% if culture_intro %}<p class="culture-intro">{{ culture_intro }}</p>{% endif %}
+                <div class="culture-grid">
+                    {% for item in culture_items %}
+                    <div class="culture-item">
+                        <div class="value-icon">{% include 'partials/_icon.html' with icon=item.icon %}</div>
+                        <h4 class="culture-title">{{ item.title }}</h4>
+                        <p>{{ item.text }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if profile.values_declaration %}
+            <div class="declaration reveal">
+                <h4>Our Core Values Declaration</h4>
+                <p>{{ profile.values_declaration }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if profile.church_name %}
+<section class="section section-navy">
+    <div class="container center">
+        <h2 class="section-title light">{{ profile.church_name }}</h2>
+        <div class="recap-block">
+            <p class="recap-line"><span class="recap-label">Vision:</span> {{ profile.vision }}</p>
+            <p class="recap-line"><span class="recap-label">Mission:</span> {{ profile.mission }}</p>
+            <p class="vm-scripture recap-tagline">{{ profile.tagline }}</p>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<section class="section">
+    <div class="container center">
+        <h2 class="section-title">Join the Shekinah Blaze family</h2>
+        <p class="section-sub center">Come and encounter the presence of God with us.</p>
+        <a href="{% url 'contact:contact' %}" class="btn btn-gold">Get In Touch</a>
+    </div>
+</section>
+{% endblock %}
+

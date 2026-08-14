@@ -1,0 +1,28 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Gallery Â· {{ site_profile.church_name }}{% endblock %}
+
+{% block content %}
+
+
+<section class="hero-slider gallery-slider" id="gallerySlider">
+    <div class="hero-track" id="galleryTrack">
+        {% for slide in slides %}
+        <div class="hero-slide{% if forloop.first %} active{% endif %}">
+            <img src="{{ slide.image.url }}" alt="{{ slide.title }}" data-lightbox>
+        </div>
+        {% endfor %}
+    </div>
+    {% if slides|length > 1 %}
+    <button class="slider-arrow prev" id="galleryPrev" aria-label="Previous slide">&#10094;</button>
+    <button class="slider-arrow next" id="galleryNext" aria-label="Next slide">&#10095;</button>
+    <div class="slider-dots" id="galleryDots">
+        {% for slide in slides %}<button class="dot{% if forloop.first %} active{% endif %}" data-index="{{ forloop.counter0 }}" aria-label="Slide {{ forloop.counter }}"></button>{% endfor %}
+    </div>
+    {% endif %}
+</section>
+{% if not slides %}
+<section class="section"><div class="container"><p class="empty-state">No slideshow images yet.</p></div></section>
+{% endif %}
+{% endblock %}
+

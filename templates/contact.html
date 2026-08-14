@@ -1,0 +1,70 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Contact Â· {{ site_profile.church_name }}{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <h1 class="page-title">Contact Us</h1>
+        <p class="page-sub">We would love to hear from you</p>
+    </div>
+</section>
+
+<section class="section section-navy contact-page">
+    <div class="container">
+        <div class="contact-grid">
+            <div class="form-card">
+                <h2 class="section-title">Send a Message</h2>
+                <form method="post" action="{% url 'contact:contact' %}" class="form-stack" novalidate>
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="form-field">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-gold btn-block">Send Message</button>
+                </form>
+            </div>
+            <aside class="info-card">
+                <h2 class="section-title">Details</h2>
+                {% if info.phone or info.whatsapp or info.email %}
+                <div class="info-block">
+                    <h4>Reach Us</h4>
+                    <ul class="social-list">
+                        {% if info.phone %}<li><a href="tel:{{ info.phone }}" aria-label="Call us">{% include 'partials/_icon.html' with icon='phone' %}<span>Call Us · {{ info.phone }}</span></a></li>{% endif %}
+                        {% if info.whatsapp %}<li><a href="https://wa.me/{{ info.whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp">{% include 'partials/_icon.html' with icon='whatsapp' %}<span>WhatsApp · {{ info.whatsapp }}</span></a></li>{% endif %}
+                        {% if info.email %}<li><a href="mailto:{{ info.email }}" aria-label="Email us">{% include 'partials/_icon.html' with icon='email' %}<span>Email · {{ info.email }}</span></a></li>{% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+                {% if info.address %}
+                <div class="info-block">
+                    <h4>Where We Meet</h4>
+                    <p>{{ info.address }}</p>
+                </div>
+                {% endif %}
+                {% if info.service_times %}
+                <div class="info-block">
+                    <h4>Service Times</h4>
+                    <p>{{ info.service_times|linebreaksbr }}</p>
+                </div>
+                {% endif %}
+                {% if info.facebook or info.twitter or info.instagram or info.youtube %}
+                <div class="info-block">
+                    <h4>Follow Us</h4>
+                    <ul class="social-list">
+                        {% if info.facebook %}<li><a href="{{ info.facebook }}" target="_blank" rel="noopener" aria-label="Facebook">{% include 'partials/_icon.html' with icon='facebook' %}<span>Facebook</span></a></li>{% endif %}
+                        {% if info.twitter %}<li><a href="{{ info.twitter }}" target="_blank" rel="noopener" aria-label="X / Twitter">{% include 'partials/_icon.html' with icon='x' %}<span>X / Twitter</span></a></li>{% endif %}
+                        {% if info.instagram %}<li><a href="{{ info.instagram }}" target="_blank" rel="noopener" aria-label="Instagram">{% include 'partials/_icon.html' with icon='instagram' %}<span>Instagram</span></a></li>{% endif %}
+                        {% if info.youtube %}<li><a href="{{ info.youtube }}" target="_blank" rel="noopener" aria-label="YouTube">{% include 'partials/_icon.html' with icon='youtube' %}<span>YouTube</span></a></li>{% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+            </aside>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

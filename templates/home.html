@@ -1,0 +1,239 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="hero-slider" id="heroSlider">
+    <div class="hero-track" id="heroTrack">
+        {% for slide in slides %}
+        <div class="hero-slide{% if forloop.first %} active{% endif %}" data-title="{{ slide.title }}" data-caption="{{ slide.caption }}">
+            <img src="{{ slide.image.url }}" alt="{{ slide.title }}" data-lightbox>
+        </div>
+        {% endfor %}
+    </div>
+    {% if slides|length > 1 %}
+    <button class="slider-arrow prev" id="heroPrev" aria-label="Previous slide">&#10094;</button>
+    <button class="slider-arrow next" id="heroNext" aria-label="Next slide">&#10095;</button>
+    <div class="slider-dots" id="heroDots">
+        {% for slide in slides %}<button class="dot{% if forloop.first %} active{% endif %}" data-index="{{ forloop.counter0 }}" aria-label="Slide {{ forloop.counter }}"></button>{% endfor %}
+    </div>
+    {% endif %}
+</section>
+
+<div class="action-strip">
+    <div class="container action-strip-inner">
+        <div class="strip-msg" id="heroStripMsg">
+            <strong id="heroStripTitle">{{ slides.0.title }}</strong>
+            <p id="heroStripCaption">{{ slides.0.caption|truncatechars:140 }}</p>
+        </div>
+        <div class="strip-actions">
+            <a href="{% url 'about:about' %}" class="btn btn-gold">Our Vision</a>
+            <a href="{% url 'contact:contact' %}" class="btn btn-outline-light">Visit Us</a>
+        </div>
+    </div>
+</div>
+
+{% for sec in sections_top %}
+<section class="section">
+    <div class="container">
+        <div class="split{% cycle '' ' reverse' %} reveal">
+            {% if sec.image %}
+            <div class="split-media">
+                <img src="{{ sec.image.url }}" alt="{{ sec.title }}" class="fit-img" data-lightbox loading="lazy">
+            </div>
+            {% endif %}
+            <div class="split-body">
+                {% if sec.subtitle %}<span class="eyebrow">{{ sec.subtitle }}</span>{% endif %}
+                <h2 class="section-title">{{ sec.title }}</h2>
+                {% if sec.body %}<p>{{ sec.body|linebreaksbr }}</p>{% endif %}
+                {% if sec.button_text and sec.button_url %}<a href="{{ sec.button_url }}" class="btn btn-gold">{{ sec.button_text }}</a>{% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endfor %}
+
+{% if stats %}
+<section class="section section-tint stats-section">
+    <div class="container">
+        <h2 class="section-title center">Our Journey</h2>
+        <p class="section-sub center">{{ site_profile.tagline|default:'' }}</p>
+        <div class="stats-grid">
+            {% for stat in stats %}
+            <div class="stat-card reveal">
+                <div class="stat-value">{{ stat.value }}</div>
+                <div class="stat-label">{{ stat.label }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if site_profile.vision or site_profile.mission %}
+<section class="section">
+    <div class="container">
+        <h2 class="section-title center">Our Vision &amp; Mission</h2>
+        <div class="vm-grid">
+            {% if site_profile.vision %}
+            <div class="vm-card reveal">
+                <span class="eyebrow">{{ site_profile.vision_title|default:'Our Vision' }}</span>
+                <h3 class="card-title">Vision</h3>
+                <p class="vm-text">{{ site_profile.vision }}</p>
+                {% if site_profile.vision_scripture %}<p class="vm-scripture">{{ site_profile.vision_scripture }}</p>{% endif %}
+            </div>
+            {% endif %}
+            {% if site_profile.mission %}
+            <div class="vm-card reveal">
+                <span class="eyebrow">{{ site_profile.mission_title|default:'Our Mission' }}</span>
+                <h3 class="card-title">Mission</h3>
+                <p class="vm-text">{{ site_profile.mission }}</p>
+                {% if site_profile.mission_scripture %}<p class="vm-scripture">{{ site_profile.mission_scripture }}</p>{% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if devotions %}
+<section class="section section-tint" id="devotions">
+    <div class="container">
+        <h2 class="section-title center">Daily Devotions</h2>
+        <p class="section-sub center">A daily word from the Shekinah Blaze family</p>
+        <div class="card-grid">
+            {% for dev in devotions %}
+            <article class="card reveal">
+                <div class="card-media">
+                    {% if dev.image %}
+                    <img src="{{ dev.image.url }}" alt="{{ dev.title }}" class="fit-img" data-lightbox loading="lazy">
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <time class="eyebrow">{{ dev.date|date:'d M Y' }}</time>
+                    <h3 class="card-title">{{ dev.title }}</h3>
+                    {% if dev.scripture %}<p class="card-scripture">{{ dev.scripture }}</p>{% endif %}
+                    {% if dev.message %}<p class="card-text clamp">{{ dev.message|truncatewords:40 }}</p>{% endif %}
+                    {% include 'partials/share_buttons.html' with share_title=dev.title share_url=share_url %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if events %}
+<section class="section" id="events">
+    <div class="container">
+        <h2 class="section-title center">Upcoming Events</h2>
+        <p class="section-sub center">Gather with us at Shekinah Blaze</p>
+        <div class="card-grid">
+            {% for event in events %}
+            <article class="card reveal">
+                <div class="card-media">
+                    {% if event.poster %}
+                    <img src="{{ event.poster.url }}" alt="{{ event.title }}" class="fit-img" data-lightbox loading="lazy">
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <time class="eyebrow">{{ event.date|date:'d M Y' }}</time>
+                    <h3 class="card-title">{{ event.title }}</h3>
+                    {% if event.description %}<p class="card-text clamp">{{ event.description|truncatewords:35 }}</p>{% endif %}
+                    {% if event.link %}<a href="{{ event.link }}" target="_blank" rel="noopener" class="card-text">More information</a>{% endif %}
+                    {% include 'partials/share_buttons.html' with share_title=event.title share_url=share_url %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        <div class="center cta-block">
+            <a href="{% url 'blackboard:blackboard' %}" class="btn btn-gold">All Events</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if sermons %}
+<section class="section" id="sermons">
+    <div class="container">
+        <h2 class="section-title center">Latest Sermons</h2>
+        <p class="section-sub center">Recent messages with video</p>
+        <div class="card-grid">
+            {% for s in sermons %}
+            <article class="card reveal">
+                {% if s.video_id %}
+                <a href="{{ s.video_url }}" target="_blank" rel="noopener" class="video-preview" aria-label="Watch {{ s.title }}">
+                    <img src="{{ s.thumbnail_url }}" alt="{{ s.title }} video preview" loading="lazy">
+                    <span class="video-play" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </span>
+                </a>
+                {% endif %}
+                <div class="card-body">
+                    <h3 class="card-title">{{ s.title }}</h3>
+                    {% if s.speaker %}<p class="card-text">Speaker: {{ s.speaker }}</p>{% endif %}
+                    {% if s.scripture %}<p class="card-scripture">{{ s.scripture }}</p>{% endif %}
+                    {% if s.description %}<p class="card-text clamp">{{ s.description|truncatewords:35 }}</p>{% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        <div class="center cta-block">
+            <a href="{% url 'blackboard:blackboard' %}" class="btn btn-gold">All Sermons</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% for sec in sections_bottom %}
+<section class="section{% cycle ' section-tint' '' %}">
+    <div class="container">
+        <div class="split{% cycle '' ' reverse' %} reveal">
+            {% if sec.image %}
+            <div class="split-media">
+                <img src="{{ sec.image.url }}" alt="{{ sec.title }}" class="fit-img" data-lightbox loading="lazy">
+            </div>
+            {% endif %}
+            <div class="split-body">
+                {% if sec.subtitle %}<span class="eyebrow">{{ sec.subtitle }}</span>{% endif %}
+                <h2 class="section-title">{{ sec.title }}</h2>
+                {% if sec.body %}<p>{{ sec.body|linebreaksbr }}</p>{% endif %}
+                {% if sec.button_text and sec.button_url %}<a href="{{ sec.button_url }}" class="btn btn-gold">{{ sec.button_text }}</a>{% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endfor %}
+
+{% if testimonies %}
+<section class="section section-tint">
+    <div class="container">
+        <h2 class="section-title center">Testimonies</h2>
+        <p class="section-sub center">What God has done among us</p>
+        <div class="testimony-grid">
+            {% for t in testimonies %}
+            <blockquote class="testimony-card reveal">
+                <p>&ldquo;{{ t.message }}&rdquo;</p>
+                <cite>{{ t.name }}</cite>
+            </blockquote>
+            {% endfor %}
+        </div>
+        <div class="center cta-block">
+            <a href="#testify" class="btn btn-outline-gold">Share Your Testimony</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<section class="section section-navy" id="testify">
+    <div class="container narrow">
+        <h2 class="section-title center light">Share Your Testimony</h2>
+        <p class="section-sub center light">We would love to hear what God is doing in your life.</p>
+        <form method="post" action="{% url 'home:testimony' %}" class="form-stack">
+            {% csrf_token %}
+            {{ testimony_form.as_p }}
+            <button type="submit" class="btn btn-gold btn-block">Submit Testimony</button>
+        </form>
+    </div>
+</section>
+{% endblock %}
+

@@ -1,0 +1,139 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Blackboard Â· {{ site_profile.church_name }}{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <h1 class="page-title">The Blackboard</h1>
+        <p class="page-sub">Announcements, events, and sermons for the Shekinah Blaze family</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="pillbar" role="tablist">
+            <button class="pill-btn active" data-pill="announcements" role="tab" aria-selected="true">Announcements</button>
+            <button class="pill-btn" data-pill="events" role="tab" aria-selected="false">Events</button>
+            <button class="pill-btn" data-pill="sermons" role="tab" aria-selected="false">Sermons</button>
+            <button class="pill-btn" data-pill="materials" role="tab" aria-selected="false">PDF Material</button>
+        </div>
+
+        <div class="tabpanel" id="panel-announcements" data-tabpanel="announcements">
+            <div class="list-stack">
+                {% for a in announcements %}
+                <article class="list-item reveal">
+                    <div class="list-date"><span class="date-day">{{ a.date|date:'d' }}</span><span class="date-month">{{ a.date|date:'M Y' }}</span></div>
+                    <div class="list-body">
+                        <h3 class="list-title">{{ a.title }}</h3>
+                        {% if a.body %}<p class="list-text">{{ a.body|linebreaksbr }}</p>{% endif %}
+                    </div>
+                    {% if a.image %}
+                    <div class="list-media">
+                        <img src="{{ a.image.url }}" alt="{{ a.title }}" class="fit-img" data-lightbox loading="lazy">
+                    </div>
+                    {% endif %}
+                </article>
+                {% empty %}
+                <p class="empty-state">No announcements yet. Check back soon.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="tabpanel hidden" id="panel-events" data-tabpanel="events">
+            {% if events %}
+            <div class="card-grid">
+                {% for event in events %}
+                <article class="card reveal">
+                    <div class="card-media">
+                        {% if event.poster %}
+                        <img src="{{ event.poster.url }}" alt="{{ event.title }}" class="fit-img" data-lightbox loading="lazy">
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">{{ event.title }}</h3>
+                        {% if event.description %}<p class="card-text clamp">{{ event.description|truncatewords:30 }}</p>{% endif %}
+                        {% if event.link %}<a href="{{ event.link }}" target="_blank" rel="noopener" class="card-text">More information</a>{% endif %}
+                        <div class="btn-row">
+                            <button class="btn btn-gold btn-sm" data-rsvp="{{ event.pk }}" data-rsvp-title="{{ event.title }}">RSVP</button>
+                        </div>
+                        {% include 'partials/share_buttons.html' with share_title=event.title share_url=share_url %}
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-state">No events at the moment.</p>
+            {% endif %}
+        </div>
+
+        <div class="tabpanel hidden" id="panel-sermons" data-tabpanel="sermons">
+            {% if sermons %}
+            <div class="card-grid">
+                {% for s in sermons %}
+                <article class="card reveal">
+                    {% if s.video_id %}
+                    <a href="{{ s.video_url }}" target="_blank" rel="noopener" class="video-preview" aria-label="Watch {{ s.title }}">
+                        <img src="{{ s.thumbnail_url }}" alt="{{ s.title }} video preview" loading="lazy">
+                        <span class="video-play" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </span>
+                    </a>
+                    {% endif %}
+                    <div class="card-body">
+                        <h3 class="card-title">{{ s.title }}</h3>
+                        {% if s.speaker %}<p class="card-text">Speaker: {{ s.speaker }}</p>{% endif %}
+                        {% if s.series %}<p class="card-text">Series: {{ s.series }}</p>{% endif %}
+                        {% if s.scripture %}<p class="card-scripture">{{ s.scripture }}</p>{% endif %}
+                        {% if s.description %}<p class="card-text clamp">{{ s.description|truncatewords:35 }}</p>{% endif %}
+                        <div class="btn-row">
+                            {% if s.pdf %}<a class="btn btn-gold btn-sm" href="{{ s.pdf.url }}" target="_blank" rel="noopener">{% include 'partials/_icon.html' with icon='pdf' %}<span>View PDF</span></a>{% endif %}
+                            {% if s.pdf %}<a class="btn btn-outline-gold btn-sm" href="{{ s.pdf.url }}" download>{% include 'partials/_icon.html' with icon='pdf' %}<span>Download</span></a>{% endif %}
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-state">Sermons will be posted here soon.</p>
+            {% endif %}
+        </div>
+
+        <div class="tabpanel hidden" id="panel-materials" data-tabpanel="materials">
+            {% if materials %}
+            <div class="card-grid">
+                {% for m in materials %}
+                <article class="card reveal">
+                    <div class="card-body">
+                        <h3 class="card-title">{{ m.title }}</h3>
+                        {% if m.description %}<p class="card-text">{{ m.description }}</p>{% endif %}
+                        <div class="btn-row">
+                            <a class="btn btn-gold btn-sm" href="{{ m.file.url }}" target="_blank" rel="noopener">{% include 'partials/_icon.html' with icon='pdf' %}<span>View</span></a>
+                            <a class="btn btn-outline-gold btn-sm" href="{{ m.file.url }}" download>{% include 'partials/_icon.html' with icon='pdf' %}<span>Download</span></a>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-state">PDF material will be available here soon.</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<div class="modal" id="rsvpModal" aria-hidden="true">
+    <div class="modal-dialog">
+        <button class="modal-close" id="rsvpClose" aria-label="Close">&times;</button>
+        <h3 class="section-title">RSVP</h3>
+        <p class="modal-event" id="rsvpEventName"></p>
+        <form method="post" action="{% url 'blackboard:rsvp' %}" class="form-stack" id="rsvpForm">
+            {% csrf_token %}
+            {{ rsvp_form.as_p }}
+            <button type="submit" class="btn btn-gold btn-block">Confirm Attendance</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

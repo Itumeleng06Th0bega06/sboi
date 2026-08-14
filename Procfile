@@ -1,0 +1,1 @@
+web: gunicorn sboi.wsgi:application --workers 2 --timeout 120 --graceful-timeout 60

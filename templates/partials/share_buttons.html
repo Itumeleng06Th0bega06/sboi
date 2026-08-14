@@ -1,0 +1,15 @@
+<div class="share-row" data-share-title="{{ share_title }}" data-share-url="{{ share_url }}">
+    <span class="share-label">Share</span>
+    <button class="share-btn" data-share="whatsapp" aria-label="Share on WhatsApp">
+        {% include 'partials/_icon.html' with icon='whatsapp' %}
+    </button>
+    <button class="share-btn" data-share="facebook" aria-label="Share on Facebook">
+        {% include 'partials/_icon.html' with icon='facebook' %}
+    </button>
+    <button class="share-btn" data-share="x" aria-label="Share on X">
+        {% include 'partials/_icon.html' with icon='x' %}
+    </button>
+    <button class="share-btn" data-share="copy" aria-label="Copy link">
+        {% include 'partials/_icon.html' with icon='link' %}
+    </button>
+</div>

@@ -1,0 +1,57 @@
+{% extends "registration/base.html" %}
+
+{% load i18n jazzmin %}
+{% get_jazzmin_settings request as jazzmin_settings %}
+{% get_jazzmin_ui_tweaks as jazzmin_ui %}
+
+{% block content %}
+    <h1 class="auth-title">{{ jazzmin_settings.site_header }}</h1>
+    <p class="auth-sub">{{ jazzmin_settings.welcome_sign }}</p>
+    <form action="{{ app_path }}" method="post" class="form-stack">
+        {% csrf_token %}
+        {% if user.is_authenticated %}
+            <div class="callout callout-danger">
+                <p>
+                    {% blocktrans trimmed %}
+                        You are authenticated as {{ username }}, but are not authorized to
+                        access this page. Would you like to login to a different account?
+                    {% endblocktrans %}
+                </p>
+            </div>
+        {% endif %}
+        {% if form.errors %}
+            {% if form.username.errors %}
+                <div class="callout callout-danger">
+                    <p>{{ form.username.label }}: {{ form.username.errors|join:', ' }}</p>
+                </div>
+            {% endif %}
+            {% if form.password.errors %}
+                <div class="callout callout-danger">
+                    <p>{{ form.password.label }}: {{ form.password.errors|join:', ' }}</p>
+                </div>
+            {% endif %}
+            {% if form.non_field_errors %}
+                <div class="callout callout-danger">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endif %}
+        <div class="form-field">
+            <label for="id_username">{{ form.username.label }}</label>
+            <input type="text" name="username" class="input" id="id_username" placeholder="{{ form.username.label }}" required autofocus>
+        </div>
+        <div class="form-field">
+            <label for="id_password">{{ form.password.label }}</label>
+            <input type="password" name="password" class="input" id="id_password" placeholder="{{ form.password.label }}" required>
+        </div>
+        <button type="submit" class="btn btn-gold btn-block">{% trans "Log in" %}</button>
+        {% url 'admin_password_reset' as password_reset_url %}
+        {% if password_reset_url %}
+            <p class="auth-foot">
+                <a href="{{ password_reset_url }}">{% trans 'Forgotten your password or username?' %}</a>
+            </p>
+        {% endif %}
+    </form>
+{% endblock %}
