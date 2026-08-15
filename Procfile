@@ -1,1 +1,1 @@
-web: gunicorn sboi.wsgi:application --workers 2 --timeout 120 --graceful-timeout 60
+web: python manage.py migrate && gunicorn sboi.wsgi:application --workers 2 --timeout 120 --graceful-timeout 60
