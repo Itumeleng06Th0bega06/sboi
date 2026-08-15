@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from sboi.admin_utils import ImageThumbMixin
+
 from .models import FeaturedSection, HomeStat, Subscriber, Testimony
 
 admin.site.site_header = 'Shekinah Blaze Outreach International'
@@ -14,8 +16,10 @@ class HomeStatAdmin(admin.ModelAdmin):
 
 
 @admin.register(FeaturedSection)
-class FeaturedSectionAdmin(admin.ModelAdmin):
-    list_display = ['title', 'subtitle', 'order']
+class FeaturedSectionAdmin(ImageThumbMixin, admin.ModelAdmin):
+    thumb_field = 'image'
+    list_display = ['thumb', 'title', 'subtitle', 'order']
+    list_display_links = ['title']
     list_editable = ['order']
 
 

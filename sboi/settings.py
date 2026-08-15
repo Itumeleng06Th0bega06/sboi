@@ -151,8 +151,6 @@ JAZZMIN_SETTINGS = {
     'search_model': ['auth.User', 'blackboard.Devotion', 'blackboard.Sermon', 'blackboard.Event'],
     'topmenu_links': [
         {'name': 'View Website', 'url': '/', 'new_window': False, 'icon': 'fas fa-globe'},
-        {'app': 'blackboard'},
-        {'app': 'contact'},
     ],
     'show_sidebar': True,
     'navigation_expanded': True,
@@ -187,7 +185,6 @@ JAZZMIN_SETTINGS = {
         'contact.ContactInfo': 'fas fa-address-book',
         'contact.ContactMessage': 'fas fa-envelope',
         'gallery.SliderImage': 'fas fa-images',
-        'gallery.GalleryImage': 'fas fa-th-large',
     },
     'default_icon_parents': 'fas fa-chevron-circle-right',
     'default_icon_children': 'fas fa-circle',

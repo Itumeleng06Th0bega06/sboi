@@ -16,7 +16,7 @@ from about.models import (
 )
 from blackboard.models import Announcement, Devotion
 from contact.models import ContactInfo
-from gallery.models import GalleryImage, SliderImage
+from gallery.models import SliderImage
 from home.models import FeaturedSection, HomeStat
 
 STATIC = Path(settings.BASE_DIR) / 'static' / 'images'
@@ -51,7 +51,6 @@ class Command(BaseCommand):
         self.seed_stats()
         self.seed_sections()
         self.seed_sliders()
-        self.seed_gallery()
         self.seed_devotions()
         self.seed_announcement()
         self.seed_contact()
@@ -201,16 +200,6 @@ class Command(BaseCommand):
                 continue
             SliderImage.objects.update_or_create(image=rel, defaults={'title': 'Shekinah Blaze', 'caption': 'Moments of worship and fellowship.', 'placement': 'gallery', 'is_active': True, 'order': 100 + i})
         self.stdout.write('  Slider images seeded.')
-
-    def seed_gallery(self):
-        img_filter = (p for p in (STATIC / 'gallery').iterdir() if p.suffix.lower() in ('.jpg', '.jpeg', '.png'))
-        gallery_files = sorted(img_filter)
-        for i, name in enumerate(gallery_files):
-            rel = img('gallery', name.name)
-            if not rel:
-                continue
-            GalleryImage.objects.update_or_create(image=rel, defaults={'title': 'Shekinah Blaze', 'caption': '', 'is_active': True, 'order': i + 1})
-        self.stdout.write(f'  {len(gallery_files)} gallery images seeded.')
 
     def seed_devotions(self):
         folder = STATIC / 'devotions'

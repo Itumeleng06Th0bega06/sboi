@@ -64,14 +64,19 @@ SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 X_FRAME_OPTIONS = 'DENY'
 
 # ---------------------------------------------------------------------------
-# Static files (WhiteNoise) and media (S3-compatible bucket)
+# Static files (WhiteNoise) and media (local disk — testing phase)
 # ---------------------------------------------------------------------------
+#
+# Media note: uploaded files live on Render's ephemeral disk and are lost on
+# every deploy/restart, and are not served in production. During the testing
+# phase this is fine (no admin uploads). Before going live with real uploads,
+# switch the default storage to an S3-compatible bucket (django-storages).
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STORAGES = {
     'default': {
-        'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
     },
     'staticfiles': {
         'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
@@ -84,16 +89,6 @@ MIDDLEWARE = [
 ]
 
 WHITENOISE_MAX_AGE = 31536000
-
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME', '')
-AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', '')
-AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL', '')
-AWS_S3_CUSTOM_DOMAIN = os.environ.get('AWS_S3_CUSTOM_DOMAIN', None)
-AWS_S3_FILE_OVERWRITE = False
-AWS_QUERYSTRING_AUTH = False
-AWS_DEFAULT_ACL = None
 
 # ---------------------------------------------------------------------------
 # Database (PostgreSQL via DATABASE_URL; Render includes sslmode in the URL)

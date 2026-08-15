@@ -1,16 +1,14 @@
 from django.contrib import admin
 
-from .models import GalleryImage, SliderImage
+from sboi.admin_utils import ImageThumbMixin
+
+from .models import SliderImage
 
 
 @admin.register(SliderImage)
-class SliderImageAdmin(admin.ModelAdmin):
-    list_display = ['title', 'placement', 'is_active', 'order']
+class SliderImageAdmin(ImageThumbMixin, admin.ModelAdmin):
+    thumb_field = 'image'
+    list_display = ['thumb', 'title', 'placement', 'is_active', 'order']
+    list_display_links = ['title']
     list_editable = ['placement', 'is_active', 'order']
     list_filter = ['placement', 'is_active']
-
-
-@admin.register(GalleryImage)
-class GalleryImageAdmin(admin.ModelAdmin):
-    list_display = ['title', 'is_active', 'order']
-    list_editable = ['is_active', 'order']

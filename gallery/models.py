@@ -10,22 +10,8 @@ class SliderImage(models.Model):
 
     title = models.CharField(max_length=200, blank=True)
     caption = models.CharField(max_length=300, blank=True)
-    image = models.ImageField(upload_to='slider/')
+    image = models.ImageField(upload_to='slider/', help_text='Recommended size: 1920x1080 (16:9).')
     placement = models.CharField(max_length=10, choices=PLACEMENT_CHOICES, default='home')
-    is_active = models.BooleanField(default=True)
-    order = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        ordering = ['order']
-
-    def __str__(self):
-        return self.title or str(self.image)
-
-
-class GalleryImage(models.Model):
-    title = models.CharField(max_length=200, blank=True)
-    caption = models.CharField(max_length=300, blank=True)
-    image = models.ImageField(upload_to='gallery/')
     is_active = models.BooleanField(default=True)
     order = models.PositiveIntegerField(default=0)
 

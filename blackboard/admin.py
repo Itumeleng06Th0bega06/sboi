@@ -5,6 +5,8 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+from sboi.admin_utils import ImageThumbMixin
+
 from .models import (
     Announcement,
     Devotion,
@@ -89,8 +91,10 @@ class MemberProfileAdmin(admin.ModelAdmin):
 
 
 @admin.register(Devotion)
-class DevotionAdmin(admin.ModelAdmin):
-    list_display = ['title', 'date', 'author', 'is_published']
+class DevotionAdmin(ImageThumbMixin, admin.ModelAdmin):
+    thumb_field = 'image'
+    list_display = ['thumb', 'title', 'date', 'author', 'is_published']
+    list_display_links = ['title']
     list_filter = ['is_published']
     search_fields = ['title', 'message']
     list_editable = ['is_published']
@@ -98,8 +102,10 @@ class DevotionAdmin(admin.ModelAdmin):
 
 
 @admin.register(Announcement)
-class AnnouncementAdmin(admin.ModelAdmin):
-    list_display = ['title', 'date', 'is_published']
+class AnnouncementAdmin(ImageThumbMixin, admin.ModelAdmin):
+    thumb_field = 'image'
+    list_display = ['thumb', 'title', 'date', 'is_published']
+    list_display_links = ['title']
     list_filter = ['is_published']
     search_fields = ['title', 'body']
     list_editable = ['is_published']
@@ -107,8 +113,10 @@ class AnnouncementAdmin(admin.ModelAdmin):
 
 
 @admin.register(Event)
-class EventAdmin(admin.ModelAdmin):
-    list_display = ['title', 'date', 'is_published']
+class EventAdmin(ImageThumbMixin, admin.ModelAdmin):
+    thumb_field = 'poster'
+    list_display = ['thumb', 'title', 'date', 'is_published']
+    list_display_links = ['title']
     list_filter = ['is_published']
     search_fields = ['title', 'description']
     list_editable = ['is_published']

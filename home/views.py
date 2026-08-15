@@ -3,7 +3,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 
 from blackboard.models import Devotion, Event, Sermon
-from gallery.models import GalleryImage, SliderImage
+from gallery.models import SliderImage
 
 from .forms import SubscriberForm, TestimonyForm
 from .models import FeaturedSection, HomeStat, Subscriber, Testimony

@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from sboi.admin_utils import ImageThumbMixin
+
 from .models import (
     ChurchProfile,
     CoreValue,
@@ -12,8 +14,10 @@ from .models import (
 
 
 @admin.register(ChurchProfile)
-class ChurchProfileAdmin(admin.ModelAdmin):
-    list_display = ['church_name', 'tagline', 'location']
+class ChurchProfileAdmin(ImageThumbMixin, admin.ModelAdmin):
+    thumb_field = 'story_image'
+    list_display = ['thumb', 'church_name', 'tagline', 'location']
+    list_display_links = ['church_name']
     fieldsets = (
         (None, {'fields': ['church_name', 'tagline', 'location']}),
         ('Founder', {'fields': ['founder_name', 'founder_role', 'founder_byline', 'founder_scripture', 'founder_message', 'founder_signature', 'founder_tagline']}),
@@ -105,6 +109,8 @@ class CoreValueAdmin(admin.ModelAdmin):
 
 
 @admin.register(Leader)
-class LeaderAdmin(admin.ModelAdmin):
-    list_display = ['name', 'role', 'order']
+class LeaderAdmin(ImageThumbMixin, admin.ModelAdmin):
+    thumb_field = 'photo'
+    list_display = ['thumb', 'name', 'role', 'order']
+    list_display_links = ['name']
     list_editable = ['order']

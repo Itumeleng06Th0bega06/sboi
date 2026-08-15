@@ -18,8 +18,9 @@ def admin_notifications(request):
     if not request.path.startswith('/admin/'):
         return {}
 
-    from blackboard.models import EventRsvp, MemberProfile
+    from blackboard.models import Announcement, Devotion, Event, EventRsvp, MemberProfile, Sermon
     from contact.models import ContactMessage
+    from gallery.models import SliderImage
 
     from .models import Subscriber, Testimony
 
@@ -64,5 +65,81 @@ def admin_notifications(request):
             'admin:blackboard_memberprofile_changelist',
         ),
     ]
-    return {'admin_notifications': notifications}
+
+    def quick_action(label, icon, add_view_name):
+        return {'label': label, 'icon': icon, 'url': reverse(add_view_name)}
+
+    def change_url(admin_name, pk):
+        return reverse(f'admin:{admin_name}_change', args=[pk])
+
+    def image_item(img, admin_name):
+        return {
+            'title': img.title,
+            'image': img.image.name,
+            'image_url': img.image.url,
+            'url': change_url(admin_name, img.pk),
+        }
+
+    dashboard = {
+        'quick_actions': [
+            quick_action('Add devotion', 'fa-solid fa-book-bible', 'admin:blackboard_devotion_add'),
+            quick_action('Add event', 'fa-solid fa-calendar-plus', 'admin:blackboard_event_add'),
+            quick_action('Add sermon', 'fa-solid fa-microphone-lines', 'admin:blackboard_sermon_add'),
+            quick_action('Add announcement', 'fa-solid fa-bullhorn', 'admin:blackboard_announcement_add'),
+            quick_action('Add slider image', 'fa-solid fa-photo-film', 'admin:gallery_sliderimage_add'),
+        ],
+        'slider_latest': [image_item(img, 'gallery_sliderimage') for img in SliderImage.objects.all()[:6]],
+        'messages_latest': [
+            {
+                'name': m.name,
+                'subject': m.subject,
+                'is_read': m.is_read,
+                'created_at': m.created_at,
+                'url': change_url('contact_contactmessage', m.pk),
+            }
+            for m in ContactMessage.objects.all()[:5]
+        ],
+        'testimonies_pending': [
+            {
+                'name': t.name,
+                'submitted_at': t.submitted_at,
+                'url': change_url('home_testimony', t.pk),
+            }
+            for t in Testimony.objects.filter(is_approved=False)[:5]
+        ],
+        'devotions_latest': [
+            {
+                'title': d.title,
+                'date': d.date,
+                'url': change_url('blackboard_devotion', d.pk),
+            }
+            for d in Devotion.objects.all()[:5]
+        ],
+        'events_latest': [
+            {
+                'title': e.title,
+                'date': e.date,
+                'url': change_url('blackboard_event', e.pk),
+            }
+            for e in Event.objects.all()[:5]
+        ],
+        'sermons_latest': [
+            {
+                'title': s.title,
+                'speaker': s.speaker,
+                'date': s.date,
+                'url': change_url('blackboard_sermon', s.pk),
+            }
+            for s in Sermon.objects.all()[:5]
+        ],
+        'announcements_latest': [
+            {
+                'title': a.title,
+                'date': a.date,
+                'url': change_url('blackboard_announcement', a.pk),
+            }
+            for a in Announcement.objects.all()[:5]
+        ],
+    }
+    return {'admin_notifications': notifications, 'admin_dashboard': dashboard}
 

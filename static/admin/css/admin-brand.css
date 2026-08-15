@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
 
 :root {
   --sboi-navy: #390254;
@@ -60,7 +60,7 @@ body.bg-body-tertiary {
 }
 
 /* ---------- "View Website" button (top menu link) ---------- */
-.app-header .navbar-nav:not(.ms-auto) .nav-link:not([data-lte-toggle]) {
+.app-header .navbar-nav:not(.ms-auto) .nav-link:not([data-lte-toggle]):not(.dropdown-toggle) {
   background: linear-gradient(135deg, var(--sboi-gold), var(--sboi-gold-2));
   border-color: var(--sboi-gold-2);
   color: var(--sboi-navy);
@@ -68,13 +68,15 @@ body.bg-body-tertiary {
   border-radius: 8px;
   padding: 0.35rem 0.95rem;
   margin-left: 0.5rem;
-  box-shadow: 0 4px 12px rgba(255, 164, 0, 0.3);
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(255, 164, 0, 0.15);
 }
 
-.app-header .navbar-nav:not(.ms-auto) .nav-link:not([data-lte-toggle]):hover {
+.app-header .navbar-nav:not(.ms-auto) .nav-link:not([data-lte-toggle]):not(.dropdown-toggle):hover {
   background: linear-gradient(135deg, #ffb020, #d18d00);
   color: var(--sboi-navy);
-  box-shadow: 0 6px 16px rgba(255, 164, 0, 0.45);
+  box-shadow: 0 6px 16px rgba(255, 164, 0, 0.22);
 }
 
 /* ---------- Sidebar (AdminLTE 4: .app-sidebar + --lte-sidebar-* vars) ---------- */
@@ -126,7 +128,7 @@ body.bg-body-tertiary {
   background: linear-gradient(135deg, var(--sboi-gold), var(--sboi-gold-2));
   color: var(--sboi-navy);
   font-weight: 600;
-  box-shadow: 0 6px 18px rgba(255, 164, 0, 0.35);
+  box-shadow: 0 6px 18px rgba(255, 164, 0, 0.18);
 }
 
 .sidebar-wrapper .sidebar-menu .nav-item > .nav-link.active .nav-icon {
@@ -211,7 +213,7 @@ body.bg-body-tertiary {
   border-color: var(--sboi-gold-2);
   color: var(--sboi-navy);
   font-weight: 600;
-  box-shadow: 0 6px 16px rgba(255, 164, 0, 0.3);
+  box-shadow: 0 6px 16px rgba(255, 164, 0, 0.15);
 }
 
 .btn-primary:hover,
@@ -454,7 +456,7 @@ a.dropdown-item {
 }
 
 /* ================================================================
-   Auth pages (login / register) — matches the site's auth pages
+   Auth pages (login / register) â€” matches the site's auth pages
    ================================================================ */
 .login-page,
 .register-page {
@@ -557,14 +559,14 @@ a.dropdown-item {
   font-weight: 600;
   border-radius: 10px;
   padding: 0.8rem 1.2rem;
-  box-shadow: 0 8px 20px rgba(240, 150, 0, 0.35);
+  box-shadow: 0 8px 20px rgba(240, 150, 0, 0.18);
   transition: box-shadow 0.2s, transform 0.2s;
 }
 
 .login-page .btn.btn-gold:hover {
   color: var(--sboi-navy);
   background: linear-gradient(135deg, #ffb020, #d18d00);
-  box-shadow: 0 12px 26px rgba(240, 150, 0, 0.5);
+  box-shadow: 0 12px 26px rgba(240, 150, 0, 0.25);
   transform: translateY(-1px);
 }
 
@@ -584,4 +586,116 @@ a.dropdown-item {
 .register-card .btn-primary.btn-block {
   background: linear-gradient(90deg, var(--sboi-gold), var(--sboi-gold-2));
   border: none;
+}
+/* ---------- Dashboard (admin index) ---------- */
+.sboi-dash-wrap { max-width: 1280px; }
+
+.sboi-dash-hero {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  padding: 1.25rem 1.5rem; margin-bottom: 1.25rem;
+  background: linear-gradient(135deg, var(--sboi-navy), var(--sboi-navy-bg));
+  border-radius: 12px; color: #fff; box-shadow: 0 8px 22px rgba(57, 2, 84, 0.12);
+}
+.sboi-dash-hero h1 {
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-size: 1.5rem; margin: 0; color: #fff;
+}
+.sboi-dash-hero p { margin: 0.25rem 0 0; color: rgba(255, 255, 255, 0.78); font-size: 0.95rem; }
+.sboi-dash-date {
+  font-weight: 600; color: var(--sboi-gold); background: rgba(255, 255, 255, 0.08);
+  padding: 0.45rem 0.9rem; border-radius: 8px; font-size: 0.92rem; white-space: nowrap;
+}
+
+.sboi-panel {
+  background: #fff; border: 1px solid rgba(57, 2, 84, 0.1); border-radius: 12px;
+  padding: 1.1rem 1.25rem; margin-bottom: 1.25rem;
+  box-shadow: 0 2px 10px rgba(57, 2, 84, 0.02);
+}
+.sboi-panel h2 {
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-size: 1.05rem; margin: 0 0 0.9rem; color: var(--sboi-navy);
+  padding-bottom: 0.5rem; border-bottom: 2px solid rgba(255, 164, 0, 0.35);
+}
+.sboi-none { color: var(--sboi-muted); font-size: 0.9rem; }
+
+.sboi-stats {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.85rem;
+}
+a.stat-card {
+  display: flex; align-items: baseline; gap: 0.85rem; padding: 1rem 1.1rem;
+  background: var(--sboi-cream); border: 1px solid rgba(57, 2, 84, 0.08);
+  border-left: 4px solid var(--sboi-gold); border-radius: 10px;
+  text-decoration: none; color: var(--sboi-navy);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+a.stat-card:hover { box-shadow: 0 8px 22px rgba(57, 2, 84, 0.08); transform: translateY(-2px); }
+.stat-count { font-size: 1.7rem; font-weight: 700; line-height: 1; color: var(--sboi-gold-2); }
+.stat-count.zero { color: var(--sboi-muted); }
+.stat-label { font-size: 0.85rem; color: var(--sboi-muted); line-height: 1.3; }
+
+.sboi-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+a.action-btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 0.95rem; border-radius: 8px;
+  background: var(--sboi-navy); color: #fff; text-decoration: none;
+  font-weight: 600; font-size: 0.88rem;
+  transition: background 0.15s, transform 0.15s;
+}
+a.action-btn:hover { background: var(--sboi-navy-bg); transform: translateY(-1px); }
+a.action-btn i { color: var(--sboi-gold); }
+
+.sboi-grid { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+@media (max-width: 1100px) { .sboi-grid { grid-template-columns: 1fr; } }
+
+.sboi-media-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.8rem;
+}
+a.media-tile {
+  display: block; text-decoration: none; border-radius: 10px; overflow: hidden;
+  border: 1px solid rgba(57, 2, 84, 0.12); background: var(--sboi-cream);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+a.media-tile:hover { box-shadow: 0 8px 20px rgba(57, 2, 84, 0.09); transform: translateY(-2px); }
+a.media-tile img { display: block; width: 100%; height: 100px; object-fit: cover; }
+.media-caption {
+  display: block; padding: 0.4rem 0.6rem; font-size: 0.8rem; color: var(--sboi-navy);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+ul.sboi-list { list-style: none; margin: 0; padding: 0; }
+ul.sboi-list li { padding: 0.55rem 0; border-bottom: 1px solid rgba(57, 2, 84, 0.07); }
+ul.sboi-list li:last-child { border-bottom: none; }
+ul.sboi-list a { color: var(--sboi-navy); font-weight: 600; text-decoration: none; }
+ul.sboi-list a:hover { color: var(--sboi-gold-2); text-decoration: underline; }
+.list-meta { display: block; font-size: 0.8rem; color: var(--sboi-muted); margin-top: 0.15rem; }
+.sboi-badge {
+  display: inline-block; margin-right: 0.35rem; padding: 0.1rem 0.5rem;
+  background: var(--sboi-gold); color: var(--sboi-navy); border-radius: 999px;
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+}
+
+/* ---------- Image thumbnails in changelists ---------- */
+img.admin-thumb {
+  display: inline-block; width: 88px; height: 60px; object-fit: cover; vertical-align: middle;
+  border-radius: 6px; border: 1px solid rgba(57, 2, 84, 0.18);
+  box-shadow: 0 1px 4px rgba(57, 2, 84, 0.06); background: var(--sboi-cream);
+}
+.admin-thumb-empty {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 88px; height: 60px; border-radius: 6px; color: var(--sboi-muted);
+  border: 1px dashed rgba(57, 2, 84, 0.25); background: var(--sboi-cream); font-size: 0.9rem;
+}
+.admin-thumb-path {
+  display: block; max-width: 200px; margin-top: 0.2rem;
+  font-size: 0.72rem; color: var(--sboi-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ---------- Image previews on add/change forms ---------- */
+.form-row .file-upload img,
+.aligned .file-upload img,
+.form-row.field-image img {
+  max-width: 340px; height: auto; margin-top: 0.5rem;
+  border-radius: 8px; border: 1px solid rgba(57, 2, 84, 0.2);
+  box-shadow: 0 2px 8px rgba(57, 2, 84, 0.05);
 }

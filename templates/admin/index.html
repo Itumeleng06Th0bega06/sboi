@@ -1,23 +1,6 @@
 {% extends "admin/base_site.html" %}
 {% load i18n static admin_filters %}
 
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static "admin/css/dashboard.css" %}" {% csp_nonce_attr %}><style>
-  .sboi-dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-  .sboi-dashboard a.notif-card {
-    display: flex; align-items: baseline; gap: 0.9rem; padding: 1.1rem 1.25rem;
-    background: #fff; border: 1px solid rgba(57, 2, 84, 0.1); border-left: 4px solid var(--sboi-gold);
-    border-radius: 10px; text-decoration: none; color: var(--sboi-navy);
-    box-shadow: 0 2px 10px rgba(57, 2, 84, 0.06);
-    transition: box-shadow 0.15s ease, transform 0.15s ease;
-  }
-  .sboi-dashboard a.notif-card:hover { box-shadow: 0 8px 22px rgba(57, 2, 84, 0.16); transform: translateY(-2px); }
-  .sboi-dashboard .notif-count { font-size: 1.8rem; font-weight: 700; line-height: 1; color: var(--sboi-gold-2); }
-  .sboi-dashboard .notif-count.zero { color: var(--sboi-muted); }
-  .sboi-dashboard .notif-label { font-size: 0.9rem; color: var(--sboi-muted); }
-  .sboi-dashboard .notif-none { grid-column: 1 / -1; padding: 0.9rem 1rem; color: var(--sboi-muted); }
-  .sboi-dashboard .module h2 { font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; color: var(--sboi-navy); }
-</style>{% endblock %}
-
 {% block coltype %}colMS{% endblock %}
 
 {% block bodyclass %}{{ block.super }} dashboard{% endblock %}
@@ -25,20 +8,109 @@
 {% block nav-breadcrumbs %}{% endblock %}
 
 {% block content %}
-<div id="content-main" class="app-list">
-  <div class="module">
-    <h2>{% translate 'Notifications' %}</h2>
-    <div class="sboi-dashboard">
+<div id="content-main" class="sboi-dash-wrap">
+  <header class="sboi-dash-hero">
+    <div class="sboi-dash-hero-text">
+      <h1>{% translate 'Dashboard' %}</h1>
+      <p>{{ site_header }} &mdash; {{ welcome_sign }}</p>
+    </div>
+    <time class="sboi-dash-date" datetime="{% now 'Y-m-d' %}">{% now 'l, j F Y' %}</time>
+  </header>
+
+  <section class="sboi-panel" aria-labelledby="sboi-notif-title">
+    <h2 id="sboi-notif-title">{% translate 'Notifications' %}</h2>
+    <div class="sboi-stats">
       {% for item in admin_notifications %}
-      <a class="notif-card" href="{{ item.url }}">
-        <span class="notif-count{% if item.count == 0 %} zero{% endif %}">{{ item.count }}</span>
-        <span class="notif-label">{{ item.label }}</span>
+      <a class="stat-card" href="{{ item.url }}">
+        <span class="stat-count{% if item.count == 0 %} zero{% endif %}">{{ item.count }}</span>
+        <span class="stat-label">{{ item.label }}</span>
       </a>
       {% empty %}
-      <span class="notif-none">{% translate 'Nothing needs your attention right now.' %}</span>
+      <span class="sboi-none">{% translate 'Nothing needs your attention right now.' %}</span>
       {% endfor %}
     </div>
+  </section>
+
+  <section class="sboi-panel" aria-labelledby="sboi-actions-title">
+    <h2 id="sboi-actions-title">{% translate 'Quick actions' %}</h2>
+    <div class="sboi-actions">
+      {% for action in admin_dashboard.quick_actions %}
+      <a class="action-btn" href="{{ action.url }}">
+        <i class="{{ action.icon }}" aria-hidden="true"></i>
+        <span>{{ action.label }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <div class="sboi-grid">
+    <div class="sboi-grid-main">
+      <section class="sboi-panel" aria-labelledby="sboi-slider-title">
+        <h2 id="sboi-slider-title">{% translate 'Latest slider images' %}</h2>
+        <div class="sboi-media-grid">
+          {% for img in admin_dashboard.slider_latest %}
+          <a class="media-tile" href="{{ img.url }}" title="{{ img.image }}">
+            <img src="{{ img.image_url }}" alt="{{ img.title }}" loading="lazy">
+            <span class="media-caption">{{ img.title }}</span>
+          </a>
+          {% empty %}
+          <span class="sboi-none">{% translate 'No slider images yet.' %}</span>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="sboi-panel" aria-labelledby="sboi-devotions-title">
+        <h2 id="sboi-devotions-title">{% translate 'Latest devotions' %}</h2>
+        <ul class="sboi-list">
+          {% for item in admin_dashboard.devotions_latest %}
+          <li><a href="{{ item.url }}">{{ item.title }}</a><span class="list-meta">{{ item.date }}</span></li>
+          {% empty %}
+          <li class="sboi-none">{% translate 'No devotions yet.' %}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    </div>
+
+    <aside class="sboi-grid-side">
+      <section class="sboi-panel" aria-labelledby="sboi-inbox-title">
+        <h2 id="sboi-inbox-title">{% translate 'Inbox' %}</h2>
+        <ul class="sboi-list">
+          {% for msg in admin_dashboard.messages_latest %}
+          <li>
+            <a href="{{ msg.url }}">
+              {% if not msg.is_read %}<span class="sboi-badge" aria-label="unread">{% translate 'New' %}</span>{% endif %}
+              {{ msg.subject|default:msg.name }}
+            </a>
+            <span class="list-meta">{{ msg.name }} &middot; {{ msg.created_at|date:'j M Y' }}</span>
+          </li>
+          {% empty %}
+          <li class="sboi-none">{% translate 'No messages.' %}</li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      <section class="sboi-panel" aria-labelledby="sboi-testimonies-title">
+        <h2 id="sboi-testimonies-title">{% translate 'Pending testimonies' %}</h2>
+        <ul class="sboi-list">
+          {% for item in admin_dashboard.testimonies_pending %}
+          <li><a href="{{ item.url }}">{{ item.name }}</a><span class="list-meta">{{ item.submitted_at|date:'j M Y' }}</span></li>
+          {% empty %}
+          <li class="sboi-none">{% translate 'All testimonies approved.' %}</li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      <section class="sboi-panel" aria-labelledby="sboi-events-title">
+        <h2 id="sboi-events-title">{% translate 'Upcoming events' %}</h2>
+        <ul class="sboi-list">
+          {% for item in admin_dashboard.events_latest %}
+          <li><a href="{{ item.url }}">{{ item.title }}</a><span class="list-meta">{{ item.date }}</span></li>
+          {% empty %}
+          <li class="sboi-none">{% translate 'No events yet.' %}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    </aside>
   </div>
-  {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
 </div>
 {% endblock %}
