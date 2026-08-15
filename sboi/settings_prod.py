@@ -5,7 +5,6 @@ Run with:  python manage.py runserver --settings=sboi.settings_prod
 Deploy as: DJANGO_SETTINGS_MODULE=sboi.settings_prod gunicorn sboi.wsgi:application
 """
 import os
-
 import dj_database_url
 from dotenv import load_dotenv
 from sboi.settings import *  # noqa: F401,F403
@@ -26,7 +25,8 @@ ALLOWED_HOSTS = [
     h.strip()
     for h in os.environ.get(
         'ALLOWED_HOSTS',
-        'shekinahblaze.org,www.shekinahblaze.org,.onrender.com',
+        'shekinahblaze.org,www.shekinahblaze.org',
+        'sboi.onrender.com,https://sboi.onrender.com',
     ).split(',')
     if h.strip()
 ]
