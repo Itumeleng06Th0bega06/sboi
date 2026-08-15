@@ -25,8 +25,7 @@ ALLOWED_HOSTS = [
     h.strip()
     for h in os.environ.get(
         'ALLOWED_HOSTS',
-        'shekinahblaze.org,www.shekinahblaze.org',
-        'sboi.onrender.com,https://sboi.onrender.com',
+        'shekinahblaze.org,www.shekinahblaze.org,sboi.onrender.com,.onrender.com',
     ).split(',')
     if h.strip()
 ]
