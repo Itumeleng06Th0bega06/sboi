@@ -15,7 +15,11 @@ def site_info(request):
 
 
 def admin_notifications(request):
-    if not request.path.startswith('/admin/'):
+    try:
+        admin_path = reverse('admin:index')
+    except Exception:
+        admin_path = '/admin/'
+    if not request.path.startswith(admin_path):
         return {}
 
     from blackboard.models import Announcement, Devotion, Event, EventRsvp, MemberProfile, Sermon

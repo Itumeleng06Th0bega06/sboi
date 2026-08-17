@@ -98,7 +98,7 @@ STORAGES = {
         'BACKEND': 'sboi.cloudinary_storage.CloudinaryMediaStorage',
     },
     'staticfiles': {
-        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
     },
 }
 
