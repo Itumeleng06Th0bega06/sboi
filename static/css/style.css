@@ -363,6 +363,25 @@ textarea.input { resize: vertical; }
 .form-help { color: var(--muted); font-size: 0.8rem; }
 .mt-2 { margin-top: 1.2rem; }
 
+/* Django as_p markup inside form stacks */
+.form-stack p { display: grid; gap: 0.35rem; }
+.form-stack p label { font-weight: 500; color: var(--navy); font-size: 0.92rem; }
+.form-stack p .errorlist { list-style: none; color: #a03030; font-size: 0.85rem; }
+.form-stack p .helptext { color: var(--muted); font-size: 0.8rem; }
+.form-stack p .input::placeholder { color: #8a8f9c; }
+
+/* Dark sections: keep as_p labels, inputs and placeholders readable */
+.section-navy .form-stack p label { color: var(--white); }
+.section-navy .form-stack p .errorlist { color: #ffb0b0; }
+.section-navy .form-stack p .helptext { color: #c6cede; }
+.section-navy .form-stack .input {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  color: var(--white);
+}
+.section-navy .form-stack .input::placeholder { color: rgba(255, 255, 255, 0.55); }
+.section-navy .form-stack .input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255, 164, 0, 0.25); }
+
 /* Gallery tabs + mosaic */
 .gallery-tabs { display: flex; gap: 0.5rem; justify-content: center; margin: 2.5rem auto 0; }
 .gallery-tab { padding: 0.6rem 1.6rem; border: 1.5px solid var(--gold); color: var(--gold); border-radius: 999px; font-weight: 600; transition: all 0.2s; }

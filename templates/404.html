@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Page Not Found — Shekinah Blaze Outreach International{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container center-text">
+        <h1 class="section-title center">Page Not Found</h1>
+        <p class="section-sub center">The page you're looking for doesn't exist or may have moved.</p>
+        <p class="section-sub center">Let us help you find your way.</p>
+        <div class="cta-block" style="margin-top:2rem">
+            <a href="{% url 'home:home' %}" class="btn btn-gold">Back to Home</a>
+            <a href="{% url 'contact:contact' %}" class="btn btn-outline-gold">Contact Us</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

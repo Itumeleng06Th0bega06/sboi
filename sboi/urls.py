@@ -5,6 +5,13 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from . import views
+
+handler400 = views.handler400
+handler403 = views.handler403
+handler404 = views.handler404
+handler500 = views.handler500
+
 urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
     path('', include('home.urls')),

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Bad Request — Shekinah Blaze Outreach International{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container center-text">
+        <h1 class="section-title center">Bad Request</h1>
+        <p class="section-sub center">Your browser sent a request we couldn't understand.</p>
+        <p class="section-sub center">Please go back and try again.</p>
+        <div class="cta-block" style="margin-top:2rem">
+            <a href="{% url 'home:home' %}" class="btn btn-gold">Back to Home</a>
+            <a href="{% url 'contact:contact' %}" class="btn btn-outline-gold">Contact Us</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
