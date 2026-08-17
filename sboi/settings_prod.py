@@ -70,19 +70,32 @@ SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 X_FRAME_OPTIONS = 'DENY'
 
 # ---------------------------------------------------------------------------
-# Static files (WhiteNoise) and media (local disk — testing phase)
+# Static files (WhiteNoise) and media (Cloudinary CDN)
 # ---------------------------------------------------------------------------
 #
-# Media note: uploaded files live on Render's ephemeral disk and are lost on
-# every deploy/restart, and are not served in production. During the testing
-# phase this is fine (no admin uploads). Before going live with real uploads,
-# switch the default storage to an S3-compatible bucket (django-storages).
+# Media note: image files are uploaded to Cloudinary (durable CDN storage),
+# so they survive deploys and restarts. Seed the images once with:
+#   python manage.py seed
+# (already part of the Render start command).
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', ''),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
+}
+if not CLOUDINARY_STORAGE['CLOUD_NAME']:
+    raise ImproperlyConfigured(
+        'CLOUDINARY_CLOUD_NAME is not set. Create a free account at '
+        'https://cloudinary.com → Dashboard → copy the Cloud name, API key and '
+        'API secret. Then add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and '
+        'CLOUDINARY_API_SECRET to Render → Environment, and redeploy.'
+    )
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STORAGES = {
     'default': {
-        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
     },
     'staticfiles': {
         'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',

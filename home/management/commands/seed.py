@@ -1,8 +1,11 @@
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from pathlib import Path
-import shutil
+import re
 from datetime import date, timedelta
+
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 
 from about.manual_texts import MANUAL
 from about.models import (
@@ -20,17 +23,22 @@ from gallery.models import SliderImage
 from home.models import FeaturedSection, HomeStat
 
 STATIC = Path(settings.BASE_DIR) / 'static' / 'images'
-MEDIA = Path(settings.MEDIA_ROOT)
+
+
+def _safe_name(name: str) -> str:
+    """Cloudinary public IDs cannot contain spaces or unusual characters."""
+    return re.sub(r'[^A-Za-z0-9._-]+', '_', name).strip('_')
 
 
 def copy(src: Path, sub: str) -> str:
+    """Upload a static image to the default media storage (Cloudinary in
+    production, local disk in development) and return its relative path."""
     if not src.exists():
         return ''
-    dst = MEDIA / sub / src.name
-    dst.parent.mkdir(parents=True, exist_ok=True)
-    if not dst.exists():
-        shutil.copy2(src, dst)
-    return f'{sub}/{src.name}'
+    dst = f'{sub}/{_safe_name(src.name)}'
+    if not default_storage.exists(dst):
+        default_storage.save(dst, ContentFile(src.read_bytes()))
+    return dst
 
 
 def img(sub: str, name: str) -> str:
@@ -188,17 +196,29 @@ class Command(BaseCommand):
             ('16 years established.jpg', '16 Years Established', 'We have witnessed the faithfulness of the Lord.'),
             ('God Made.jpeg.jpg', 'Transformed Lives', 'Lives transformed by the power of the Gospel.'),
         ]
+        new_home = []
         for i, (name, title, caption) in enumerate(home_slides):
             rel = img('home', name)
             if not rel:
                 continue
-            SliderImage.objects.update_or_create(image=rel, defaults={'title': title, 'caption': caption, 'placement': 'home', 'is_active': True, 'order': i + 1})
+            new_home.append(rel)
+            SliderImage.objects.update_or_create(
+                image=rel,
+                defaults={'title': title, 'caption': caption, 'placement': 'home', 'is_active': True, 'order': i + 1},
+            )
+        new_gallery = []
         img_filter = (p for p in (STATIC / 'gallery').iterdir() if p.suffix.lower() in ('.jpg', '.jpeg', '.png'))
         for i, name in enumerate(sorted(img_filter)):
             rel = img('gallery', name.name)
             if not rel:
                 continue
-            SliderImage.objects.update_or_create(image=rel, defaults={'title': 'Shekinah Blaze', 'caption': 'Moments of worship and fellowship.', 'placement': 'gallery', 'is_active': True, 'order': 100 + i})
+            new_gallery.append(rel)
+            SliderImage.objects.update_or_create(
+                image=rel,
+                defaults={'title': 'Shekinah Blaze', 'caption': 'Moments of worship and fellowship.', 'placement': 'gallery', 'is_active': True, 'order': 100 + i},
+            )
+        SliderImage.objects.filter(placement='home').exclude(image__in=new_home).delete()
+        SliderImage.objects.filter(placement='gallery', title='Shekinah Blaze').exclude(image__in=new_gallery).delete()
         self.stdout.write('  Slider images seeded.')
 
     def seed_devotions(self):
