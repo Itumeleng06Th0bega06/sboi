@@ -1,4 +1,5 @@
 ﻿{% extends 'base.html' %}
+{% load media_tags %}
 
 {% block title %}Gallery Â· {{ site_profile.church_name }}{% endblock %}
 
@@ -9,7 +10,7 @@
     <div class="hero-track" id="galleryTrack">
         {% for slide in slides %}
         <div class="hero-slide{% if forloop.first %} active{% endif %}">
-            <img src="{{ slide.image.url }}" alt="{{ slide.title }}" data-lightbox>
+            <img src="{% opt_img slide.image width=1600 %}" alt="{{ slide.title }}" data-lightbox>
         </div>
         {% endfor %}
     </div>

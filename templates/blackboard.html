@@ -1,5 +1,6 @@
 ﻿{% extends 'base.html' %}
 {% load static %}
+{% load media_tags %}
 
 {% block title %}Blackboard Â· {{ site_profile.church_name }}{% endblock %}
 
@@ -31,7 +32,7 @@
                     </div>
                     {% if a.image %}
                     <div class="list-media">
-                        <img src="{{ a.image.url }}" alt="{{ a.title }}" class="fit-img" data-lightbox loading="lazy">
+                        <img src="{% opt_img a.image width=640 %}" alt="{{ a.title }}" class="fit-img" data-lightbox loading="lazy">
                     </div>
                     {% endif %}
                 </article>
@@ -48,7 +49,7 @@
                 <article class="card reveal">
                     <div class="card-media">
                         {% if event.poster %}
-                        <img src="{{ event.poster.url }}" alt="{{ event.title }}" class="fit-img" data-lightbox loading="lazy">
+                        <img src="{% opt_img event.poster width=640 %}" alt="{{ event.title }}" class="fit-img" data-lightbox loading="lazy">
                         {% endif %}
                     </div>
                     <div class="card-body">

@@ -2,13 +2,15 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
+from sboi.fields import OptimizedImageField
+
 
 class Devotion(models.Model):
     title = models.CharField(max_length=200)
     date = models.DateField()
     scripture = models.CharField(max_length=300, blank=True)
     author = models.CharField(max_length=120, blank=True)
-    image = models.ImageField(upload_to='devotions/', blank=True)
+    image = OptimizedImageField(upload_to='devotions/', blank=True)
     message = models.TextField(blank=True)
     is_published = models.BooleanField(default=True)
 
@@ -23,7 +25,7 @@ class Announcement(models.Model):
     title = models.CharField(max_length=200)
     date = models.DateField()
     body = models.TextField(blank=True)
-    image = models.ImageField(upload_to='announcements/', blank=True)
+    image = OptimizedImageField(upload_to='announcements/', blank=True)
     is_published = models.BooleanField(default=True)
 
     class Meta:
@@ -37,7 +39,7 @@ class Event(models.Model):
     title = models.CharField(max_length=200)
     date = models.DateField(default=timezone.now)
     description = models.TextField(blank=True)
-    poster = models.ImageField(upload_to='events/', blank=True)
+    poster = OptimizedImageField(upload_to='events/', blank=True)
     link = models.URLField(blank=True)
     is_published = models.BooleanField(default=True)
 

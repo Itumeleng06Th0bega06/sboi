@@ -1,5 +1,7 @@
 from django.db import models
 
+from sboi.fields import OptimizedImageField
+
 
 class HomeStat(models.Model):
     value = models.CharField(max_length=50)
@@ -17,7 +19,7 @@ class FeaturedSection(models.Model):
     title = models.CharField(max_length=200)
     subtitle = models.CharField(max_length=200, blank=True)
     body = models.TextField(blank=True)
-    image = models.ImageField(upload_to='home/sections/', blank=True)
+    image = OptimizedImageField(upload_to='home/sections/', blank=True)
     button_text = models.CharField(max_length=60, blank=True)
     button_url = models.CharField(max_length=200, blank=True)
     order = models.PositiveIntegerField(default=0)

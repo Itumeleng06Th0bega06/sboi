@@ -1,5 +1,6 @@
 ﻿{% extends 'base.html' %}
 {% load static %}
+{% load media_tags %}
 
 {% block title %}{{ site_profile.church_name|default:'Shekinah Blaze' }} Â· About{% endblock %}
 
@@ -20,7 +21,7 @@
             {% for leader in leaders %}
             <article class="leader-card reveal">
                 <div class="leader-media">
-                    {% if leader.photo %}<img src="{{ leader.photo.url }}" alt="{{ leader.name }}" class="fit-img" data-lightbox loading="lazy">{% endif %}
+                    {% if leader.photo %}<img src="{% opt_img leader.photo width=640 %}" alt="{{ leader.name }}" class="fit-img" data-lightbox loading="lazy">{% endif %}
                 </div>
                 <div class="leader-body">
                     <h3 class="leader-name">{{ leader.name }}</h3>
@@ -76,7 +77,7 @@
             {% for section in story_sections %}
                 {% if section.image %}
                 <figure class="story-img reveal">
-                    <img src="{{ profile.story_image.url }}" alt="Shekinah Blaze family" class="fit-img" data-lightbox loading="lazy">
+                    <img src="{% opt_img profile.story_image width=720 %}" alt="Shekinah Blaze family" class="fit-img" data-lightbox loading="lazy">
                 </figure>
                 {% else %}
                 <article class="story-card reveal">

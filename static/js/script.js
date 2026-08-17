@@ -5,9 +5,16 @@
   var toggle = document.getElementById('navToggle');
   var nav = document.getElementById('mainNav');
   if (toggle && nav) {
+    function closeNav() {
+      nav.classList.remove('open');
+      toggle.classList.remove('open');
+    }
     toggle.addEventListener('click', function () {
       nav.classList.toggle('open');
       toggle.classList.toggle('open');
+    });
+    nav.addEventListener('click', function (e) {
+      if (e.target.closest('a')) closeNav();
     });
   }
 
@@ -132,7 +139,7 @@
 
   function openLightbox(img) {
     if (!lightbox || !lightboxImg) return;
-    lightboxImg.src = img.src;
+    lightboxImg.src = img.getAttribute('data-full') || img.src;
     lightboxImg.alt = img.alt || '';
     lightboxCaption.textContent = img.alt || '';
     lightbox.classList.add('open');

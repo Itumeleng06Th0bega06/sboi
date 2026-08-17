@@ -1,5 +1,7 @@
 from django.db import models
 
+from sboi.fields import OptimizedImageField
+
 
 class ChurchProfile(models.Model):
     church_name = models.CharField(max_length=200, default='Shekinah Blaze Outreach International')
@@ -16,7 +18,7 @@ class ChurchProfile(models.Model):
 
     story = models.TextField(blank=True)
     story_subtitle = models.TextField(blank=True)
-    story_image = models.ImageField(upload_to='about/', blank=True)
+    story_image = OptimizedImageField(upload_to='about/', blank=True)
 
     vision_title = models.CharField(max_length=200, default='Our Vision')
     vision = models.TextField(blank=True)
@@ -125,7 +127,7 @@ class CoreValue(models.Model):
 class Leader(models.Model):
     name = models.CharField(max_length=200)
     role = models.CharField(max_length=200)
-    photo = models.ImageField(upload_to='about/', blank=True)
+    photo = OptimizedImageField(upload_to='about/', blank=True)
     bio = models.TextField(blank=True)
     order = models.PositiveIntegerField(default=0)
 
