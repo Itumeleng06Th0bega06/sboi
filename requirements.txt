@@ -13,5 +13,4 @@ whitenoise==6.12.0
 python-dotenv==1.2.2
 
 # Media storage (Cloudinary CDN — durable, not tied to Render's disk)
-django-cloudinary-storage==0.3.0
 cloudinary==1.45.0

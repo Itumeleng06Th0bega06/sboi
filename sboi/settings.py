@@ -145,7 +145,7 @@ CLOUDINARY_STORAGE = {
 STORAGES = {
     'default': {
         'BACKEND': (
-            'cloudinary_storage.storage.MediaCloudinaryStorage'
+            'sboi.cloudinary_storage.CloudinaryMediaStorage'
             if CLOUDINARY_STORAGE['CLOUD_NAME']
             else 'django.core.files.storage.FileSystemStorage'
         ),

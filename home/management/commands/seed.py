@@ -186,6 +186,8 @@ class Command(BaseCommand):
             title='Touching Our Community',
             defaults={'subtitle': 'Mission In Action', 'body': 'The strongest mouth of our message is our hands — gifts, time, service, and kindness to the community. Everyone is welcome, everyone is reached.', 'image': img('home', '16 years established.jpg'), 'button_text': 'Get Involved', 'button_url': '/contact/', 'order': 4},
         )
+        titles = {'Welcome to Shekinah Blaze', 'The Dwelling Place of God', 'Our Culture', 'Touching Our Community'}
+        FeaturedSection.objects.exclude(title__in=titles).delete()
         self.stdout.write('  Featured sections seeded.')
 
     def seed_sliders(self):
