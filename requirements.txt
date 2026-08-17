@@ -14,3 +14,4 @@ python-dotenv==1.2.2
 
 # Media storage (Cloudinary CDN — durable, not tied to Render's disk)
 cloudinary==1.45.0
+requests==2.34.2
