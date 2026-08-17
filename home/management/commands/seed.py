@@ -233,10 +233,15 @@ class Command(BaseCommand):
             'IMG-20260803-WA0002.jpg': date(2026, 8, 3),
         }
         fallback = date(2026, 7, 26)
+        new_rels = []
         for i, f in enumerate(files):
             rel = copy(STATIC / 'devotions' / f, 'devotions')
+            if not rel:
+                continue
+            new_rels.append(rel)
             d = known.get(f, fallback + timedelta(days=i))
             Devotion.objects.update_or_create(image=rel, defaults={'title': 'Daily Devotion', 'date': d, 'is_published': True})
+        Devotion.objects.exclude(image__in=new_rels).delete()
         self.stdout.write(f'  {len(files)} devotions seeded.')
 
     def seed_announcement(self):
