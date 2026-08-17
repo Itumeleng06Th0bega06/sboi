@@ -7,6 +7,7 @@ Deploy as: DJANGO_SETTINGS_MODULE=sboi.settings_prod gunicorn sboi.wsgi:applicat
 import os
 import dj_database_url
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 from sboi.settings import *  # noqa: F401,F403
 
 # Load a local .env file if present (e.g. for smoke-testing prod settings locally).
@@ -19,7 +20,13 @@ load_dotenv(BASE_DIR / '.env')
 
 DEBUG = False
 
-SECRET_KEY = os.environ['SECRET_KEY']
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise ImproperlyConfigured(
+        'SECRET_KEY is not set. Go to Render → your Web Service → Environment '
+        '→ Add Environment Variable: key=SECRET_KEY, value=(click Generate). '
+        'Then redeploy.'
+    )
 
 ALLOWED_HOSTS = [
     h.strip()
