@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load i18n static admin_filters %}
+{% load i18n static admin_filters media_tags %}
 
 {% block coltype %}colMS{% endblock %}
 
@@ -50,7 +50,7 @@
         <div class="sboi-media-grid">
           {% for img in admin_dashboard.slider_latest %}
           <a class="media-tile" href="{{ img.url }}" title="{{ img.image }}">
-            <img src="{{ img.image_url }}" alt="{{ img.title }}" loading="lazy">
+            <img src="{% opt_img img.image width=400 %}" alt="{{ img.title }}" loading="lazy">
             <span class="media-caption">{{ img.title }}</span>
           </a>
           {% empty %}

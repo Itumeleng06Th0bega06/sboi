@@ -24,7 +24,16 @@
             <nav class="main-nav" id="mainNav">
                 <ul class="nav-tabs">
                     <li><a href="{% url 'home:home' %}" class="nav-tab{% if request.resolved_match.namespace == 'home' %} active{% endif %}">Home</a></li>
-                    <li><a href="{% url 'about:about' %}" class="nav-tab{% if request.resolved_match.namespace == 'about' %} active{% endif %}">About</a></li>
+                    <li class="nav-item nav-dropdown" id="navAboutDropdown">
+                        <a href="{% url 'about:about' %}" class="nav-tab{% if request.resolved_match.namespace == 'about' %} active{% endif %}" id="navAboutToggle" aria-haspopup="true" aria-expanded="false">About
+                            <svg class="nav-chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41Z"/></svg>
+                        </a>
+                        <ul class="nav-dropdown-menu">
+                            {% for chapter in about_chapters %}
+                            <li><a href="{% url 'about:about' %}#{{ chapter.id }}">{{ chapter.title }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
                     <li><a href="{% url 'blackboard:blackboard' %}" class="nav-tab{% if request.resolved_match.namespace == 'blackboard' %} active{% endif %}">Blackboard</a></li>
                     <li><a href="{% url 'gallery:gallery' %}" class="nav-tab{% if request.resolved_match.namespace == 'gallery' %} active{% endif %}">Gallery</a></li>
                     <li><a href="{% url 'contact:contact' %}" class="nav-tab{% if request.resolved_match.namespace == 'contact' %} active{% endif %}">Contact</a></li>

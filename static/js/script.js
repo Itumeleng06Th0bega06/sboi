@@ -14,7 +14,7 @@
       toggle.classList.toggle('open');
     });
     nav.addEventListener('click', function (e) {
-      if (e.target.closest('a')) closeNav();
+      if (e.target.closest('a') && !e.target.closest('#navAboutDropdown')) closeNav();
     });
   }
 
@@ -209,6 +209,36 @@
     }
     window.open(shareUrl, '_blank', 'noopener,width=600,height=500');
   });
+
+  /* ---------- Nav dropdown (About chapters) ---------- */
+  var navDropdown = document.getElementById('navAboutDropdown');
+  if (navDropdown) {
+    var navToggle = document.getElementById('navAboutToggle');
+    var navMenu = navDropdown.querySelector('.nav-dropdown-menu');
+    function closeNavDropdown() {
+      navDropdown.classList.remove('open');
+      if (navToggle) navToggle.setAttribute('aria-expanded', 'false');
+    }
+    if (navToggle) {
+      navToggle.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var open = navDropdown.classList.toggle('open');
+        navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+    }
+    if (navMenu) {
+      navMenu.addEventListener('click', function (e) {
+        if (e.target.closest('a')) closeNavDropdown();
+      });
+    }
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('#navAboutDropdown')) closeNavDropdown();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeNavDropdown();
+    });
+  }
 
   /* ---------- Back to top ---------- */
   var toTop = document.getElementById('toTop');

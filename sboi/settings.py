@@ -23,8 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-qv&sk8dv*%&4x$u-&4wqt$c(oik5e=smc(4+b&4i^0-^+q!cgt'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+# Local development settings (production uses sboi.settings_prod on Render).
+# DEBUG must be True here so runserver serves the static files.
+DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver', 'shekinahblaze.org', 'www.shekinahblaze.org', '.onrender.com']
 
@@ -74,6 +75,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'home.context_processors.site_info',
                 'home.context_processors.admin_notifications',
+                'about.context_processors.about_chapters',
             ],
         },
     },
@@ -171,7 +173,6 @@ JAZZMIN_SETTINGS = {
     'site_logo_classes': 'img-fluid',
     'welcome_sign': 'Governed by Heaven, Established on Earth',
     'copyright': 'Shekinah Blaze Outreach International',
-    'search_model': ['auth.User', 'blackboard.Devotion', 'blackboard.Sermon', 'blackboard.Event'],
     'topmenu_links': [
         {'name': 'View Website', 'url': '/', 'new_window': False, 'icon': 'fas fa-globe'},
     ],
@@ -181,7 +182,7 @@ JAZZMIN_SETTINGS = {
     'hide_models': [],
     'order_with_respect_to': ['home', 'about', 'blackboard', 'gallery', 'contact', 'auth'],
     'custom_css': 'admin/css/admin-brand.css',
-    'custom_js': None,
+    'custom_js': 'admin/js/search.js',
     'show_ui_builder': False,
     'language_chooser': False,
     'icons': {

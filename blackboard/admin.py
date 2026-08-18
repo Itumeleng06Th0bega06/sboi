@@ -5,7 +5,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from sboi.admin_utils import ImageThumbMixin
+from sboi.admin_utils import ImageThumbMixin, OptionalDateAdminMixin
 
 from .models import (
     Announcement,
@@ -91,7 +91,7 @@ class MemberProfileAdmin(admin.ModelAdmin):
 
 
 @admin.register(Devotion)
-class DevotionAdmin(ImageThumbMixin, admin.ModelAdmin):
+class DevotionAdmin(OptionalDateAdminMixin, ImageThumbMixin, admin.ModelAdmin):
     thumb_field = 'image'
     list_display = ['thumb', 'title', 'date', 'author', 'is_published']
     list_display_links = ['title']
@@ -102,7 +102,7 @@ class DevotionAdmin(ImageThumbMixin, admin.ModelAdmin):
 
 
 @admin.register(Announcement)
-class AnnouncementAdmin(ImageThumbMixin, admin.ModelAdmin):
+class AnnouncementAdmin(OptionalDateAdminMixin, ImageThumbMixin, admin.ModelAdmin):
     thumb_field = 'image'
     list_display = ['thumb', 'title', 'date', 'is_published']
     list_display_links = ['title']
@@ -113,7 +113,7 @@ class AnnouncementAdmin(ImageThumbMixin, admin.ModelAdmin):
 
 
 @admin.register(Event)
-class EventAdmin(ImageThumbMixin, admin.ModelAdmin):
+class EventAdmin(OptionalDateAdminMixin, ImageThumbMixin, admin.ModelAdmin):
     thumb_field = 'poster'
     list_display = ['thumb', 'title', 'date', 'is_published']
     list_display_links = ['title']
@@ -133,7 +133,7 @@ class EventRsvpAdmin(admin.ModelAdmin):
 
 
 @admin.register(Sermon)
-class SermonAdmin(admin.ModelAdmin):
+class SermonAdmin(OptionalDateAdminMixin, admin.ModelAdmin):
     list_display = ['title', 'speaker', 'date', 'series', 'has_video', 'is_published']
     list_filter = ['is_published', 'series']
     search_fields = ['title', 'speaker', 'scripture']

@@ -4,31 +4,31 @@ from sboi.fields import OptimizedImageField
 
 
 class HomeStat(models.Model):
-    value = models.CharField(max_length=50)
-    label = models.CharField(max_length=120)
-    order = models.PositiveIntegerField(default=0)
+    value = models.CharField(max_length=50, blank=True)
+    label = models.CharField(max_length=120, blank=True)
+    order = models.PositiveIntegerField(blank=True, default=0)
 
     class Meta:
         ordering = ['order']
 
     def __str__(self):
-        return f'{self.value} {self.label}'
+        return f'{self.value or ""} {self.label or ""}'.strip() or '(Untitled stat)'
 
 
 class FeaturedSection(models.Model):
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=200, blank=True)
     subtitle = models.CharField(max_length=200, blank=True)
     body = models.TextField(blank=True)
     image = OptimizedImageField(upload_to='home/sections/', blank=True)
     button_text = models.CharField(max_length=60, blank=True)
     button_url = models.CharField(max_length=200, blank=True)
-    order = models.PositiveIntegerField(default=0)
+    order = models.PositiveIntegerField(blank=True, default=0)
 
     class Meta:
         ordering = ['order']
 
     def __str__(self):
-        return self.title
+        return self.title or '(Untitled section)'
 
 
 class Testimony(models.Model):

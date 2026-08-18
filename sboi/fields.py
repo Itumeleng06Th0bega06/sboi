@@ -21,5 +21,4 @@ class OptimizedImageField(ImageField):
                     data, name = result
                     file.file = io.BytesIO(data)
                     file.name = name
-                    file.size = len(data)
         return super().pre_save(model_instance, add)

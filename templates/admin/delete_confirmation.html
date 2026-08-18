@@ -1,0 +1,58 @@
+{% load i18n admin_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% translate 'Confirm deletion' %}</title>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: rgba(10, 12, 25, 0.55); font-family: Inter, system-ui, sans-serif; }
+.sboi-popup { width: min(440px, 92vw); background: #fff; border-radius: 14px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4); padding: 1.6rem 1.8rem; text-align: center; }
+.sboi-icon { width: 46px; height: 46px; border-radius: 50%; background: #fdecec; color: #a03030; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.9rem; font-size: 1.4rem; font-weight: 700; }
+.sboi-popup h1 { font-size: 1.15rem; color: #16264b; margin: 0 0 0.4rem; }
+.sboi-popup p.msg { color: #444; font-size: 0.92rem; line-height: 1.55; margin: 0 0 0.8rem; }
+ul.deleted { text-align: left; background: #f7f8fb; border-radius: 10px; padding: 0.6rem 1.4rem; max-height: 150px; overflow: auto; font-size: 0.85rem; color: #333; margin: 0 0 1.1rem; }
+ul.deleted li { margin: 0.15rem 0; }
+.actions { display: flex; gap: 0.6rem; justify-content: center; }
+.btn { padding: 0.55rem 1.2rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-decoration: none; cursor: pointer; border: none; }
+.btn-danger { background: #a03030; color: #fff; }
+.btn-danger:hover { background: #8a2828; }
+.btn-cancel { background: #eef0f5; color: #16264b; }
+.btn-cancel:hover { background: #e2e5ee; }
+</style>
+</head>
+<body>
+<div class="sboi-popup" role="alertdialog" aria-modal="true" aria-labelledby="popup-title">
+    <div class="sboi-icon">!</div>
+    <h1 id="popup-title">
+        {% if perms_lacking or protected %}{% translate 'Cannot delete' %}{% else %}{% blocktranslate %}Delete {{ object_name }}{% endblocktranslate %}{% endif %}
+    </h1>
+    {% if perms_lacking %}
+        <p class="msg">{% blocktranslate %}Deleting the {{ object_name }} would result in deleting related objects, but your account doesn't have permission to delete the following types of objects:{% endblocktranslate %}</p>
+        <ul class="deleted">{{ perms_lacking|truncated_unordered_list:delete_confirmation_max_display }}</ul>
+        <div class="actions"><a role="button" href="javascript:history.back()" class="btn btn-cancel">{% translate 'No, take me back' %}</a></div>
+    {% elif protected %}
+        <p class="msg">{% blocktranslate %}Deleting the {{ object_name }} would require deleting the following protected related objects:{% endblocktranslate %}</p>
+        <ul class="deleted">{{ protected|truncated_unordered_list:delete_confirmation_max_display }}</ul>
+        <div class="actions"><a role="button" href="javascript:history.back()" class="btn btn-cancel">{% translate 'No, take me back' %}</a></div>
+    {% else %}
+        <p class="msg">{% blocktranslate %}Are you sure you want to delete the {{ object_name }}? All of the following related items will be deleted:{% endblocktranslate %}</p>
+        {% if delete_confirmation_max_display is None or delete_confirmation_max_display > 0 %}
+        <ul class="deleted">{{ deleted_objects|truncated_unordered_list:delete_confirmation_max_display }}</ul>
+        {% endif %}
+        <form method="post">{% csrf_token %}
+            <div>
+                <input type="hidden" name="post" value="yes">
+                {% if is_popup %}<input type="hidden" name="{{ is_popup_var }}" value="1">{% endif %}
+                {% if to_field %}<input type="hidden" name="{{ to_field_var }}" value="{{ to_field }}">{% endif %}
+                <div class="actions">
+                    <a role="button" href="javascript:history.back()" class="btn btn-cancel">{% translate 'No, take me back' %}</a>
+                    <input type="submit" value="{% translate 'Yes, delete it' %}" class="btn btn-danger">
+                </div>
+            </div>
+        </form>
+    {% endif %}
+</div>
+</body>
+</html>

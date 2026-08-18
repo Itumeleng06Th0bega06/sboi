@@ -33,6 +33,32 @@
     </div>
 </div>
 
+{% if announcements %}
+<section class="section">
+    <div class="container">
+        <h2 class="section-title center">Announcements</h2>
+        <p class="section-sub center">What's happening at Shekinah Blaze</p>
+        <div class="list-stack">
+            {% for a in announcements %}
+            <article class="list-item reveal">
+                <div class="list-date"><span class="date-day">{{ a.date|date:'d' }}</span><span class="date-month">{{ a.date|date:'M Y' }}</span></div>
+                <div class="list-body">
+                    {% if a.title %}<h3 class="list-title">{{ a.title }}</h3>{% endif %}
+                    {% if a.body %}<p class="list-text">{{ a.body|linebreaksbr }}</p>{% endif %}
+                </div>
+                {% if a.image %}
+                <div class="list-media{% if not a.title and not a.body %} list-media-featured{% endif %}">
+                    <img src="{% opt_img a.image width=640 %}" alt="{{ a.title }}" class="fit-img" data-lightbox loading="lazy">
+                </div>
+                {% endif %}
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+<div class="announce-strip" aria-hidden="true"></div>
+{% endif %}
+
 {% for sec in sections_top %}
 <section class="section">
     <div class="container">
@@ -101,7 +127,7 @@
     <div class="container">
         <h2 class="section-title center">Daily Devotions</h2>
         <p class="section-sub center">A daily word from the Shekinah Blaze family</p>
-        <div class="card-grid">
+        <div class="card-grid card-grid-centered">
             {% for dev in devotions %}
             <article class="card reveal">
                 <div class="card-media">
@@ -128,7 +154,7 @@
     <div class="container">
         <h2 class="section-title center">Upcoming Events</h2>
         <p class="section-sub center">Gather with us at Shekinah Blaze</p>
-        <div class="card-grid">
+        <div class="card-grid card-grid-centered">
             {% for event in events %}
             <article class="card reveal">
                 <div class="card-media">

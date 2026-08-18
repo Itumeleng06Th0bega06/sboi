@@ -27,11 +27,11 @@
                 <article class="list-item reveal">
                     <div class="list-date"><span class="date-day">{{ a.date|date:'d' }}</span><span class="date-month">{{ a.date|date:'M Y' }}</span></div>
                     <div class="list-body">
-                        <h3 class="list-title">{{ a.title }}</h3>
+                        {% if a.title %}<h3 class="list-title">{{ a.title }}</h3>{% endif %}
                         {% if a.body %}<p class="list-text">{{ a.body|linebreaksbr }}</p>{% endif %}
                     </div>
                     {% if a.image %}
-                    <div class="list-media">
+                    <div class="list-media{% if not a.title and not a.body %} list-media-featured{% endif %}">
                         <img src="{% opt_img a.image width=640 %}" alt="{{ a.title }}" class="fit-img" data-lightbox loading="lazy">
                     </div>
                     {% endif %}
@@ -107,12 +107,9 @@
                 {% for m in materials %}
                 <article class="card reveal">
                     <div class="card-body">
-                        <h3 class="card-title">{{ m.title }}</h3>
+                        <h3 class="card-title"><a class="card-title-link" href="{{ m.file.url }}" target="_blank" rel="noopener">{{ m.title }}</a></h3>
                         {% if m.description %}<p class="card-text">{{ m.description }}</p>{% endif %}
-                        <div class="btn-row">
-                            <a class="btn btn-gold btn-sm" href="{{ m.file.url }}" target="_blank" rel="noopener">{% include 'partials/_icon.html' with icon='pdf' %}<span>View</span></a>
-                            <a class="btn btn-outline-gold btn-sm" href="{{ m.file.url }}" download>{% include 'partials/_icon.html' with icon='pdf' %}<span>Download</span></a>
-                        </div>
+                        <a class="btn btn-outline-gold btn-sm btn-download" href="{{ m.file.url }}" download>{% include 'partials/_icon.html' with icon='pdf' %}<span>Download</span></a>
                     </div>
                 </article>
                 {% endfor %}

@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
-from blackboard.models import Devotion, Event, Sermon
+from blackboard.models import Announcement, Devotion, Event, Sermon
 from gallery.models import SliderImage
 
 from .forms import SubscriberForm, TestimonyForm
@@ -19,6 +19,7 @@ def home(request):
         'devotions': Devotion.objects.filter(is_published=True)[:6],
         'sermons': Sermon.objects.filter(is_published=True).exclude(video_url='').order_by('-date', '-id')[:2],
         'events': Event.objects.filter(is_published=True)[:3],
+        'announcements': Announcement.objects.filter(is_published=True)[:5],
         'testimonies': Testimony.objects.filter(is_approved=True)[:6],
         'subscribe_form': SubscriberForm(),
         'testimony_form': TestimonyForm(),

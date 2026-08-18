@@ -11,6 +11,7 @@ handler404 = views.handler404
 handler500 = views.handler500
 
 urlpatterns = [
+    path(settings.ADMIN_URL + 'search/', admin.site.admin_view(views.admin_search), name='admin_search'),
     path(settings.ADMIN_URL, admin.site.urls),
     path('', include('home.urls')),
     path('about/', include('about.urls')),

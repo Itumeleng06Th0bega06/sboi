@@ -79,8 +79,7 @@ def admin_notifications(request):
     def image_item(img, admin_name):
         return {
             'title': img.title,
-            'image': img.image.name,
-            'image_url': img.image.url,
+            'image': img.image,
             'url': change_url(admin_name, img.pk),
         }
 

@@ -59,80 +59,80 @@ class ChurchProfile(models.Model):
 
 
 class VisionPillar(models.Model):
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=200, blank=True)
     subtitle = models.CharField(max_length=200, blank=True)
     body = models.TextField(blank=True)
-    order = models.PositiveIntegerField(default=0)
+    order = models.PositiveIntegerField(blank=True, default=0)
 
     class Meta:
         ordering = ['order']
 
     def __str__(self):
-        return self.title
+        return self.title or '(Untitled pillar)'
 
 
 class MissionComponent(models.Model):
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=200, blank=True)
     subtitle = models.CharField(max_length=200, blank=True)
     body = models.TextField(blank=True)
-    order = models.PositiveIntegerField(default=0)
+    order = models.PositiveIntegerField(blank=True, default=0)
 
     class Meta:
         ordering = ['order']
 
     def __str__(self):
-        return self.title
+        return self.title or '(Untitled component)'
 
 
 class PathwayStep(models.Model):
-    step = models.PositiveIntegerField(default=1)
-    title = models.CharField(max_length=120)
+    step = models.PositiveIntegerField(blank=True, default=1)
+    title = models.CharField(max_length=120, blank=True)
     description = models.TextField(blank=True)
-    order = models.PositiveIntegerField(default=0)
+    order = models.PositiveIntegerField(blank=True, default=0)
 
     class Meta:
         ordering = ['order']
 
     def __str__(self):
-        return f'{self.step}. {self.title}'
+        return f'{self.step}. {self.title or "Untitled"}'
 
 
 class MissionAction(models.Model):
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=200, blank=True)
     description = models.TextField(blank=True)
-    order = models.PositiveIntegerField(default=0)
+    order = models.PositiveIntegerField(blank=True, default=0)
 
     class Meta:
         ordering = ['order']
 
     def __str__(self):
-        return self.title
+        return self.title or '(Untitled action)'
 
 
 class CoreValue(models.Model):
-    title = models.CharField(max_length=120)
+    title = models.CharField(max_length=120, blank=True)
     scripture = models.CharField(max_length=300, blank=True)
     what_we_believe = models.TextField(blank=True)
     what_this_means = models.TextField(blank=True)
     our_commitment = models.TextField(blank=True)
-    order = models.PositiveIntegerField(default=0)
+    order = models.PositiveIntegerField(blank=True, default=0)
 
     class Meta:
         ordering = ['order']
 
     def __str__(self):
-        return self.title
+        return self.title or '(Untitled value)'
 
 
 class Leader(models.Model):
-    name = models.CharField(max_length=200)
-    role = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, blank=True)
+    role = models.CharField(max_length=200, blank=True)
     photo = OptimizedImageField(upload_to='about/', blank=True)
     bio = models.TextField(blank=True)
-    order = models.PositiveIntegerField(default=0)
+    order = models.PositiveIntegerField(blank=True, default=0)
 
     class Meta:
         ordering = ['order']
 
     def __str__(self):
-        return self.name
+        return self.name or '(Untitled leader)'

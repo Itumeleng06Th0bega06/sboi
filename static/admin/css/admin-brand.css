@@ -44,6 +44,14 @@ body.bg-body-tertiary {
   color: var(--sboi-ink);
 }
 
+/* Sidebar toggle icon: always white, whatever its state */
+.app-header.navbar a[data-lte-toggle="sidebar"] i,
+.app-header.navbar a[data-lte-toggle="sidebar"]:hover i,
+.app-header.navbar a[data-lte-toggle="sidebar"]:focus i,
+.app-header.navbar a[data-lte-toggle="sidebar"]:active i {
+  color: #fff !important;
+}
+
 .app-header .form-control-navbar {
   background-color: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.25);
@@ -110,6 +118,16 @@ body.bg-body-tertiary {
   font-weight: 700;
   font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
   letter-spacing: 0.03em;
+  font-size: 1rem;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-brand .brand-image {
+  height: 34px;
+  width: auto;
 }
 
 .sidebar-wrapper .sidebar-menu .nav-item > .nav-link {
@@ -673,6 +691,34 @@ ul.sboi-list a:hover { color: var(--sboi-gold-2); text-decoration: underline; }
   background: var(--sboi-gold); color: var(--sboi-navy); border-radius: 999px;
   font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
 }
+
+/* ---------- Global admin search page ---------- */
+.sboi-global-search { max-width: 860px; }
+.sboi-search-form { display: flex; gap: 0.6rem; margin-bottom: 1.4rem; }
+.sboi-search-form .form-control { flex: 1; border-radius: 8px; border-color: rgba(57, 2, 84, 0.25); }
+.sboi-search-form .form-control:focus { border-color: var(--sboi-gold); box-shadow: 0 0 0 0.2rem rgba(255, 164, 0, 0.25); }
+.sboi-search-form .btn { border-radius: 8px; white-space: nowrap; }
+.sboi-search-summary { color: var(--sboi-muted); margin-bottom: 1.2rem; }
+.sboi-search-none { color: var(--sboi-muted); padding: 1.5rem 0; }
+.sboi-search-groups { display: grid; gap: 1.2rem; }
+.sboi-search-group {
+  background: #fff; border: 1px solid rgba(57, 2, 84, 0.1); border-radius: 12px;
+  padding: 1rem 1.2rem; box-shadow: 0 2px 10px rgba(57, 2, 84, 0.03);
+}
+.sboi-search-group h2 {
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-size: 1rem; margin: 0 0 0.6rem; color: var(--sboi-navy);
+  border-bottom: 2px solid rgba(255, 164, 0, 0.35); padding-bottom: 0.4rem;
+}
+.sboi-search-count {
+  display: inline-block; margin-left: 0.35rem; padding: 0.05rem 0.5rem;
+  background: var(--sboi-gold); color: var(--sboi-navy); border-radius: 999px;
+  font-size: 0.72rem; font-weight: 700; font-family: 'Inter', sans-serif;
+  vertical-align: middle;
+}
+.sboi-search-group ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+.sboi-search-group a { color: var(--sboi-navy); font-weight: 500; text-decoration: none; }
+.sboi-search-group a:hover { color: var(--sboi-gold-2); text-decoration: underline; }
 
 /* ---------- Image thumbnails in changelists ---------- */
 img.admin-thumb {

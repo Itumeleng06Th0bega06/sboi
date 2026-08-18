@@ -6,8 +6,8 @@ from sboi.fields import OptimizedImageField
 
 
 class Devotion(models.Model):
-    title = models.CharField(max_length=200)
-    date = models.DateField()
+    title = models.CharField(max_length=200, blank=True)
+    date = models.DateField(default=timezone.localdate)
     scripture = models.CharField(max_length=300, blank=True)
     author = models.CharField(max_length=120, blank=True)
     image = OptimizedImageField(upload_to='devotions/', blank=True)
@@ -18,12 +18,12 @@ class Devotion(models.Model):
         ordering = ['-date']
 
     def __str__(self):
-        return self.title
+        return self.title or f'Devotion ({self.date})'
 
 
 class Announcement(models.Model):
-    title = models.CharField(max_length=200)
-    date = models.DateField()
+    title = models.CharField(max_length=200, blank=True)
+    date = models.DateField(default=timezone.localdate)
     body = models.TextField(blank=True)
     image = OptimizedImageField(upload_to='announcements/', blank=True)
     is_published = models.BooleanField(default=True)
@@ -32,12 +32,12 @@ class Announcement(models.Model):
         ordering = ['-date']
 
     def __str__(self):
-        return self.title
+        return self.title or f'Announcement ({self.date})'
 
 
 class Event(models.Model):
-    title = models.CharField(max_length=200)
-    date = models.DateField(default=timezone.now)
+    title = models.CharField(max_length=200, blank=True)
+    date = models.DateField(default=timezone.localdate)
     description = models.TextField(blank=True)
     poster = OptimizedImageField(upload_to='events/', blank=True)
     link = models.URLField(blank=True)
@@ -47,7 +47,7 @@ class Event(models.Model):
         ordering = ['-date', '-id']
 
     def __str__(self):
-        return self.title
+        return self.title or f'Event ({self.date})'
 
     @property
     def is_upcoming(self):
@@ -70,7 +70,7 @@ class EventRsvp(models.Model):
 
 
 class Sermon(models.Model):
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=200, blank=True)
     speaker = models.CharField(max_length=120, blank=True)
     date = models.DateField(blank=True, null=True)
     scripture = models.CharField(max_length=300, blank=True)
@@ -82,9 +82,6 @@ class Sermon(models.Model):
 
     class Meta:
         ordering = ['-date', '-id']
-
-    def __str__(self):
-        return self.title
 
     @property
     def video_id(self):
@@ -113,19 +110,22 @@ class Sermon(models.Model):
             return ''
         return f'https://img.youtube.com/vi/{vid}/hqdefault.jpg'
 
+    def __str__(self):
+        return self.title or f'Sermon ({self.date or "no date"})'
+
 
 class PdfMaterial(models.Model):
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=200, blank=True)
     description = models.TextField(blank=True)
-    file = models.FileField(upload_to='materials/')
+    file = models.FileField(upload_to='materials/', blank=True)
     is_published = models.BooleanField(default=True)
-    order = models.PositiveIntegerField(default=0)
+    order = models.PositiveIntegerField(blank=True, default=0)
 
     class Meta:
         ordering = ['order']
 
     def __str__(self):
-        return self.title
+        return self.title or f'PDF Material #{self.pk}'
 
 
 class MemberProfile(models.Model):

@@ -6,9 +6,8 @@
 
 {% block content %}
 
-
 {% if leaders %}
-<section class="section section-navy">
+<section class="section section-navy" id="ch-leadership">
     <div class="container">
         <div class="chapter-head reveal">
             <span class="chapter-badge">{% include 'partials/_icon.html' with icon='crown' %}</span>
@@ -36,7 +35,7 @@
 {% endif %}
 
 {% if profile.founder_message %}
-<section class="section">
+<section class="section" id="ch-founder">
     <div class="container">
         <div class="chapter-head reveal">
             <span class="chapter-badge">01</span>
@@ -62,7 +61,7 @@
 {% endif %}
 
 {% if profile.story %}
-<section class="section section-tint">
+<section class="section section-tint" id="ch-story">
     <div class="container">
         <div class="chapter-head reveal">
             <span class="chapter-badge">02</span>
@@ -92,7 +91,7 @@
 {% endif %}
 
 {% if profile.vision %}
-<section class="section">
+<section class="section" id="ch-vision">
     <div class="container">
         <div class="chapter-head reveal">
             <span class="chapter-badge">03</span>
@@ -172,7 +171,7 @@
 {% endif %}
 
 {% if profile.mission %}
-<section class="section section-tint">
+<section class="section section-tint" id="ch-mission">
     <div class="container">
         <div class="chapter-head reveal">
             <span class="chapter-badge">04</span>
@@ -282,7 +281,7 @@
 {% endif %}
 
 {% if values %}
-<section class="section">
+<section class="section" id="ch-values">
     <div class="container">
         <div class="chapter-head reveal">
             <span class="chapter-badge">05</span>
