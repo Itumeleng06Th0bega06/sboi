@@ -1,0 +1,148 @@
+.sboi-delete-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+.sboi-delete-overlay.open { display: flex; }
+.sboi-delete-backdrop {
+    position: absolute;
+    inset: 0;
+    background: transparent;
+}
+.sboi-delete-modal {
+    position: relative;
+    width: min(460px, 92vw);
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    font-family: Inter, system-ui, sans-serif;
+}
+.sboi-delete-head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 1.1rem 1.4rem 0;
+}
+.sboi-delete-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #fdecec;
+    color: #a03030;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.sboi-delete-head h2 {
+    font-size: 1.1rem;
+    color: #16264b;
+    margin: 0;
+    flex: 1;
+}
+.sboi-delete-x {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    color: #666;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0.2rem;
+}
+.sboi-delete-x:hover { color: #000; }
+.sboi-delete-body { padding: 0.4rem 1.4rem 1.4rem; overflow: auto; }
+
+.sboi-delete-body .sboi-popup {
+    width: auto;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0.6rem 0 0;
+}
+.sboi-delete-body .sboi-popup h1 {
+    font-size: 1.05rem;
+    color: #16264b;
+    margin: 0 0 0.4rem;
+    text-align: center;
+}
+.sboi-delete-body p.msg {
+    color: #444;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    margin: 0 0 0.8rem;
+    text-align: center;
+}
+.sboi-delete-body ul.deleted {
+    text-align: left;
+    background: #f7f8fb;
+    border-radius: 10px;
+    padding: 0.6rem 1.4rem;
+    max-height: 150px;
+    overflow: auto;
+    font-size: 0.85rem;
+    color: #333;
+    margin: 0 0 1.1rem;
+}
+.sboi-delete-body ul.deleted li { margin: 0.15rem 0; }
+.sboi-delete-body .actions {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+}
+.sboi-delete-body .btn {
+    padding: 0.55rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+}
+.sboi-delete-body .btn-danger { background: #a03030; color: #fff; }
+.sboi-delete-body .btn-danger:hover { background: #8a2828; }
+.sboi-delete-body .btn-danger:disabled { opacity: 0.6; cursor: default; }
+.sboi-delete-body .btn-cancel { background: #eef0f5; color: #16264b; }
+.sboi-delete-body .btn-cancel:hover { background: #e2e5ee; }
+.sboi-delete-body .sboi-delete-error {
+    color: #a03030;
+    font-size: 0.88rem;
+    margin: 0.6rem 0 0;
+    text-align: center;
+}
+.sboi-delete-loading,
+.sboi-delete-msg {
+    color: #555;
+    text-align: center;
+    padding: 1rem 0;
+    margin: 0;
+}
+.sboi-row-actions {
+    white-space: nowrap;
+    text-align: right;
+}
+.sboi-row-actions a {
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-size: 0.8rem;
+    text-decoration: none;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    border: 1px solid #d7dbe6;
+    color: #16264b;
+    background: #fff;
+}
+.sboi-row-actions a:hover { background: #f2f4fa; }
+.sboi-row-actions a.sboi-row-delete {
+    color: #a03030;
+    border-color: #ecc9c9;
+}
+.sboi-row-actions a.sboi-row-delete:hover { background: #fdecec; }

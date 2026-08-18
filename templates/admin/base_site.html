@@ -1,0 +1,10 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+{% block extrahead %}
+    {{ block.super }}
+    <script src="{% static 'admin/js/delete-modal.js' %}?v=3" defer></script>
+{% endblock %}
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'admin/css/delete-modal.css' %}?v=3">
+{% endblock %}
