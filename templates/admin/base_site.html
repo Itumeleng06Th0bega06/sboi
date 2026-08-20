@@ -2,9 +2,10 @@
 {% load static %}
 {% block extrahead %}
     {{ block.super }}
-    <script src="{% static 'admin/js/delete-modal.js' %}?v=3" defer></script>
+    <script src="{% static 'admin/js/delete-modal.js' %}?v=5" defer></script>
+    <script src="{% static 'admin/js/sidebar-nav.js' %}?v=1" defer></script>
 {% endblock %}
 {% block extrastyle %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'admin/css/delete-modal.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'admin/css/delete-modal.css' %}?v=4">
 {% endblock %}

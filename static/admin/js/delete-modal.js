@@ -2,6 +2,7 @@
     'use strict';
 
     var overlay = null;
+    var pendingDelete = { pks: [], across: false };
 
     function ensureOverlay() {
         if (overlay) {
@@ -58,6 +59,78 @@
         body.appendChild(msg);
     }
 
+    function showToast(message) {
+        var toast = document.createElement('div');
+        toast.className = 'sboi-delete-toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(function () {
+            toast.classList.add('hide');
+        }, 1800);
+        setTimeout(function () {
+            toast.remove();
+        }, 2300);
+    }
+
+    function pksFromUrl(url) {
+        var path = url.replace(/\?.*$/, '');
+        var m = path.match(/\/(\d+)\/delete\/$/);
+        return m ? [m[1]] : [];
+    }
+
+    function removeRows(pks) {
+        var table = document.getElementById('result_list');
+        if (!table) {
+            return 0;
+        }
+        var removed = 0;
+        table.querySelectorAll('tbody tr').forEach(function (tr) {
+            var cb = tr.querySelector('input.action-select');
+            if (cb && pks.indexOf(cb.value) !== -1) {
+                tr.remove();
+                removed += 1;
+            }
+        });
+        return removed;
+    }
+
+    function syncCounter(removed) {
+        var remaining = document.querySelectorAll('#result_list input.action-select:checked').length;
+        document.querySelectorAll('span.action-counter').forEach(function (counter) {
+            var total = parseInt(counter.dataset.actionsIcnt || '0', 10);
+            total = Math.max(0, total - removed);
+            counter.dataset.actionsIcnt = String(total);
+            counter.textContent = remaining + ' of ' + total + ' selected';
+            counter.classList.remove('hidden');
+        });
+        var toggle = document.getElementById('action-toggle');
+        if (toggle) {
+            toggle.checked = false;
+        }
+        document.querySelectorAll('input.select-across').forEach(function (el) {
+            el.value = '0';
+        });
+        document.querySelectorAll('div.actions span.question, div.actions span.clear, div.actions span.all').forEach(function (el) {
+            el.classList.add('hidden');
+            el.style.display = '';
+        });
+    }
+
+    function handleSuccess(submitUrl) {
+        if (pendingDelete.across || !document.getElementById('result_list')) {
+            window.location.href = landingUrl(submitUrl);
+            return;
+        }
+        var removed = removeRows(pendingDelete.pks);
+        if (!removed || !document.querySelector('#result_list tbody tr')) {
+            window.location.reload();
+            return;
+        }
+        syncCounter(removed);
+        close();
+        showToast('Deleted successfully.');
+    }
+
     function wire(root, submitUrl) {
         root.querySelectorAll('.btn-cancel').forEach(function (link) {
             link.addEventListener('click', function (e) {
@@ -88,7 +161,7 @@
                 redirect: 'manual'
             }).then(function (resp) {
                 if (resp.type === 'opaqueredirect') {
-                    window.location.href = landingUrl(submitUrl);
+                    handleSuccess(submitUrl);
                     return null;
                 }
                 if (resp.ok) {
@@ -152,6 +225,8 @@
         var link = e.target.closest ? e.target.closest('a.deletelink, a[href*="/delete/"]') : null;
         if (link) {
             e.preventDefault();
+            pendingDelete.pks = pksFromUrl(link.href);
+            pendingDelete.across = false;
             var ov = ensureOverlay();
             loadInto(ov, fetch(link.href, {
                 credentials: 'same-origin',
@@ -160,6 +235,7 @@
         }
     });
 
+    function wireChangelistPage() {
     var form = document.getElementById('changelist-form');
     if (form) {
         form.addEventListener('submit', function (e) {
@@ -172,6 +248,11 @@
                 return;
             }
             e.preventDefault();
+            pendingDelete.pks = Array.prototype.map.call(picked, function (el) {
+                return el.value;
+            });
+            var across = form.querySelector('input.select-across');
+            pendingDelete.across = !!(across && across.value === '1');
             var url = (form.getAttribute('action') || window.location.pathname).split('?')[0];
             var ov = ensureOverlay();
             loadInto(ov, fetch(url, {
@@ -222,4 +303,8 @@
             });
         }
     }
+}
+
+wireChangelistPage();
+document.addEventListener('sboi:admin-loaded', wireChangelistPage);
 })();

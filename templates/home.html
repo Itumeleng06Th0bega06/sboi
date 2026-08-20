@@ -255,7 +255,7 @@
     <div class="container narrow">
         <h2 class="section-title center light">Share Your Testimony</h2>
         <p class="section-sub center light">We would love to hear what God is doing in your life.</p>
-        <form method="post" action="{% url 'home:testimony' %}" class="form-stack">
+        <form method="post" action="{% url 'home:testimony' %}" class="form-stack" data-ajax-form>
             {% csrf_token %}
             {{ testimony_form.as_p }}
             <button type="submit" class="btn btn-gold btn-block">Submit Testimony</button>

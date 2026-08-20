@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
@@ -7,6 +8,8 @@ from gallery.models import SliderImage
 
 from .forms import SubscriberForm, TestimonyForm
 from .models import FeaturedSection, HomeStat, Subscriber, Testimony
+
+AJAX = lambda request: request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
 
 def home(request):
@@ -34,9 +37,15 @@ def subscribe(request):
         if form.is_valid():
             email = form.cleaned_data['email']
             Subscriber.objects.get_or_create(email=email, defaults={'is_active': True})
-            messages.success(request, 'Thank you for subscribing to our newsletter.')
+            message = 'Thank you for subscribing to our newsletter.'
+            if AJAX(request):
+                return JsonResponse({'ok': True, 'message': message})
+            messages.success(request, message)
         else:
-            messages.error(request, 'Please enter a valid email address.')
+            message = 'Please enter a valid email address.'
+            if AJAX(request):
+                return JsonResponse({'ok': False, 'message': message}, status=400)
+            messages.error(request, message)
     return redirect('home:home')
 
 
@@ -45,7 +54,13 @@ def submit_testimony(request):
         form = TestimonyForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Thank you for sharing your testimony. It will appear after review.')
+            message = 'Thank you for sharing your testimony. It will appear after review.'
+            if AJAX(request):
+                return JsonResponse({'ok': True, 'message': message})
+            messages.success(request, message)
         else:
-            messages.error(request, 'Please provide your name and a message.')
+            message = 'Please provide your name and a message.'
+            if AJAX(request):
+                return JsonResponse({'ok': False, 'message': message}, status=400)
+            messages.error(request, message)
     return redirect('home:home')

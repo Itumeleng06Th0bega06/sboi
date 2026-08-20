@@ -15,7 +15,7 @@
         <div class="contact-grid">
             <div class="form-card">
                 <h2 class="section-title">Send a Message</h2>
-                <form method="post" action="{% url 'contact:contact' %}" class="form-stack" novalidate>
+                <form method="post" action="{% url 'contact:contact' %}" class="form-stack" novalidate data-ajax-form>
                     {% csrf_token %}
                     {% for field in form %}
                     <div class="form-field">
