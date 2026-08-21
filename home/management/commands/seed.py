@@ -209,7 +209,8 @@ class Command(BaseCommand):
                 defaults={'title': title, 'caption': caption, 'placement': 'home', 'is_active': True, 'order': i + 1},
             )
         new_gallery = []
-        img_filter = (p for p in (STATIC / 'gallery').iterdir() if p.suffix.lower() in ('.jpg', '.jpeg', '.png'))
+        gallery_dir = STATIC / 'gallery'
+        img_filter = (p for p in gallery_dir.iterdir() if p.suffix.lower() in ('.jpg', '.jpeg', '.png')) if gallery_dir.exists() else ()
         for i, name in enumerate(sorted(img_filter)):
             rel = img('gallery', name.name)
             if not rel:
@@ -225,6 +226,9 @@ class Command(BaseCommand):
 
     def seed_devotions(self):
         folder = STATIC / 'devotions'
+        if not folder.exists():
+            self.stdout.write('  No static devotions folder — skipping (devotions are admin-managed).')
+            return
         files = sorted(p.name for p in folder.iterdir() if p.suffix.lower() in ('.jpg', '.jpeg', '.png'))
         known = {
             'IMG-20260729-WA0000.jpg': date(2026, 7, 29),
