@@ -3,6 +3,7 @@
 
     var MAIN_SELECTOR = 'main.app-main';
     var NAVBAR_SEARCH = 'form.d-flex.ms-2';
+    var ADMIN_PREFIX = '/' + (window.location.pathname.split('/')[1] || 'admin');
 
     function sameOrigin(url) {
         try {
@@ -34,7 +35,7 @@
             return false;
         }
         var path = abs.replace(window.location.origin, '');
-        if (path.indexOf('/admin/') !== 0) {
+        if (path.indexOf(ADMIN_PREFIX + '/') !== 0) {
             return false;
         }
         if (/\/delete\//.test(path)) {
@@ -304,7 +305,7 @@
             return;
         }
         var path = abs.replace(window.location.origin, '');
-        if (path.indexOf('/admin/') !== 0) {
+        if (path.indexOf(ADMIN_PREFIX + '/') !== 0) {
             return;
         }
         var method = (form.method || 'get').toLowerCase();
@@ -365,7 +366,7 @@
         if (!form) {
             return;
         }
-        form.setAttribute('action', window.location.origin + '/admin/search/');
+        form.setAttribute('action', window.location.origin + ADMIN_PREFIX + '/search/');
         var input = form.querySelector('input[name="q"]');
         if (input) {
             input.setAttribute('placeholder', 'Search');
@@ -404,7 +405,7 @@
 
     window.addEventListener('popstate', function (e) {
         var url = e.state && e.state.sboiAdminNav;
-        if (url && sameOrigin(url) && url.indexOf('/admin/') !== -1) {
+        if (url && sameOrigin(url) && url.indexOf(ADMIN_PREFIX + '/') === 0) {
             load(url, true);
         }
     });
@@ -414,7 +415,7 @@
     };
 
     if (document.body && !document.body.classList.contains('popup') &&
-            window.location.pathname.indexOf('/admin/') === 0) {
+            window.location.pathname.indexOf(ADMIN_PREFIX + '/') === 0) {
         jazzifyChangelist();
     }
     setupNavbarSearch();
