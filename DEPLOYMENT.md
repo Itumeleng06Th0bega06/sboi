@@ -97,6 +97,27 @@ python manage.py loaddata --settings=sboi.settings_prod data.json
 - **Logs:** Web Service → **Logs** tab.
 - **Bugs:** `python manage.py shell` in the Shell tab to inspect data.
 
+## 9. Seeding (one-time only — read this)
+
+`python manage.py seed` fills a **fresh/empty** database with the manual's
+content and images. By default it is additive-only: it creates missing rows
+and never touches or deletes anything you edited in the admin.
+
+> **NEVER put `seed` in the Render Build Command or Start Command.**
+> Boot-time seeding was the cause of admin edits "reverting" (contact info
+> changing back, deleted announcements reappearing). If it is currently in
+> your Start Command on Render, remove it — the Start Command must be only:
+>
+> ```
+> gunicorn sboi.wsgi:application --workers 2 --timeout 120 --graceful-timeout 60
+> ```
+
+There is also a destructive reset variant for scratch databases only:
+
+```
+python manage.py seed --refresh   # overwrites + prunes non-seed rows
+```
+
 ## Security notes
 
 - `SECRET_KEY`, `DATABASE_URL` and `ADMIN_URL` are **never** committed to git

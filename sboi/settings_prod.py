@@ -74,9 +74,11 @@ X_FRAME_OPTIONS = 'DENY'
 # ---------------------------------------------------------------------------
 #
 # Media note: image files are uploaded to Cloudinary (durable CDN storage),
-# so they survive deploys and restarts. Seed the images once with:
-#   python manage.py seed
-# (already part of the Render start command).
+# so they survive deploys and restarts. Seed a FRESH database once with:
+#   python manage.py seed --settings=sboi.settings_prod
+# NEVER run seed automatically on boot (start command / build command) —
+# it must not overwrite or prune admin-managed content. The default mode
+# only fills in missing rows, but boot-time seeding is still wrong.
 
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
@@ -97,8 +99,12 @@ STORAGES = {
     'default': {
         'BACKEND': 'sboi.cloudinary_storage.CloudinaryMediaStorage',
     },
+    # Manifest storage gives every static file a content-hashed URL
+    # (e.g. admin-brand.a1b2c3.css). Browsers may cache those URLs forever,
+    # which is safe: each deploy produces new URLs, so style/data changes go
+    # live immediately instead of showing year-old cached assets.
     'staticfiles': {
-        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
     },
 }
 
