@@ -20,6 +20,22 @@ body {
   color: var(--sboi-ink);
 }
 
+/* Pin Bootstrap "primary" to the brand green so nothing leaks flatly blue */
+:root,
+[data-bs-theme='light'],
+[data-bs-theme='dark'] {
+  --bs-primary: #002f2b;
+  --bs-primary-rgb: 0, 47, 43;
+  --bs-primary-text-emphasis: #00513d;
+  --bs-primary-bg-subtle: rgba(0, 47, 43, 0.08);
+  --bs-primary-border-subtle: rgba(0, 47, 43, 0.25);
+  --bs-link-color: #b07f3a;
+  --bs-link-color-rgb: 176, 127, 58;
+  --bs-link-hover-color: #002f2b;
+  --bs-link-hover-color-rgb: 0, 47, 43;
+}
+
+body.bg-body-secondary,
 body.bg-body-tertiary {
   background-color: var(--sboi-cream);
 }
@@ -473,15 +489,20 @@ a.dropdown-item {
 }
 
 /* ================================================================
-   Auth pages (login / register) â€” matches the site's auth pages
+   Auth pages (login / register) — matches the site's auth pages
    ================================================================ */
 .login-page,
 .register-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: radial-gradient(circle at 50% 0%, var(--sboi-green-3), var(--sboi-green-bg) 70%);
 }
 
 .login-box {
-  width: min(460px, 100%);
+  width: min(460px, calc(100% - 2rem));
+  margin: 2rem auto;
 }
 
 .login-box .card,
@@ -504,6 +525,7 @@ a.dropdown-item {
 .login-logo img {
   width: 110px;
   height: auto;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
 }
 
 .login-logo a,
@@ -597,6 +619,32 @@ a.dropdown-item {
 .login-page .auth-foot a {
   color: var(--sboi-gold);
   font-weight: 600;
+}
+
+.login-page .auth-foot .auth-back {
+  display: inline-block;
+  margin-top: 0.5rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 400;
+}
+
+.login-page .auth-foot .auth-back:hover {
+  color: var(--sboi-gold);
+}
+
+.login-page :focus-visible {
+  outline: 2px solid var(--sboi-gold);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .login-box .card-body.login-card-body {
+    padding: 1.6rem 1.4rem 2rem;
+  }
+
+  .login-logo img {
+    width: 88px;
+  }
 }
 
 .login-box .btn-primary.btn-block,

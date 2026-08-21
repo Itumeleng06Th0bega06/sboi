@@ -171,6 +171,7 @@ JAZZMIN_SETTINGS = {
     'site_brand': 'Shekinah Blaze',
     'site_logo': 'images/home/Logo.png.png',
     'site_logo_classes': 'img-fluid',
+    'login_logo': 'images/home/Logo.png.png',
     'welcome_sign': 'Governed by Heaven, Established on Earth',
     'copyright': 'Shekinah Blaze Outreach International',
     'search_model': ['blackboard.Devotion'],
@@ -182,7 +183,9 @@ JAZZMIN_SETTINGS = {
     'hide_apps': [],
     'hide_models': [],
     'order_with_respect_to': ['home', 'about', 'blackboard', 'gallery', 'contact', 'auth'],
-    'custom_css': None,
+    # Loaded by Jazzmin on every admin page AND the auth pages
+    # (login / password reset), which don't extend admin/base_site.html.
+    'custom_css': 'admin/css/admin-brand.css',
     'custom_js': None,
     'show_ui_builder': False,
     'language_chooser': False,
