@@ -1,13 +1,13 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 {% load media_tags %}
 
-{% block title %}{{ site_profile.church_name|default:'Shekinah Blaze' }} Â· About{% endblock %}
+{% block title %}{{ site_profile.church_name|default:'Shekinah Blaze' }} · About{% endblock %}
 
 {% block content %}
 
 {% if leaders %}
-<section class="section section-navy" id="ch-leadership">
+<section class="section section-green" id="ch-leadership">
     <div class="container">
         <div class="chapter-head reveal">
             <span class="chapter-badge">{% include 'partials/_icon.html' with icon='crown' %}</span>
@@ -39,7 +39,7 @@
     <div class="container">
         <div class="chapter-head reveal">
             <span class="chapter-badge">01</span>
-            <span class="eyebrow">Chapter One Â· The Founder's Message</span>
+            <span class="eyebrow">Chapter One · The Founder's Message</span>
             <div class="chapter-rule" aria-hidden="true"></div>
         </div>
         <div class="chapter-body">
@@ -65,7 +65,7 @@
     <div class="container">
         <div class="chapter-head reveal">
             <span class="chapter-badge">02</span>
-            <span class="eyebrow">Chapter Two Â· Our Story</span>
+            <span class="eyebrow">Chapter Two · Our Story</span>
             <div class="chapter-rule" aria-hidden="true"></div>
         </div>
         <div class="chapter-body">
@@ -95,7 +95,7 @@
     <div class="container">
         <div class="chapter-head reveal">
             <span class="chapter-badge">03</span>
-            <span class="eyebrow">Chapter Three Â· Our Vision</span>
+            <span class="eyebrow">Chapter Three · Our Vision</span>
             <div class="chapter-rule" aria-hidden="true"></div>
         </div>
         <div class="chapter-body">
@@ -175,7 +175,7 @@
     <div class="container">
         <div class="chapter-head reveal">
             <span class="chapter-badge">04</span>
-            <span class="eyebrow">Chapter Four Â· Our Mission</span>
+            <span class="eyebrow">Chapter Four · Our Mission</span>
             <div class="chapter-rule" aria-hidden="true"></div>
         </div>
         <div class="chapter-body">
@@ -285,7 +285,7 @@
     <div class="container">
         <div class="chapter-head reveal">
             <span class="chapter-badge">05</span>
-            <span class="eyebrow">Chapter Five Â· Our Core Values</span>
+            <span class="eyebrow">Chapter Five · Our Core Values</span>
             <div class="chapter-rule" aria-hidden="true"></div>
         </div>
         <div class="chapter-body">
@@ -350,7 +350,7 @@
 {% endif %}
 
 {% if profile.church_name %}
-<section class="section section-navy">
+<section class="section section-green">
     <div class="container center">
         <h2 class="section-title light">{{ profile.church_name }}</h2>
         <div class="recap-block">

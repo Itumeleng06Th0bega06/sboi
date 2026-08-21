@@ -57,6 +57,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'sboi.middleware.ConsumeStalePublicMessages',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -172,7 +173,7 @@ JAZZMIN_SETTINGS = {
     'site_logo_classes': 'img-fluid',
     'welcome_sign': 'Governed by Heaven, Established on Earth',
     'copyright': 'Shekinah Blaze Outreach International',
-    'search_model': ['auth.User', 'blackboard.Devotion', 'blackboard.Sermon', 'blackboard.Event'],
+    'search_model': ['blackboard.Devotion'],
     'topmenu_links': [
         {'name': 'View Website', 'url': '/', 'new_window': False, 'icon': 'fas fa-globe'},
     ],
@@ -181,7 +182,7 @@ JAZZMIN_SETTINGS = {
     'hide_apps': [],
     'hide_models': [],
     'order_with_respect_to': ['home', 'about', 'blackboard', 'gallery', 'contact', 'auth'],
-    'custom_css': 'admin/css/admin-brand.css',
+    'custom_css': None,
     'custom_js': None,
     'show_ui_builder': False,
     'language_chooser': False,

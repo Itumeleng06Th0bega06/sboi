@@ -10,7 +10,7 @@
     </div>
 </section>
 
-<section class="section section-navy contact-page">
+<section class="section section-green contact-page">
     <div class="container">
         <div class="contact-grid">
             <div class="form-card">
@@ -31,11 +31,11 @@
                 <h2 class="section-title">Details</h2>
                 {% if info.phone or info.whatsapp or info.email %}
                 <div class="info-block">
-                    <h4>Reach Us</h4>
+                    <h4>Click Me</h4>
                     <ul class="social-list">
-                        {% if info.phone %}<li><a href="tel:{{ info.phone }}" aria-label="Call us">{% include 'partials/_icon.html' with icon='phone' %}<span>Call Us · {{ info.phone }}</span></a></li>{% endif %}
-                        {% if info.whatsapp %}<li><a href="https://wa.me/{{ info.whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp">{% include 'partials/_icon.html' with icon='whatsapp' %}<span>WhatsApp · {{ info.whatsapp }}</span></a></li>{% endif %}
-                        {% if info.email %}<li><a href="mailto:{{ info.email }}" aria-label="Email us">{% include 'partials/_icon.html' with icon='email' %}<span>Email · {{ info.email }}</span></a></li>{% endif %}
+                        {% if info.phone %}<li><a href="tel:{{ info.phone }}" aria-label="Call us">{% include 'partials/_icon.html' with icon='phone' %}</a></li>{% endif %}
+                        {% if info.whatsapp %}<li><a href="https://wa.me/{{ info.whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp">{% include 'partials/_icon.html' with icon='whatsapp' %}</a></li>{% endif %}
+                        {% if info.email %}<li><a href="mailto:{{ info.email }}" aria-label="Email us">{% include 'partials/_icon.html' with icon='email' %}</a></li>{% endif %}
                     </ul>
                 </div>
                 {% endif %}
@@ -55,10 +55,10 @@
                 <div class="info-block">
                     <h4>Follow Us</h4>
                     <ul class="social-list">
-                        {% if info.facebook %}<li><a href="{{ info.facebook }}" target="_blank" rel="noopener" aria-label="Facebook">{% include 'partials/_icon.html' with icon='facebook' %}<span>Facebook</span></a></li>{% endif %}
-                        {% if info.twitter %}<li><a href="{{ info.twitter }}" target="_blank" rel="noopener" aria-label="X / Twitter">{% include 'partials/_icon.html' with icon='x' %}<span>X / Twitter</span></a></li>{% endif %}
-                        {% if info.instagram %}<li><a href="{{ info.instagram }}" target="_blank" rel="noopener" aria-label="Instagram">{% include 'partials/_icon.html' with icon='instagram' %}<span>Instagram</span></a></li>{% endif %}
-                        {% if info.youtube %}<li><a href="{{ info.youtube }}" target="_blank" rel="noopener" aria-label="YouTube">{% include 'partials/_icon.html' with icon='youtube' %}<span>YouTube</span></a></li>{% endif %}
+                        {% if info.facebook %}<li><a href="{{ info.facebook }}" target="_blank" rel="noopener" aria-label="Facebook">{% include 'partials/_icon.html' with icon='facebook' %}</a></li>{% endif %}
+                        {% if info.twitter %}<li><a href="{{ info.twitter }}" target="_blank" rel="noopener" aria-label="X / Twitter">{% include 'partials/_icon.html' with icon='x' %}</a></li>{% endif %}
+                        {% if info.instagram %}<li><a href="{{ info.instagram }}" target="_blank" rel="noopener" aria-label="Instagram">{% include 'partials/_icon.html' with icon='instagram' %}</a></li>{% endif %}
+                        {% if info.youtube %}<li><a href="{{ info.youtube }}" target="_blank" rel="noopener" aria-label="YouTube">{% include 'partials/_icon.html' with icon='youtube' %}</a></li>{% endif %}
                     </ul>
                 </div>
                 {% endif %}

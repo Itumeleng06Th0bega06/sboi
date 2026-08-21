@@ -45,7 +45,7 @@
 }
 .sboi-delete-head h2 {
     font-size: 1.1rem;
-    color: #16264b;
+    color: #1e2b26;
     margin: 0;
     flex: 1;
 }
@@ -70,7 +70,7 @@
 }
 .sboi-delete-body .sboi-popup h1 {
     font-size: 1.05rem;
-    color: #16264b;
+    color: #1e2b26;
     margin: 0 0 0.4rem;
     text-align: center;
 }
@@ -110,7 +110,7 @@
 .sboi-delete-body .btn-danger { background: #a03030; color: #fff; }
 .sboi-delete-body .btn-danger:hover { background: #8a2828; }
 .sboi-delete-body .btn-danger:disabled { opacity: 0.6; cursor: default; }
-.sboi-delete-body .btn-cancel { background: #eef0f5; color: #16264b; }
+.sboi-delete-body .btn-cancel { background: #eef0f5; color: #1e2b26; }
 .sboi-delete-body .btn-cancel:hover { background: #e2e5ee; }
 .sboi-delete-body .sboi-delete-error {
     color: #a03030;
@@ -137,7 +137,7 @@
     padding: 0.2rem 0.6rem;
     border-radius: 6px;
     border: 1px solid #d7dbe6;
-    color: #16264b;
+    color: #1e2b26;
     background: #fff;
 }
 .sboi-row-actions a:hover { background: #f2f4fa; }
@@ -146,20 +146,3 @@
     border-color: #ecc9c9;
 }
 .sboi-row-actions a.sboi-row-delete:hover { background: #fdecec; }
-.sboi-delete-toast {
-    position: fixed;
-    top: 18px;
-    right: 18px;
-    z-index: 10001;
-    background: #198754;
-    color: #fff;
-    padding: 0.65rem 1.1rem;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-    opacity: 1;
-    transition: opacity 0.4s ease;
-    font-family: Inter, system-ui, sans-serif;
-}
-.sboi-delete-toast.hide { opacity: 0; }

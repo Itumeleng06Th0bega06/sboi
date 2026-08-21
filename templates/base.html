@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=3">
 </head>
 <body>
     {% block nav %}
@@ -60,14 +60,6 @@
     </header>
     {% endblock %}
 
-    {% if messages %}
-    <div class="flash container">
-        {% for message in messages %}
-        <div class="flash-item {{ message.tags }}">{{ message }}</div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
     <main>
         {% block content %}{% endblock %}
     </main>
@@ -78,16 +70,6 @@
                 <img src="{% static 'images/home/Logo.png.png' %}" alt="" class="footer-logo">
                 <p class="footer-tagline">{{ site_profile.tagline|default:'' }}</p>
                 <p class="footer-location">{{ site_profile.location|default:'' }}</p>
-            </div>
-            <div class="footer-col">
-                <h4>Explore</h4>
-                <ul class="footer-links">
-                    <li><a href="{% url 'home:home' %}">Home</a></li>
-                    <li><a href="{% url 'about:about' %}">About</a></li>
-                    <li><a href="{% url 'blackboard:blackboard' %}">Blackboard</a></li>
-                    <li><a href="{% url 'gallery:gallery' %}">Gallery</a></li>
-                    <li><a href="{% url 'contact:contact' %}">Contact</a></li>
-                </ul>
             </div>
             <div class="footer-col">
                 <h4>Reach Us</h4>

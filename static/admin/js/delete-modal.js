@@ -59,19 +59,6 @@
         body.appendChild(msg);
     }
 
-    function showToast(message) {
-        var toast = document.createElement('div');
-        toast.className = 'sboi-delete-toast';
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        setTimeout(function () {
-            toast.classList.add('hide');
-        }, 1800);
-        setTimeout(function () {
-            toast.remove();
-        }, 2300);
-    }
-
     function pksFromUrl(url) {
         var path = url.replace(/\?.*$/, '');
         var m = path.match(/\/(\d+)\/delete\/$/);
@@ -117,18 +104,27 @@
     }
 
     function handleSuccess(submitUrl) {
+        var landing = landingUrl(submitUrl);
         if (pendingDelete.across || !document.getElementById('result_list')) {
-            window.location.href = landingUrl(submitUrl);
+            close();
+            if (window.sboiNav) {
+                window.sboiNav.load(landing, false);
+            } else {
+                window.location.href = landing;
+            }
             return;
         }
         var removed = removeRows(pendingDelete.pks);
+        close();
         if (!removed || !document.querySelector('#result_list tbody tr')) {
-            window.location.reload();
+            if (window.sboiNav) {
+                window.sboiNav.load(landing, false);
+            } else {
+                window.location.reload();
+            }
             return;
         }
         syncCounter(removed);
-        close();
-        showToast('Deleted successfully.');
     }
 
     function wire(root, submitUrl) {
