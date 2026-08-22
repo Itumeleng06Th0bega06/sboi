@@ -17,20 +17,6 @@
     <time class="sboi-dash-date" datetime="{% now 'Y-m-d' %}">{% now 'l, j F Y' %}</time>
   </header>
 
-  <section class="sboi-panel" aria-labelledby="sboi-notif-title">
-    <h2 id="sboi-notif-title">{% translate 'Notifications' %}</h2>
-    <div class="sboi-stats">
-      {% for item in admin_notifications %}
-      <a class="stat-card" href="{{ item.url }}">
-        <span class="stat-count{% if item.count == 0 %} zero{% endif %}">{{ item.count }}</span>
-        <span class="stat-label">{{ item.label }}</span>
-      </a>
-      {% empty %}
-      <span class="sboi-none">{% translate 'Nothing needs your attention right now.' %}</span>
-      {% endfor %}
-    </div>
-  </section>
-
   <section class="sboi-panel" aria-labelledby="sboi-actions-title">
     <h2 id="sboi-actions-title">{% translate 'Quick actions' %}</h2>
     <div class="sboi-actions">

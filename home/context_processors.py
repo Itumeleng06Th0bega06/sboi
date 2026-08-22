@@ -7,6 +7,75 @@ from about.models import ChurchProfile
 from contact.models import ContactInfo
 
 
+def build_admin_notifications():
+    """Every site notification shown in the admin bell and dashboard.
+
+    Each item: {label, count, url, icon, tone}.
+    tone: 'attention' = needs action, 'warning' = needs review,
+          'info' = recent activity.
+    """
+    from blackboard.models import EventRsvp, MemberProfile
+    from contact.models import ContactMessage
+
+    from .models import Subscriber, Testimony
+
+    week = timezone.now() - timedelta(days=7)
+
+    def item(label, queryset, view_name, icon, tone):
+        return {
+            'label': label,
+            'count': queryset.count(),
+            'url': reverse(view_name),
+            'icon': icon,
+            'tone': tone,
+        }
+
+    return [
+        item(
+            'Unread contact messages',
+            ContactMessage.objects.filter(is_read=False),
+            'admin:contact_contactmessage_changelist',
+            'fa-solid fa-envelope',
+            'attention',
+        ),
+        item(
+            'Pending testimonies',
+            Testimony.objects.filter(is_approved=False),
+            'admin:home_testimony_changelist',
+            'fa-solid fa-comment-dots',
+            'attention',
+        ),
+        item(
+            'Blocked / suspended members',
+            MemberProfile.objects.exclude(status='active'),
+            'admin:blackboard_memberprofile_changelist',
+            'fa-solid fa-user-slash',
+            'warning',
+        ),
+        item(
+            'New newsletter subscribers (7 days)',
+            Subscriber.objects.filter(subscribed_at__gte=week),
+            'admin:home_subscriber_changelist',
+            'fa-solid fa-envelope-open-text',
+            'info',
+        ),
+        item(
+            'New event RSVPs (7 days)',
+            EventRsvp.objects.filter(created_at__gte=week),
+            'admin:blackboard_eventrsvp_changelist',
+            'fa-solid fa-clipboard-check',
+            'info',
+        ),
+        item(
+            'New members (7 days)',
+            MemberProfile.objects.filter(created_at__gte=week),
+            'admin:blackboard_memberprofile_changelist',
+            'fa-solid fa-id-card',
+            'info',
+        ),
+    ]
+
+
 def site_info(request):
     return {
         'site_profile': ChurchProfile.objects.first(),
@@ -22,53 +91,13 @@ def admin_notifications(request):
     if not request.path.startswith(admin_path):
         return {}
 
-    from blackboard.models import Announcement, Devotion, Event, EventRsvp, MemberProfile, Sermon
+    from blackboard.models import Announcement, Devotion, Event, Sermon
     from contact.models import ContactMessage
     from gallery.models import SliderImage
 
-    from .models import Subscriber, Testimony
+    from .models import Testimony
 
-    week = timezone.now() - timedelta(days=7)
-
-    def count_with_url(label, queryset, view_name):
-        return {
-            'label': label,
-            'count': queryset.count(),
-            'url': reverse(view_name),
-        }
-
-    notifications = [
-        count_with_url(
-            'Unread contact messages',
-            ContactMessage.objects.filter(is_read=False),
-            'admin:contact_contactmessage_changelist',
-        ),
-        count_with_url(
-            'Pending testimonies',
-            Testimony.objects.filter(is_approved=False),
-            'admin:home_testimony_changelist',
-        ),
-        count_with_url(
-            'New newsletter subscribers (7 days)',
-            Subscriber.objects.filter(subscribed_at__gte=week),
-            'admin:home_subscriber_changelist',
-        ),
-        count_with_url(
-            'New event RSVPs (7 days)',
-            EventRsvp.objects.filter(created_at__gte=week),
-            'admin:blackboard_eventrsvp_changelist',
-        ),
-        count_with_url(
-            'New members (7 days)',
-            MemberProfile.objects.filter(created_at__gte=week),
-            'admin:blackboard_memberprofile_changelist',
-        ),
-        count_with_url(
-            'Blocked / suspended members',
-            MemberProfile.objects.exclude(status='active'),
-            'admin:blackboard_memberprofile_changelist',
-        ),
-    ]
+    notifications = build_admin_notifications()
 
     def quick_action(label, icon, add_view_name):
         return {'label': label, 'icon': icon, 'url': reverse(add_view_name)}
@@ -145,4 +174,3 @@ def admin_notifications(request):
         ],
     }
     return {'admin_notifications': notifications, 'admin_dashboard': dashboard}
-

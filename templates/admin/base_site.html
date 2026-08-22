@@ -4,9 +4,11 @@
     {{ block.super }}
     <script src="{% static 'admin/js/delete-modal.js' %}?v=7" defer></script>
     <script src="{% static 'admin/js/sidebar-nav.js' %}?v=15" defer></script>
+    <script src="{% static 'admin/js/notification-bell.js' %}?v=1" defer></script>
 {% endblock %}
 {% block extrastyle %}
     {{ block.super }}
     {# admin-brand.css is loaded globally via JAZZMIN_SETTINGS.custom_css #}
     <link rel="stylesheet" href="{% static 'admin/css/delete-modal.css' %}?v=5">
+    <link rel="stylesheet" href="{% static 'admin/css/notification-bell.css' %}?v=1">
 {% endblock %}

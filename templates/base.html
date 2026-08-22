@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=6">
 </head>
 <body>
     {% block nav %}
@@ -16,7 +16,6 @@
         <div class="header-inner container">
             <a href="{% url 'home:home' %}" class="brand">
                 <img src="{% static 'images/home/Logo.png.png' %}" alt="{{ site_profile.church_name }}" class="brand-logo">
-                <span class="brand-name">{{ site_profile.church_name|default:'Shekinah Blaze' }}</span>
             </a>
             <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
                 <span></span><span></span><span></span>

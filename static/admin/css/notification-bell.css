@@ -1,0 +1,163 @@
+/* ================================================================
+   Admin nav notification bell
+   ================================================================ */
+.sboi-bell-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sboi-bell-toggle i {
+  font-size: 1.05rem;
+}
+
+.sboi-bell-badge {
+  position: absolute;
+  top: -3px;
+  right: -5px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--sboi-gold, #d2a24e), var(--sboi-gold-2, #b07f3a));
+  color: var(--sboi-green, #002f2b);
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(210, 162, 78, 0.45);
+}
+
+/* ---------- Dropdown card ---------- */
+.sboi-bell-menu {
+  width: min(360px, calc(100vw - 2rem));
+  max-height: 430px;
+  overflow-y: auto;
+  padding: 0;
+  margin-top: 0.65rem !important;
+  border: 1px solid rgba(0, 100, 75, 0.12);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(0, 47, 43, 0.18);
+}
+
+.sboi-bell-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0.7rem 1rem;
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-weight: 600;
+  color: var(--sboi-green, #002f2b);
+  background: #fff;
+  border-bottom: 2px solid rgba(210, 162, 78, 0.35);
+}
+
+/* ---------- Items ---------- */
+.sboi-bell-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 1rem;
+  text-decoration: none;
+  color: var(--sboi-ink, #1e2b26);
+}
+
+.sboi-bell-item:hover,
+.sboi-bell-item:focus {
+  background: var(--sboi-cream, #f7f5ee);
+  color: var(--sboi-green, #002f2b);
+}
+
+.sboi-bell-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(0, 47, 43, 0.08);
+  color: var(--sboi-green, #002f2b);
+}
+
+.tone-attention .sboi-bell-icon {
+  background: rgba(210, 162, 78, 0.18);
+  color: var(--sboi-gold-2, #b07f3a);
+}
+
+.tone-warning .sboi-bell-icon {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+}
+
+.sboi-bell-label {
+  flex: 1;
+  font-size: 0.88rem;
+  line-height: 1.3;
+}
+
+.sboi-bell-count {
+  flex: 0 0 auto;
+  padding: 0.05rem 0.55rem;
+  border-radius: 999px;
+  background: var(--sboi-green, #002f2b);
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.tone-attention .sboi-bell-count {
+  background: linear-gradient(135deg, var(--sboi-gold), var(--sboi-gold-2));
+  color: var(--sboi-green, #002f2b);
+}
+
+.tone-warning .sboi-bell-count {
+  background: #dc2626;
+}
+
+.sboi-bell-count.zero {
+  background: transparent;
+  border: 1px solid rgba(92, 107, 100, 0.35);
+  color: var(--sboi-muted, #5c6b64);
+  font-weight: 600;
+}
+
+/* ---------- Empty state / footer ---------- */
+.sboi-bell-empty {
+  padding: 1.4rem 1rem;
+  text-align: center;
+  color: var(--sboi-muted, #5c6b64);
+  font-size: 0.9rem;
+}
+
+.sboi-bell-empty i {
+  font-size: 1.3rem;
+  margin-bottom: 0.4rem;
+  color: var(--sboi-gold-2, #b07f3a);
+}
+
+.sboi-bell-foot {
+  position: sticky;
+  bottom: 0;
+  display: block;
+  padding: 0.6rem 1rem;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.86rem;
+  color: var(--sboi-green, #002f2b) !important;
+  background: var(--sboi-cream, #f7f5ee);
+  border-top: 1px solid rgba(0, 100, 75, 0.08);
+}
+
+.sboi-bell-foot:hover {
+  color: var(--sboi-green-2, #008c83) !important;
+  background: var(--sboi-cream-2, #efece0);
+}
+
+.sboi-bell-foot i {
+  margin-right: 0.3rem;
+  color: var(--sboi-gold-2, #b07f3a);
+}

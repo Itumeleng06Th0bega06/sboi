@@ -18,6 +18,10 @@
   --glow: 0 0 18px rgba(210, 162, 78, 0.28);
   --glow-lg: 0 0 30px rgba(210, 162, 78, 0.33);
   --header-h: 70px;
+  /* One shared green fill so every green button reads identically,
+     whatever its size (stops are close so corners never diverge). */
+  --btn-green: linear-gradient(160deg, #01443e, var(--green));
+  --btn-green-hover: linear-gradient(160deg, #01564f, #01403a);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -30,6 +34,7 @@ body {
   background: var(--cream);
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
+  overflow-wrap: break-word;
 }
 
 img { max-width: 100%; display: block; }
@@ -60,8 +65,8 @@ button:focus, a:focus, .btn:focus { outline: none; }
 .btn:hover { transform: translateY(-2px); }
 .btn-sm { padding: 0.5rem 1.1rem; font-size: 0.85rem; }
 .btn-block { width: 100%; text-align: center; }
-.btn-gold, .btn-primary { background: linear-gradient(135deg, var(--green), #008c83); color: var(--white); box-shadow: 0 8px 20px rgba(0, 47, 43, 0.2); }
-.btn-gold:hover, .btn-primary:hover { color: var(--white); box-shadow: 0 12px 26px rgba(0, 47, 43, 0.28); }
+.btn-gold, .btn-primary { background: var(--btn-green); color: var(--white); box-shadow: 0 8px 20px rgba(0, 47, 43, 0.2); }
+.btn-gold:hover, .btn-primary:hover { background: var(--btn-green-hover); color: var(--white); box-shadow: 0 12px 26px rgba(0, 47, 43, 0.28); }
 .btn-gold:active, .btn-primary:active { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0, 47, 43, 0.2); }
 .btn-outline-gold { border-color: var(--gold); color: var(--gold); background: transparent; }
 .btn-outline-gold:hover { background: var(--gold); color: var(--green); }
@@ -494,8 +499,8 @@ textarea.input { resize: vertical; }
 .strip-msg strong { font-family: var(--serif); font-size: 1.45rem; color: var(--green); line-height: 1.25; }
 .strip-msg p { font-size: 1.02rem; color: #3a2600; font-weight: 500; }
 .strip-actions { display: flex; gap: 0.9rem; flex-wrap: wrap; justify-content: center; }
-.action-strip .btn { background: var(--green); color: var(--cream); }
-.action-strip .btn:hover { background: #008c83; color: var(--white); }
+.action-strip .btn { background: var(--btn-green); color: var(--cream); }
+.action-strip .btn:hover { background: var(--btn-green-hover); color: var(--white); }
 
 /* Pill buttons (blackboard + nav) */
 .pill-btn { display: inline-block; padding: 0.6rem 1.5rem; border-radius: 999px; background: var(--white); color: var(--green); border: 1.5px solid var(--gold); font-weight: 600; transition: all 0.2s; }
@@ -629,7 +634,7 @@ textarea.input { resize: vertical; }
 
 /* About: mission in action chips */
 .action-grid { display: flex; flex-wrap: wrap; gap: 0.7rem; justify-content: center; }
-.action-chip { display: inline-flex; flex-direction: column; align-items: center; gap: 0.25rem; background: var(--green); color: var(--cream); padding: 0.7rem 1.3rem; border-radius: 999px; font-weight: 600; font-size: 0.95rem; box-shadow: var(--shadow); text-align: center; }
+.action-chip { display: inline-flex; flex-direction: column; align-items: center; gap: 0.25rem; background: var(--btn-green); color: var(--cream); padding: 0.7rem 1.3rem; border-radius: 999px; font-weight: 600; font-size: 0.95rem; box-shadow: var(--shadow); text-align: center; }
 .action-chip svg { width: 18px; height: 18px; fill: var(--gold-2); flex-shrink: 0; }
 .action-chip-main { display: inline-flex; align-items: center; gap: 0.55rem; }
 .action-chip-desc { font-weight: 400; font-size: 0.82rem; color: var(--gold-2); line-height: 1.4; }
@@ -677,12 +682,14 @@ html { scroll-behavior: smooth; }
 @media (max-width: 960px) {
   .split, .vm-grid, .contact-grid { grid-template-columns: 1fr; }
   .split.reverse { direction: ltr; }
+  .footer-grid { grid-template-columns: repeat(2, 1fr); gap: 1.8rem; }
   .nav-toggle { display: flex; }
   .main-nav {
     position: absolute; top: 100%; left: 0; right: 0;
     background: var(--green-bg); flex-direction: column; align-items: stretch;
     padding: 1rem; gap: 1rem; display: none;
     border-bottom: 1px solid rgba(210,162,78,0.25);
+    max-height: calc(100vh - var(--header-h)); overflow-y: auto;
   }
   .main-nav.open { display: flex; }
   .nav-tabs { flex-direction: column; }
@@ -725,7 +732,7 @@ html { scroll-behavior: smooth; }
   .footer-grid { grid-template-columns: 1fr; }
   .footer-logo { height: 160px; }
   .auth-card { padding: 2rem 1.4rem; }
-  .strip-inner { padding: 0.85rem 0; }
+  .action-strip { padding: 1.4rem 0; }
   .founder-card { padding: 2rem 1.3rem; }
   .vm-card, .form-card, .info-card { padding: 1.6rem; }
   .mosaic-item { aspect-ratio: 4 / 3; }

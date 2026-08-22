@@ -1,6 +1,7 @@
 from django.apps import apps
 from django.contrib import messages
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
@@ -69,6 +70,18 @@ def admin_search(request):
         'q': q,
         'results': results,
         'total': total,
+    })
+
+
+def admin_notifications_api(request):
+    """JSON feed for the admin nav notification bell."""
+    from home.context_processors import build_admin_notifications
+
+    items = build_admin_notifications()
+    return JsonResponse({
+        'badge': sum(i['count'] for i in items if i['tone'] in ('attention', 'warning')),
+        'total': sum(i['count'] for i in items),
+        'items': items,
     })
 
 

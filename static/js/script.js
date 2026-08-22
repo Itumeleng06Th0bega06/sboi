@@ -229,7 +229,11 @@
     }
     if (navMenu) {
       navMenu.addEventListener('click', function (e) {
-        if (e.target.closest('a')) closeNavDropdown();
+        if (e.target.closest('a')) {
+          closeNavDropdown();
+          nav.classList.remove('open');
+          toggle.classList.remove('open');
+        }
       });
     }
     document.addEventListener('click', function (e) {

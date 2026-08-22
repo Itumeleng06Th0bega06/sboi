@@ -95,18 +95,19 @@ body.bg-body-tertiary {
   border-color: var(--sboi-gold-2);
   color: var(--sboi-green);
   font-weight: 600;
-  border-radius: 8px;
-  padding: 0.35rem 0.95rem;
-  margin-left: 0.5rem;
+  font-size: 0.78rem;
+  border-radius: 7px;
+  padding: 0.18rem 0.6rem;
+  margin-left: 0.4rem;
   white-space: nowrap;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(210, 162, 78, 0.15);
+  box-shadow: 0 2px 8px rgba(210, 162, 78, 0.12);
 }
 
 .app-header .navbar-nav:not(.ms-auto) .nav-link:not([data-lte-toggle]):not(.dropdown-toggle):hover {
   background: linear-gradient(135deg, #e0b96a, #c69a4e);
   color: var(--sboi-green-3);
-  box-shadow: 0 6px 16px rgba(210, 162, 78, 0.22);
+  box-shadow: 0 3px 10px rgba(210, 162, 78, 0.2);
 }
 
 /* ---------- Sidebar (AdminLTE 4: .app-sidebar + --lte-sidebar-* vars) ---------- */
