@@ -1,10 +1,15 @@
 from datetime import timedelta
 
+from django.core.cache import cache
 from django.urls import reverse
 from django.utils import timezone
 
 from about.models import ChurchProfile
 from contact.models import ContactInfo
+
+
+NOTIFICATIONS_CACHE_KEY = 'admin_notifications'
+NOTIFICATIONS_CACHE_TTL = 45
 
 
 def build_admin_notifications():
@@ -13,7 +18,15 @@ def build_admin_notifications():
     Each item: {label, count, url, icon, tone}.
     tone: 'attention' = needs action, 'warning' = needs review,
           'info' = recent activity.
+
+    Counts are cached briefly (45s) so admin page loads and the bell's
+    periodic polling cost near-zero DB work; badges may lag by up to a
+    minute, which is fine for this purpose.
     """
+    cached = cache.get(NOTIFICATIONS_CACHE_KEY)
+    if cached is not None:
+        return cached
+
     from blackboard.models import EventRsvp, MemberProfile
     from contact.models import ContactMessage
 
@@ -30,7 +43,7 @@ def build_admin_notifications():
             'tone': tone,
         }
 
-    return [
+    notifications = [
         item(
             'Unread contact messages',
             ContactMessage.objects.filter(is_read=False),
@@ -74,6 +87,8 @@ def build_admin_notifications():
             'info',
         ),
     ]
+    cache.set(NOTIFICATIONS_CACHE_KEY, notifications, NOTIFICATIONS_CACHE_TTL)
+    return notifications
 
 
 def site_info(request):

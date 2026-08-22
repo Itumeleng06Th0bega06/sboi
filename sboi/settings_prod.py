@@ -120,7 +120,13 @@ WHITENOISE_MAX_AGE = 31536000
 # ---------------------------------------------------------------------------
 
 DATABASES = {
-    'default': dj_database_url.config(conn_max_age=600),
+    # CONN_HEALTH_CHECKS pings the persistent connection per request, so the
+    # first request after an idle period (Render free-tier spin-down) reopens
+    # a dropped Postgres connection instead of failing with a 500.
+    'default': {
+        **dj_database_url.config(conn_max_age=600),
+        'CONN_HEALTH_CHECKS': True,
+    },
 }
 
 # ---------------------------------------------------------------------------
