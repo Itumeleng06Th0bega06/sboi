@@ -99,12 +99,11 @@ STORAGES = {
     'default': {
         'BACKEND': 'sboi.cloudinary_storage.CloudinaryMediaStorage',
     },
-    # Manifest storage gives every static file a content-hashed URL
-    # (e.g. admin-brand.a1b2c3.css). Browsers may cache those URLs forever,
-    # which is safe: each deploy produces new URLs, so style/data changes go
-    # live immediately instead of showing year-old cached assets.
+    # See sboi/storage.py: non-strict manifest storage — Jazzmin's base
+    # template requests a bare directory path that can never exist in the
+    # manifest, and strict mode 500s EVERY admin page because of it.
     'staticfiles': {
-        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        'BACKEND': 'sboi.storage.NonStrictManifestStaticFilesStorage',
     },
 }
 
