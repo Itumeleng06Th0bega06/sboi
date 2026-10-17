@@ -4,7 +4,7 @@
 # ===========================================================================
 #
 # Account: shekinah  ->  repo & app root  ~/repositories/sboi
-#                        virtualenv       ~/virtualenv/sboi/<py>/
+#                        virtualenv       ~/virtualenv/repositories/sboi/<py>/
 #                        web root         ~/public_html
 #
 # cPanel -> Git Version Control -> (your repo) -> "Pull or Deploy" ->
@@ -25,10 +25,12 @@ deployment:
     - export APP_ROOT=$HOME/repositories/$APP_NAME
     - export DJANGO_SETTINGS_MODULE=sboi.settings_prod
 
-    # Locate the virtualenv cPanel created (works for any Python version).
-    - export VENV_PY=$(ls -1 $HOME/virtualenv/$VENV_NAME/*/bin/python 2>/dev/null | head -n1)
+    # Locate the virtualenv cPanel created. cPanel nests it under the Python
+    # app's root (e.g. ~/virtualenv/repositories/sboi/3.13/bin/python), so
+    # search for it instead of assuming a single layout / Python version.
+    - export VENV_PY=$(find $HOME/virtualenv -maxdepth 6 -path "*/${VENV_NAME}/*/bin/python" 2>/dev/null | head -n1)
     - export VENV_BIN=${VENV_PY%/python}
-    - test -n "$VENV_PY" || (echo "ERROR - no virtualenv under $HOME/virtualenv/$VENV_NAME; set VENV_NAME in .cpanel.yml" && exit 1)
+    - test -n "$VENV_PY" || (echo "ERROR - no virtualenv found for '$VENV_NAME' under $HOME/virtualenv; set VENV_NAME in .cpanel.yml" && exit 1)
 
     - echo "==> Using interpreter $VENV_PY"
 
@@ -37,10 +39,10 @@ deployment:
     - $VENV_BIN/pip install -r $APP_ROOT/requirements.txt
 
     - echo "==> Applying database migrations"
-    - $VENV_BIN/python $APP_ROOT/manage.py migrate --noinput
+    - DJANGO_SETTINGS_MODULE=sboi.settings_prod $VENV_BIN/python $APP_ROOT/manage.py migrate --noinput
 
     - echo "==> Collecting static files into public_html/static"
-    - $VENV_BIN/python $APP_ROOT/manage.py collectstatic --noinput
+    - DJANGO_SETTINGS_MODULE=sboi.settings_prod $VENV_BIN/python $APP_ROOT/manage.py collectstatic --noinput
 
     - echo "==> Installing web-server rules in public_html"
     - mkdir -p $HOME/public_html/static $HOME/public_html/media
