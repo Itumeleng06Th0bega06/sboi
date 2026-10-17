@@ -138,6 +138,7 @@ runs a management command — so the settings module can never be wrong, whateve
 | --- | --- |
 | `manage_prod.py` | `migrate --noinput`, then `collectstatic --noinput` |
 | `manage_prod.py ensure_superuser` | `ensure_superuser` |
+| `manage_prod.py seed` | `seed` (one-time site content) |
 | `manage_prod.py check --deploy` | `check --deploy` |
 
 If the field only accepts a script path and no arguments, `manage_prod.py` on
@@ -148,6 +149,25 @@ to `manage.py`.
 `collectstatic` writes CSS/JS/images into `staticfiles/` inside the project
 (WhiteNoise serves them), and uploads are stored in `public_html/media`
 (Apache serves them).
+
+### Seed the site content (once, on a fresh database)
+
+`migrate` only creates **empty** tables. All of the site's text and pictures —
+home page sections, stats, the slider, devotions, the church profile, contact
+details — are rows in the database. So a fresh install renders the page shell
+with no content until you seed it:
+
+```bash
+python manage.py seed --settings=sboi.settings_prod
+```
+
+`seed` is **non-destructive**: it creates only the rows that are missing and
+copies the bundled images into `public_html/media`, so it is safe to re-run. It
+also accepts `--refresh` to overwrite matching rows and delete non-seed rows —
+use that only to reset a scratch database. Never run `seed` automatically on
+deploy or restart: it would fight your admin edits.
+
+After seeding, edit the content in the admin (see below).
 
 ### Create the admin without a terminal
 
