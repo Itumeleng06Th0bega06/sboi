@@ -128,6 +128,23 @@ a filesystem path`. As one complete cron command (no terminal needed):
 
     /home1/shekinah/virtualenv/repositories/sboi/3.13/bin/python /home1/shekinah/repositories/sboi/manage.py collectstatic --noinput --settings=sboi.settings_prod
 
+### The easy way: `manage_prod.py`
+
+The repo ships **`manage_prod.py`**, which forces `sboi.settings_prod` and then
+runs a management command — so the settings module can never be wrong, whatever
+"run a command" control your host gives you:
+
+| In the run field | Result |
+| --- | --- |
+| `manage_prod.py` | `collectstatic --noinput` (the default) |
+| `manage_prod.py migrate` | `migrate` |
+| `manage_prod.py ensure_superuser` | `ensure_superuser` |
+| `manage_prod.py check --deploy` | `check --deploy` |
+
+If the field only accepts a script path and no arguments, `manage_prod.py` on
+its own runs the collectstatic step. It lives in the repo, so a Git deploy
+already places it next to `manage.py`.
+
 `collectstatic` writes CSS/JS/images into `public_html/static`, and uploads are
 stored in `public_html/media`.
 
@@ -147,6 +164,7 @@ Then create the user with the bundled management command (no secret in git):
 
 ```bash
 python manage.py ensure_superuser --settings=sboi.settings_prod
+# ...or, from a terminal-free run field:  manage_prod.py ensure_superuser
 ```
 
 The command is idempotent — re-running it when the user exists changes nothing.
@@ -255,7 +273,8 @@ two one-line files containing `PassengerEnabled off`.
   `pip install cryptography` into the virtualenv.
 - **`You're using the staticfiles app without having set the STATIC_ROOT
   setting to a filesystem path`** — the command ran with the development
-  settings. Add `--settings=sboi.settings_prod` to it; a cron job does not run
-  a previous `export DJANGO_SETTINGS_MODULE=...` line.
+  settings. Add `--settings=sboi.settings_prod`, or point the run field at
+  `manage_prod.py`, which sets it for you. A cron job does not run a previous
+  `export DJANGO_SETTINGS_MODULE=...` line.
 - **Static files 404** — re-run `collectstatic` and confirm
   `public_html/static` exists; verify `STATIC_ROOT` in `sboi/settings_prod.py`.
