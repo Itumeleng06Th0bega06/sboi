@@ -71,7 +71,8 @@ Manager), ignore this file and follow steps 3–7 below.
    - **Application startup file:** `passenger_wsgi.py`
    - **Application Entry point:** `application`
 3. Click **Create**. cPanel makes a virtualenv (note its path, shown in the
-   panel, e.g. `/home1/shekinah/virtualenv/sboi/3.13`).
+   panel, e.g. `/home1/shekinah/virtualenv/repositories/sboi/3.13` — cPanel
+   nests it under the app root you typed above).
 
 ## 4. Install dependencies
 
@@ -154,7 +155,7 @@ without needing a terminal. It is **git-ignored**, so upload it next to
 2. cPanel → **Cron Jobs** → add a one-off job:
 
    ```
-   /home1/shekinah/virtualenv/sboi/3.13/bin/python /home1/shekinah/repositories/sboi/superuser.py
+   /home1/shekinah/virtualenv/repositories/sboi/3.13/bin/python /home1/shekinah/repositories/sboi/superuser.py
    ```
 
 3. Click **Run Now**, confirm the output ("Superuser ... created"), then
