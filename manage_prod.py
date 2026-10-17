@@ -19,13 +19,13 @@ Usage
 Point cPanel -> Setup Python App -> "Run Python script" at ``manage_prod.py``
 (no arguments needed), or pass a command if the field allows arguments::
 
-    manage_prod.py                              # collectstatic --noinput
-    manage_prod.py migrate
+    manage_prod.py                      # migrate, then collectstatic
     manage_prod.py ensure_superuser
     manage_prod.py check --deploy
 
-With no arguments it does the collectstatic step, which is the command that
-actually needs running after a deploy.
+With no arguments it runs the whole "publish" step — ``migrate`` followed by
+``collectstatic`` — which is everything that normally has to happen after a
+deploy. Both commands are idempotent, so running it again is always safe.
 """
 import os
 import sys
@@ -38,9 +38,6 @@ sys.path.insert(0, str(PROJECT_DIR))
 # Force the production settings module (never inherit the development default).
 os.environ['DJANGO_SETTINGS_MODULE'] = 'sboi.settings_prod'
 
-# Default action: publish static files into public_html/static.
-args = sys.argv[1:] or ['collectstatic', '--noinput']
-
 try:
     from django.core.management import execute_from_command_line
 except ImportError:
@@ -48,6 +45,13 @@ except ImportError:
           'Python created by cPanel -> Setup Python App.')
     sys.exit(1)
 
+args = sys.argv[1:]
+
+# No arguments = the full publish step: create/update the database schema, then
+# refresh the static files. Both are safe to run repeatedly.
+commands = [args] if args else [['migrate', '--noinput'], ['collectstatic', '--noinput']]
+
 print(f'[manage_prod] DJANGO_SETTINGS_MODULE={os.environ["DJANGO_SETTINGS_MODULE"]}')
-print(f'[manage_prod] running: manage.py {" ".join(args)}')
-execute_from_command_line(['manage.py', *args])
+for command in commands:
+    print(f'[manage_prod] running: manage.py {" ".join(command)}')
+    execute_from_command_line(['manage.py', *command])

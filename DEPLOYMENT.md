@@ -136,14 +136,14 @@ runs a management command — so the settings module can never be wrong, whateve
 
 | In the run field | Result |
 | --- | --- |
-| `manage_prod.py` | `collectstatic --noinput` (the default) |
-| `manage_prod.py migrate` | `migrate` |
+| `manage_prod.py` | `migrate --noinput`, then `collectstatic --noinput` |
 | `manage_prod.py ensure_superuser` | `ensure_superuser` |
 | `manage_prod.py check --deploy` | `check --deploy` |
 
 If the field only accepts a script path and no arguments, `manage_prod.py` on
-its own runs the collectstatic step. It lives in the repo, so a Git deploy
-already places it next to `manage.py`.
+its own runs the full publish step (migrations + static files), so it is the
+one entry to keep. It lives in the repo, so a Git deploy already places it next
+to `manage.py`.
 
 `collectstatic` writes CSS/JS/images into `public_html/static`, and uploads are
 stored in `public_html/media`.
