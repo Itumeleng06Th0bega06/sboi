@@ -29,8 +29,9 @@ data in **MariaDB**, and serves static files and uploads from the account's
 ## 1. Create the database and user
 
 1. cPanel → **MySQL® Databases**.
-2. **Create New Database** — e.g. `sboi` (cPanel prefixes it → `myacct_sboi`).
-3. **Add New User** — note the password (cPanel prefixes it → `myacct_sboiuser`).
+2. **Create New Database** — named `sboi` (cPanel prefixes it → `shekinah_sboi`).
+3. **Add New User** — named `sboi` (cPanel prefixes it → `shekinah_sboi`);
+   note the password.
 4. **Add User To Database** → select the database → grant **ALL PRIVILEGES**.
 
 Write down the full (prefixed) names and the password — they go into `.env`.
@@ -41,7 +42,7 @@ Write down the full (prefixed) names and the password — they go into `.env`.
 ## 2. Upload the code
 
 Use cPanel → **Git™ Version Control** (recommended) or **File Manager** to put
-the project **outside** `public_html`, e.g. `/home/myacct/sboi`.
+the project **outside** `public_html`, e.g. `/home1/shekinah/repositories/sboi`.
 
 Do **not** upload `.env`, `db.sqlite3`, `media/`, `staticfiles/` or `.venv/`
 (they are git-ignored).
@@ -53,21 +54,24 @@ The repo contains a **`.cpanel.yml`** file. Once your repo is set up under
 will automatically run the deploy tasks for you: install dependencies, run
 `migrate`, run `collectstatic`, and restart the app.
 
-Open `.cpanel.yml` first and set `APP_NAME`/`PY_VER` (and `APP_ROOT` if your
-repo is not cloned straight into `~/sboi`) to match your account. If you are
-deploying by hand (File Manager), ignore this file and follow steps 3–7 below.
+It already targets the `shekinah` account and the cPanel Git clone path
+`~/repositories/sboi`. Two names are configurable: `APP_NAME` (the repo folder)
+and `VENV_NAME` (the name you gave the app in Setup Python App — usually the
+same). The Python version is auto-detected. If you deploy by hand (File
+Manager), ignore this file and follow steps 3–7 below.
 
 ## 3. Create the Python application
 
 1. cPanel → **Setup Python App** → **Create Application**.
 2. Fill in:
    - **Python version:** 3.11 or newer (3.13 preferred).
-   - **Application root:** `sboi` (the folder from step 2).
+   - **Application root:** `repositories/sboi` (where Git Version Control
+     cloned the repo — the folder containing `manage.py`).
    - **Application URL:** your domain (e.g. `shekinahblaze.org`).
    - **Application startup file:** `passenger_wsgi.py`
    - **Application Entry point:** `application`
 3. Click **Create**. cPanel makes a virtualenv (note its path, shown in the
-   panel, e.g. `/home/myacct/virtualenv/sboi/3.13`).
+   panel, e.g. `/home1/shekinah/virtualenv/sboi/3.13`).
 
 ## 4. Install dependencies
 
@@ -76,20 +80,20 @@ Python App page, run it in a Terminal/SSH session, then:
 
 ```bash
 pip install --upgrade pip
-pip install -r ~/sboi/requirements.txt
+pip install -r ~/repositories/sboi/requirements.txt
 ```
 
 > If you truly have **no** terminal, some hosts expose a "Run pip install"
-> field on the Python App page — enter `-r /home/myacct/sboi/requirements.txt`
+> field on the Python App page — enter `-r /home1/shekinah/repositories/sboi/requirements.txt`
 > there. Otherwise contact your host to enable SSH for one command.
 
 ## 5. Configure environment variables
 
-In the project root (`/home/myacct/sboi`) create a file named `.env` by copying
+In the project root (`/home1/shekinah/repositories/sboi`) create a file named `.env` by copying
 `.env.example` and filling it in:
 
 ```bash
-cp ~/sboi/.env.example ~/sboi/.env
+cp ~/repositories/sboi/.env.example ~/repositories/sboi/.env
 ```
 
 Edit it (File Manager → Edit) and set at least:
@@ -97,8 +101,8 @@ Edit it (File Manager → Edit) and set at least:
 | Variable | Value |
 | --- | --- |
 | `SECRET_KEY` | long random string (see `.env.example` for the command) |
-| `DB_NAME` | `myacct_sboi` |
-| `DB_USER` | `myacct_sboiuser` |
+| `DB_NAME` | `shekinah_sboi` |
+| `DB_USER` | `shekinah_sboi` |
 | `DB_PASSWORD` | the database user's password |
 | `ALLOWED_HOSTS` | `shekinahblaze.org,www.shekinahblaze.org` |
 | `CSRF_TRUSTED_ORIGINS` | `https://shekinahblaze.org,https://www.shekinahblaze.org` |
@@ -139,7 +143,7 @@ To use different values, set `SUPERUSER_USERNAME`, `SUPERUSER_EMAIL` and
 1. cPanel → **Cron Jobs** → add a one-off job:
 
    ```
-   /home/myacct/virtualenv/sboi/3.13/bin/python /home/myacct/sboi/superuser.py
+   /home1/shekinah/virtualenv/sboi/3.13/bin/python /home1/shekinah/repositories/sboi/superuser.py
    ```
 
 2. Click **Run Now**, confirm the output ("Superuser ... created"), then
@@ -184,6 +188,27 @@ python manage.py loaddata data.json
 Because these live inside `public_html`, Apache returns them directly — fast and
 without waking Django. `MEDIA_ROOT`/`STATIC_ROOT` already point there via
 `PUBLIC_HTML` in `sboi/settings_prod.py`.
+
+### public_html/.htaccess
+
+Apache needs a few rules for caching, compression and hidden-file protection,
+and Passenger must be switched **off** inside `static/` and `media/` so those
+files are served from disk instead of being handed to Django.
+
+The repo ships a `.htaccess` with those rules. **Do not replace**
+`public_html/.htaccess` with it — cPanel writes the Passenger block
+(`PassengerAppRoot` / `PassengerBaseURI` / `PassengerPython`) into that same
+file. The `.cpanel.yml` deploy handles it safely: it appends the repo's
+`.htaccess` **once** (guarded by an `SBOI-DEPLOY-MARKER` comment) and writes
+`PassengerEnabled off` into `public_html/static/.htaccess` and
+`public_html/media/.htaccess`.
+
+If you deploy by hand, do the same: **append** the repo's `.htaccess` to
+`public_html/.htaccess` (keeping the existing Passenger block) and create those
+two one-line files containing `PassengerEnabled off`.
+
+> If the host forbids the `Options` directive in `.htaccess` (HTTP 500 on the
+> whole site), delete the `Options …` line from `.htaccess`.
 
 ## 9. Day-to-day
 

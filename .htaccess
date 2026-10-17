@@ -1,0 +1,89 @@
+# ===========================================================================
+# .htaccess — SHEKINAH BLAZE (cPanel / Phusion Passenger)
+# ===========================================================================
+# WHERE THIS GOES
+#   On cPanel this file belongs in  ~/public_html/.htaccess  — NOT in the
+#   project root. Do NOT replace that file, because cPanel's
+#   "Setup Python App" writes its Passenger block there:
+#
+#       # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+#       PassengerAppRoot "/home/<acct>/sboi"
+#       PassengerBaseURI "/"
+#       PassengerPython "/home/<acct>/virtualenv/sboi/3.13/bin/python"
+#       # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+#
+#   Instead APPEND this file to it — or let the .cpanel.yml deploy do it
+#   automatically (it appends only when the marker below is missing, so it
+#   never duplicates).
+#
+# Everything below only affects compression, caching and hidden files and is
+# safe to run alongside the Passenger block.
+# ===========================================================================
+
+# SBOI-DEPLOY-MARKER (used by .cpanel.yml — do not delete)
+
+# --- Basics ----------------------------------------------------------------
+# NB: if your host forbids the Options directive in .htaccess (you would get
+# an HTTP 500 with "Options not allowed here"), delete the next line.
+Options -Indexes +FollowSymLinks
+
+# --- Never expose dotfiles or source files ---------------------------------
+# .env, .git/… are dotfiles; ACME challenge files live in
+# .well-known/acme-challenge/<token> and have no leading dot, so SSL renewals
+# keep working.
+<FilesMatch "(^\.|~$|\.(py|sql|bak|log|conf|ini|yml|yaml)$)">
+    Require all denied
+</FilesMatch>
+
+# --- Compression -----------------------------------------------------------
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml \
+        text/javascript application/javascript application/json \
+        application/xml image/svg+xml
+</IfModule>
+
+# --- Caching ---------------------------------------------------------------
+# Static assets get long, immutable caching; everything else stays short so
+# HTML/content changes show up quickly.
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css                "access plus 1 year"
+    ExpiresByType application/javascript  "access plus 1 year"
+    ExpiresByType text/javascript         "access plus 1 year"
+    ExpiresByType image/jpeg              "access plus 1 year"
+    ExpiresByType image/png               "access plus 1 year"
+    ExpiresByType image/gif               "access plus 1 year"
+    ExpiresByType image/webp              "access plus 1 year"
+    ExpiresByType image/svg+xml           "access plus 1 year"
+    ExpiresByType image/x-icon            "access plus 1 year"
+    ExpiresByType font/woff2              "access plus 1 year"
+    ExpiresByType font/woff               "access plus 1 year"
+    ExpiresByType text/html               "access plus 0 seconds"
+    ExpiresDefault                        "access plus 1 hour"
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|jpg|jpeg|png|gif|svg|webp|ico|woff2?|ttf|eot)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>
+
+# --- Serve /static/ and /media/ straight from disk (never through Passenger) -
+# Those folders live inside public_html, so Apache can return them directly.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|png|jpg|jpeg|gif|svg|webp|ico)$">
+        Header always set X-Content-Type-Options "nosniff"
+    </FilesMatch>
+</IfModule>
+
+# --- Optional: force HTTPS ------------------------------------------------
+# Django already redirects to HTTPS (SECURE_SSL_REDIRECT). Enable the block
+# below only if you also want Apache to do it. Leave it off if cPanel's
+# AutoSSL/DocumentRoot setup causes a redirect loop, or if you preview the app
+# on the mail subdomain.
+#
+# <IfModule mod_rewrite.c>
+#     RewriteEngine On
+#     RewriteCond %{HTTPS} !=on
+#     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+# </IfModule>

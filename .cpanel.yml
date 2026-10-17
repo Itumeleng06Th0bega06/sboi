@@ -3,24 +3,34 @@
 # cPanel Git™ Version Control — deployment recipe
 # ===========================================================================
 #
-# cPanel -> Git Version Control -> (your repo) -> "Pull or Deploy" ->
-# "Deploy HEAD Commit" runs the tasks below, in order, on the server.
+# Account: shekinah  ->  repo & app root  ~/repositories/sboi
+#                        virtualenv       ~/virtualenv/sboi/<py>/
+#                        web root         ~/public_html
 #
-# BEFORE FIRST USE, set the two values at the top of `tasks`
-# (APP_NAME and PY_VER) to match what you chose in "Setup Python App".
-# If you did NOT clone the repo straight into ~/sboi, also change APP_ROOT
-# to the folder that contains manage.py.
+# cPanel -> Git Version Control -> (your repo) -> "Pull or Deploy" ->
+# "Deploy HEAD Commit" runs the tasks below inside the repo directory.
+#
+# APP_NAME is the repo folder (repositories/<APP_NAME>); VENV_NAME is the
+# "Setup Python App" name (normally the same). The Python version is
+# auto-detected, so you do not need to know it.
 # ===========================================================================
 
 deployment:
   tasks:
-    # --- Edit these two to match your account ---------------------------
+    # --- Repo folder name (cPanel clones into ~/repositories/<name>) --------
     - export APP_NAME=sboi
-    - export PY_VER=3.13
-    # --------------------------------------------------------------------
-    - export APP_ROOT=$HOME/$APP_NAME
-    - export VENV_BIN=$HOME/virtualenv/$APP_NAME/$PY_VER/bin
+    # --- Name used in "Setup Python App" (its virtualenv folder) ------------
+    - export VENV_NAME=sboi
+    # -----------------------------------------------------------------------
+    - export APP_ROOT=$HOME/repositories/$APP_NAME
     - export DJANGO_SETTINGS_MODULE=sboi.settings_prod
+
+    # Locate the virtualenv cPanel created (works for any Python version).
+    - export VENV_PY=$(ls -1 $HOME/virtualenv/$VENV_NAME/*/bin/python 2>/dev/null | head -n1)
+    - export VENV_BIN=${VENV_PY%/python}
+    - test -n "$VENV_PY" || (echo "ERROR - no virtualenv under $HOME/virtualenv/$VENV_NAME; set VENV_NAME in .cpanel.yml" && exit 1)
+
+    - echo "==> Using interpreter $VENV_PY"
 
     - echo "==> Installing Python dependencies"
     - $VENV_BIN/pip install --upgrade pip
@@ -31,6 +41,13 @@ deployment:
 
     - echo "==> Collecting static files into public_html/static"
     - $VENV_BIN/python $APP_ROOT/manage.py collectstatic --noinput
+
+    - echo "==> Installing web-server rules in public_html"
+    - mkdir -p $HOME/public_html/static $HOME/public_html/media
+    - touch $HOME/public_html/.htaccess
+    - grep -q SBOI-DEPLOY-MARKER $HOME/public_html/.htaccess || cat $APP_ROOT/.htaccess >> $HOME/public_html/.htaccess
+    - printf 'PassengerEnabled off\n' > $HOME/public_html/static/.htaccess
+    - printf 'PassengerEnabled off\n' > $HOME/public_html/media/.htaccess
 
     - echo "==> Restarting the Passenger application"
     - mkdir -p $APP_ROOT/tmp
