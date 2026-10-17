@@ -116,11 +116,17 @@ your host provides (Terminal, "Run Python script", or a temporary cron job like
 the one described for `superuser.py`):
 
 ```bash
-export DJANGO_SETTINGS_MODULE=sboi.settings_prod
-
-python manage.py migrate
-python manage.py collectstatic --noinput
+python manage.py migrate --settings=sboi.settings_prod
+python manage.py collectstatic --noinput --settings=sboi.settings_prod
 ```
+
+Pass `--settings` on **every** command. A cron job runs a single line, so an
+earlier `export DJANGO_SETTINGS_MODULE=...` never reaches it; without the flag
+Django loads the *development* settings and `collectstatic` dies with
+`You're using the staticfiles app without having set the STATIC_ROOT setting to
+a filesystem path`. As one complete cron command (no terminal needed):
+
+    /home1/shekinah/virtualenv/repositories/sboi/3.13/bin/python /home1/shekinah/repositories/sboi/manage.py collectstatic --noinput --settings=sboi.settings_prod
 
 `collectstatic` writes CSS/JS/images into `public_html/static`, and uploads are
 stored in `public_html/media`.
@@ -140,8 +146,7 @@ SUPERUSER_PASSWORD=...                 # required
 Then create the user with the bundled management command (no secret in git):
 
 ```bash
-export DJANGO_SETTINGS_MODULE=sboi.settings_prod
-python manage.py ensure_superuser
+python manage.py ensure_superuser --settings=sboi.settings_prod
 ```
 
 The command is idempotent — re-running it when the user exists changes nothing.
@@ -182,8 +187,8 @@ python manage.py loaddata data.json
 3. Sign in at `https://shekinahblaze.org/<your-ADMIN_URL>/`.
 4. Run the deploy check (Terminal / temporary cron):
 
-   ```bash
-   python manage.py check --deploy
+      ```bash
+   python manage.py check --deploy --settings=sboi.settings_prod
    ```
 
 ## 8. How files are served
@@ -222,8 +227,10 @@ two one-line files containing `PassengerEnabled off`.
 ## 9. Day-to-day
 
 - **Redeploys:** pull the new code, then `pip install -r requirements.txt`,
-  `python manage.py migrate`, `python manage.py collectstatic --noinput`, and
-  **Restart** the app.
+  `python manage.py migrate --settings=sboi.settings_prod`,
+  `python manage.py collectstatic --noinput --settings=sboi.settings_prod`, and
+  **Restart** the app. (Or just press **Deploy HEAD Commit**, which does all of
+  it.)
 - **Backups:** cPanel → **phpMyAdmin** → the database → **Export** (or use the
   **Backup Wizard**).
 - **Logs:** cPanel → **Setup Python App** (stderr log) and the domain's error
@@ -246,5 +253,9 @@ two one-line files containing `PassengerEnabled off`.
 - **`mysql_native_password` / driver errors** — this project uses PyMySQL, so no
   compiler is needed. If your MariaDB uses the `caching_sha2_password` plugin,
   `pip install cryptography` into the virtualenv.
+- **`You're using the staticfiles app without having set the STATIC_ROOT
+  setting to a filesystem path`** — the command ran with the development
+  settings. Add `--settings=sboi.settings_prod` to it; a cron job does not run
+  a previous `export DJANGO_SETTINGS_MODULE=...` line.
 - **Static files 404** — re-run `collectstatic` and confirm
   `public_html/static` exists; verify `STATIC_ROOT` in `sboi/settings_prod.py`.

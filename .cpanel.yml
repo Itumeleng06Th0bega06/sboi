@@ -39,10 +39,10 @@ deployment:
     - $VENV_BIN/pip install -r $APP_ROOT/requirements.txt
 
     - echo "==> Applying database migrations"
-    - DJANGO_SETTINGS_MODULE=sboi.settings_prod $VENV_BIN/python $APP_ROOT/manage.py migrate --noinput
+    - $VENV_BIN/python $APP_ROOT/manage.py migrate --noinput --settings=sboi.settings_prod
 
     - echo "==> Collecting static files into public_html/static"
-    - DJANGO_SETTINGS_MODULE=sboi.settings_prod $VENV_BIN/python $APP_ROOT/manage.py collectstatic --noinput
+    - $VENV_BIN/python $APP_ROOT/manage.py collectstatic --noinput --settings=sboi.settings_prod
 
     - echo "==> Installing web-server rules in public_html"
     - mkdir -p $HOME/public_html/static $HOME/public_html/media
