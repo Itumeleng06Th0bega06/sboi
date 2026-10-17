@@ -126,33 +126,41 @@ stored in `public_html/media`.
 
 ### Create the admin without a terminal
 
-cPanel has no interactive shell, so `createsuperuser` cannot prompt. Instead
-use the `superuser.py` script.
+cPanel has no interactive shell, so `createsuperuser` cannot prompt. The
+credentials live in `.env` (which is git-ignored — they are **not** stored in
+the repo). Set them there:
 
-It already contains default credentials, so you can run it as-is:
+```bash
+SUPERUSER_USERNAME=...                 # optional; defaults to the part before "@"
+SUPERUSER_EMAIL=admin@shekinahblaze.org
+SUPERUSER_PASSWORD=...                 # required
+```
 
-| Field | Default |
-| --- | --- |
-| Username | *(see `.env`)* |
-| Email | `admin@shekinahblaze.org` |
-| Password | *(see `.env`)* |
+Then create the user with the bundled management command (no secret in git):
 
-To use different values, set `SUPERUSER_USERNAME`, `SUPERUSER_EMAIL` and
-`SUPERUSER_PASSWORD` in `.env` (they override the defaults).
+```bash
+export DJANGO_SETTINGS_MODULE=sboi.settings_prod
+python manage.py ensure_superuser
+```
 
-1. cPanel → **Cron Jobs** → add a one-off job:
+The command is idempotent — re-running it when the user exists changes nothing.
+
+There is also a standalone `superuser.py` script that does the same thing
+without needing a terminal. It is **git-ignored**, so upload it next to
+`manage.py` by hand before running it:
+
+1. cPanel → **File Manager** → upload `superuser.py` into
+   `/home1/shekinah/repositories/sboi/`.
+2. cPanel → **Cron Jobs** → add a one-off job:
 
    ```
    /home1/shekinah/virtualenv/sboi/3.13/bin/python /home1/shekinah/repositories/sboi/superuser.py
    ```
 
-2. Click **Run Now**, confirm the output ("Superuser ... created"), then
+3. Click **Run Now**, confirm the output ("Superuser ... created"), then
    **delete the cron job**.
 
-The script is idempotent — re-running it when the user exists changes nothing.
-
-> **Change this password after your first sign-in** (Admin → Users), since the
-> default lives in a committed file.
+> **Change the password after your first sign-in** (Admin → Users).
 
 ### (Optional) Import existing content
 
