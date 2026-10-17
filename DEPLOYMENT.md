@@ -1,125 +1,216 @@
-# Deploying Shekinah Blaze to Render.com
+# Deploying Shekinah Blaze on cPanel (MariaDB)
 
 Production domain: **shekinahblaze.org** · Settings module: `sboi.settings_prod`
 
-## 1. What you need before starting
+The app runs under **Phusion Passenger** (cPanel's "Setup Python App"), stores
+data in **MariaDB**, and serves static files and uploads from the account's
+**`public_html`** directory.
 
-- A GitHub account (Render deploys from GitHub)
-- A Render account (https://render.com)
-- A `SECRET_KEY`: run
-  `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`
+---
 
-> **Media (testing phase):** uploaded files currently live on Render's local
-> disk. That disk is **ephemeral** — uploads are lost on every deploy/restart —
-> and media is **not served** in production. Do not upload pictures from the
-> admin during testing. Before going live with real uploads, add an
-> S3-compatible bucket (Backblaze B2 / Cloudflare R2) and set the default
-> storage to `storages.backends.s3boto3.S3Boto3Storage` in `settings_prod.py`.
+## Which environment is "production"?
 
-## 2. Push the code to GitHub
+| | Local development | **Production (cPanel)** |
+| --- | --- | --- |
+| Settings module | `sboi.settings` | **`sboi.settings_prod`** |
+| Config file | none | **`.env`** (copied from `.env.example`) |
+| Database | SQLite (`db.sqlite3`) | **MariaDB** |
+| `DEBUG` | `True` | `False` |
+| Static / media | `static/`, `media/` | **`public_html/static`, `public_html/media`** |
+| Served by | `runserver` | Passenger → `passenger_wsgi.py` |
 
-The repo has no commits yet. `.gitignore` already excludes `db.sqlite3`, `media/`, `.venv/` and secrets — verify with `git status` before the first commit that nothing sensitive is staged.
+**`.env.example` is only a template.** The real production configuration is the
+`.env` file you create from it. `passenger_wsgi.py` always loads
+`sboi.settings_prod`, which reads `.env` — so on the server you do **not** set
+`DJANGO_SETTINGS_MODULE` by hand (except for one-off `manage.py` commands).
 
-```powershell
-git add .
-git commit -m "Initial commit: production-ready SBOI site"
-git remote add origin https://github.com/<you>/sboi.git
-git push -u origin main
-```
+---
 
-## 3. Create the database (Render Postgres)
+## 1. Create the database and user
 
-1. Render dashboard → **New → PostgreSQL**
-2. Pick the smallest paid instance (this site is light)
-3. After creation, open the database → **Connections** → copy the **Internal Database URL** → this is `DATABASE_URL`
+1. cPanel → **MySQL® Databases**.
+2. **Create New Database** — e.g. `sboi` (cPanel prefixes it → `myacct_sboi`).
+3. **Add New User** — note the password (cPanel prefixes it → `myacct_sboiuser`).
+4. **Add User To Database** → select the database → grant **ALL PRIVILEGES**.
 
-## 4. Create the Web Service
+Write down the full (prefixed) names and the password — they go into `.env`.
 
-1. Render dashboard → **New → Web Service** → connect your GitHub repo
-2. Settings:
-   - **Name:** `sboi`
-   - **Region:** any (Frankfurt/Singapore/Virginia — pick closest to South Africa)
-   - **Runtime:** Python 3 (Render reads `runtime.txt`)
-   - **Build Command:**
-     ```
-     pip install -r requirements.txt && python manage.py collectstatic --noinput
-     ```
-   - **Start Command:**
-     ```
-     gunicorn sboi.wsgi:application --workers 2 --timeout 120 --graceful-timeout 60
-     ```
-   - **Health Check Path:** `/`
-3. **Environment** (Advanced tab) — set every variable from `.env.example`:
-   - `SECRET_KEY` (step 1)
-   - `DATABASE_URL` (step 3)
-   - `ALLOWED_HOSTS=shekinahblaze.org,www.shekinahblaze.org,.onrender.com`
-   - `CSRF_TRUSTED_ORIGINS=https://shekinahblaze.org,https://www.shekinahblaze.org,https://*.onrender.com`
-   - `ADMIN_URL=shekinah-fire-9x2k` — pick your own secret value, keep it private
-4. **Create Web Service** → wait for the first deploy to finish.
+> The site only needs plain MariaDB. No extensions beyond the defaults are
+> required.
 
-## 5. First-run setup (one time)
+## 2. Upload the code
 
-On the web service → **Shell** tab, run:
+Use cPanel → **Git™ Version Control** (recommended) or **File Manager** to put
+the project **outside** `public_html`, e.g. `/home/myacct/sboi`.
+
+Do **not** upload `.env`, `db.sqlite3`, `media/`, `staticfiles/` or `.venv/`
+(they are git-ignored).
+
+### Git deploys: `.cpanel.yml`
+
+The repo contains a **`.cpanel.yml`** file. Once your repo is set up under
+**Git Version Control**, use its **"Deploy HEAD Commit"** button and cPanel
+will automatically run the deploy tasks for you: install dependencies, run
+`migrate`, run `collectstatic`, and restart the app.
+
+Open `.cpanel.yml` first and set `APP_NAME`/`PY_VER` (and `APP_ROOT` if your
+repo is not cloned straight into `~/sboi`) to match your account. If you are
+deploying by hand (File Manager), ignore this file and follow steps 3–7 below.
+
+## 3. Create the Python application
+
+1. cPanel → **Setup Python App** → **Create Application**.
+2. Fill in:
+   - **Python version:** 3.11 or newer (3.13 preferred).
+   - **Application root:** `sboi` (the folder from step 2).
+   - **Application URL:** your domain (e.g. `shekinahblaze.org`).
+   - **Application startup file:** `passenger_wsgi.py`
+   - **Application Entry point:** `application`
+3. Click **Create**. cPanel makes a virtualenv (note its path, shown in the
+   panel, e.g. `/home/myacct/virtualenv/sboi/3.13`).
+
+## 4. Install dependencies
+
+Open the app's **"Enter to the virtual environment"** command at the top of the
+Python App page, run it in a Terminal/SSH session, then:
 
 ```bash
-python manage.py migrate --settings=sboi.settings_prod
-python manage.py createsuperuser --settings=sboi.settings_prod
+pip install --upgrade pip
+pip install -r ~/sboi/requirements.txt
 ```
 
-Import your existing database content (members, contact messages, site content):
+> If you truly have **no** terminal, some hosts expose a "Run pip install"
+> field on the Python App page — enter `-r /home/myacct/sboi/requirements.txt`
+> there. Otherwise contact your host to enable SSH for one command.
+
+## 5. Configure environment variables
+
+In the project root (`/home/myacct/sboi`) create a file named `.env` by copying
+`.env.example` and filling it in:
 
 ```bash
-# Locally, in the project folder:
-python manage.py dumpdata --natural-foreign --natural-primary -e contenttypes -e auth.Permission -e sessions -o data.json
-
-# In Render's Shell tab (upload data.json first via the Files tab):
-python manage.py loaddata --settings=sboi.settings_prod data.json
+cp ~/sboi/.env.example ~/sboi/.env
 ```
 
-> No media upload step for now — media is on the ephemeral disk during testing.
+Edit it (File Manager → Edit) and set at least:
 
-## 6. Point shekinahblaze.org at Render
+| Variable | Value |
+| --- | --- |
+| `SECRET_KEY` | long random string (see `.env.example` for the command) |
+| `DB_NAME` | `myacct_sboi` |
+| `DB_USER` | `myacct_sboiuser` |
+| `DB_PASSWORD` | the database user's password |
+| `ALLOWED_HOSTS` | `shekinahblaze.org,www.shekinahblaze.org` |
+| `CSRF_TRUSTED_ORIGINS` | `https://shekinahblaze.org,https://www.shekinahblaze.org` |
+| `ADMIN_URL` | your own secret path, e.g. `blaze-admin-9x2k` |
 
-1. Web Service → **Settings → Custom Domains** → add `shekinahblaze.org` and `www.shekinahblaze.org`
-2. Render shows the DNS records — add them at your DNS provider (CNAME to the `onrender.com` hostname, plus the `_acme-challenge` TXT record)
-3. Render provisions the Let's Encrypt certificate automatically
+## 6. First-run setup (once)
 
-## 7. Verify it's secure
+Run these with the production settings. Use whichever "run a command" method
+your host provides (Terminal, "Run Python script", or a temporary cron job like
+the one described for `superuser.py`):
 
-- Open `https://shekinahblaze.org` — the URL must never serve plain `http://`
-- The admin lives only at `https://shekinahblaze.org/<your-secret-ADMIN_URL>/`
-- Run `python manage.py check --deploy --settings=sboi.settings_prod` — it should report no issues
+```bash
+export DJANGO_SETTINGS_MODULE=sboi.settings_prod
 
-## 8. Day-to-day
-
-- **Redeploys:** push to GitHub → Render rebuilds. The database is untouched.
-- **Backups:** Render Postgres → **Backups** tab → take a manual backup before big changes.
-- **Logs:** Web Service → **Logs** tab.
-- **Bugs:** `python manage.py shell` in the Shell tab to inspect data.
-
-## 9. Seeding (one-time only — read this)
-
-`python manage.py seed` fills a **fresh/empty** database with the manual's
-content and images. By default it is additive-only: it creates missing rows
-and never touches or deletes anything you edited in the admin.
-
-> **NEVER put `seed` in the Render Build Command or Start Command.**
-> Boot-time seeding was the cause of admin edits "reverting" (contact info
-> changing back, deleted announcements reappearing). If it is currently in
-> your Start Command on Render, remove it — the Start Command must be only:
->
-> ```
-> gunicorn sboi.wsgi:application --workers 2 --timeout 120 --graceful-timeout 60
-> ```
-
-There is also a destructive reset variant for scratch databases only:
-
+python manage.py migrate
+python manage.py collectstatic --noinput
 ```
-python manage.py seed --refresh   # overwrites + prunes non-seed rows
+
+`collectstatic` writes CSS/JS/images into `public_html/static`, and uploads are
+stored in `public_html/media`.
+
+### Create the admin without a terminal
+
+cPanel has no interactive shell, so `createsuperuser` cannot prompt. Instead
+use the `superuser.py` script.
+
+It already contains default credentials, so you can run it as-is:
+
+| Field | Default |
+| --- | --- |
+| Username | *(see `.env`)* |
+| Email | `admin@shekinahblaze.org` |
+| Password | *(see `.env`)* |
+
+To use different values, set `SUPERUSER_USERNAME`, `SUPERUSER_EMAIL` and
+`SUPERUSER_PASSWORD` in `.env` (they override the defaults).
+
+1. cPanel → **Cron Jobs** → add a one-off job:
+
+   ```
+   /home/myacct/virtualenv/sboi/3.13/bin/python /home/myacct/sboi/superuser.py
+   ```
+
+2. Click **Run Now**, confirm the output ("Superuser ... created"), then
+   **delete the cron job**.
+
+The script is idempotent — re-running it when the user exists changes nothing.
+
+> **Change this password after your first sign-in** (Admin → Users), since the
+> default lives in a committed file.
+
+### (Optional) Import existing content
+
+```bash
+# Locally:
+python manage.py dumpdata --natural-foreign --natural-primary \
+  -e contenttypes -e auth.Permission -e sessions -o data.json
+
+# On cPanel: upload data.json to the project root, then run:
+python manage.py loaddata data.json
 ```
+
+## 7. Restart and verify
+
+1. cPanel → **Setup Python App** → **Restart** the application.
+2. Visit `https://shekinahblaze.org` — it must load over HTTPS with styles
+   applied.
+3. Sign in at `https://shekinahblaze.org/<your-ADMIN_URL>/`.
+4. Run the deploy check (Terminal / temporary cron):
+
+   ```bash
+   python manage.py check --deploy
+   ```
+
+## 8. How files are served
+
+| URL | Served from | By |
+| --- | --- | --- |
+| `/static/...` | `public_html/static` | Apache (after `collectstatic`) |
+| `/media/...` | `public_html/media` | Apache (uploaded files) |
+| everything else | the Django app | Passenger → `passenger_wsgi.py` |
+
+Because these live inside `public_html`, Apache returns them directly — fast and
+without waking Django. `MEDIA_ROOT`/`STATIC_ROOT` already point there via
+`PUBLIC_HTML` in `sboi/settings_prod.py`.
+
+## 9. Day-to-day
+
+- **Redeploys:** pull the new code, then `pip install -r requirements.txt`,
+  `python manage.py migrate`, `python manage.py collectstatic --noinput`, and
+  **Restart** the app.
+- **Backups:** cPanel → **phpMyAdmin** → the database → **Export** (or use the
+  **Backup Wizard**).
+- **Logs:** cPanel → **Setup Python App** (stderr log) and the domain's error
+  log.
+- **Bugs:** temporary cron running `python manage.py` commands as above.
 
 ## Security notes
 
-- `SECRET_KEY`, `DATABASE_URL` and `ADMIN_URL` are **never** committed to git
-- All cookies are HTTPS-only and SameSite=Lax; HSTS is on for a year
-- The admin URL is unguessable by design (no `/admin/` to brute-force)
+- `SECRET_KEY`, the DB password and `ADMIN_URL` live only in `.env` (git-ignored).
+- Cookies are HTTPS-only and SameSite=Lax; HSTS is on for a year.
+- The admin URL is unguessable by design (no `/admin/` to brute-force).
+- Delete one-off cron jobs (especially `superuser.py`) after you use them.
+
+## Notes / troubleshooting
+
+- **`ImproperlyConfigured: DB_NAME is not set`** — `.env` is missing or the
+  variable is blank; check the file lives in the project root.
+- **Redirect loop / not staying on HTTPS** — set `SECURE_SSL_REDIRECT=false`
+  in `.env`.
+- **`mysql_native_password` / driver errors** — this project uses PyMySQL, so no
+  compiler is needed. If your MariaDB uses the `caching_sha2_password` plugin,
+  `pip install cryptography` into the virtualenv.
+- **Static files 404** — re-run `collectstatic` and confirm
+  `public_html/static` exists; verify `STATIC_ROOT` in `sboi/settings_prod.py`.

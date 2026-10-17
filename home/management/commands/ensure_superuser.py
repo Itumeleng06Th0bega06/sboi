@@ -17,7 +17,8 @@ class Command(BaseCommand):
         if not email or not password:
             raise CommandError(
                 'SUPERUSER_EMAIL and SUPERUSER_PASSWORD must be set in the '
-                'environment (Render -> Environment -> Add Environment Variable).'
+                'environment (add them to the project .env file, or use the '
+                'standalone superuser.py script).'
             )
 
         User = get_user_model()

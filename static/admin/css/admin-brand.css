@@ -60,17 +60,9 @@ body.bg-body-tertiary {
   color: var(--sboi-ink);
 }
 
-/* Sidebar toggle icon: always white, whatever its state */
-.app-header.navbar a[data-lte-toggle="sidebar"] i,
-.app-header.navbar a[data-lte-toggle="sidebar"]:hover i,
-.app-header.navbar a[data-lte-toggle="sidebar"]:focus i,
-.app-header.navbar a[data-lte-toggle="sidebar"]:active i {
-  color: #fff !important;
-}
-
 .app-header .form-control-navbar {
   background-color: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 0;
   color: #fff;
 }
 
@@ -86,18 +78,19 @@ body.bg-body-tertiary {
 
 .app-header .form-control-navbar:focus {
   border-color: var(--sboi-gold);
-  box-shadow: 0 0 0 0.2rem rgba(210, 162, 78, 0.25);
+  box-shadow: none;
 }
 
 /* ---------- "View Website" button (top menu link) ---------- */
 .app-header .navbar-nav:not(.ms-auto) .nav-link:not([data-lte-toggle]):not(.dropdown-toggle) {
   background: linear-gradient(135deg, var(--sboi-gold), var(--sboi-gold-2));
-  border-color: var(--sboi-gold-2);
+  border: 0;
   color: var(--sboi-green);
   font-weight: 600;
-  font-size: 0.78rem;
-  border-radius: 7px;
-  padding: 0.18rem 0.6rem;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  border-radius: 6px;
+  padding: 0.12rem 0.5rem;
   margin-left: 0.4rem;
   white-space: nowrap;
   flex-shrink: 0;
@@ -110,90 +103,21 @@ body.bg-body-tertiary {
   box-shadow: 0 3px 10px rgba(210, 162, 78, 0.2);
 }
 
-/* ---------- Sidebar (AdminLTE 4: .app-sidebar + --lte-sidebar-* vars) ---------- */
-.app-sidebar {
-  background: linear-gradient(180deg, var(--sboi-green), var(--sboi-green-bg));
-  --lte-sidebar-color: rgba(255, 255, 255, 0.82);
-  --lte-sidebar-hover-color: var(--sboi-gold);
-  --lte-sidebar-hover-bg: rgba(255, 255, 255, 0.08);
-  --lte-sidebar-active-color: var(--sboi-green);
-  --lte-sidebar-menu-active-bg: var(--sboi-gold);
-  --lte-sidebar-menu-active-color: var(--sboi-green);
-  --lte-sidebar-submenu-bg: rgba(0, 0, 0, 0.22);
-  --lte-sidebar-submenu-color: rgba(255, 255, 255, 0.75);
-  --lte-sidebar-submenu-hover-color: var(--sboi-gold);
-  --lte-sidebar-submenu-hover-bg: rgba(255, 255, 255, 0.06);
-  --lte-sidebar-submenu-active-color: var(--sboi-gold);
-  --lte-sidebar-submenu-active-bg: rgba(210, 162, 78, 0.12);
-  --lte-sidebar-header-color: var(--sboi-gold);
+/* ---------- Brand logo in the top navbar ----------
+   The sidebar has been removed, so Jazzmin renders the site logo inside the
+   navbar instead. Keep it compact. */
+#jazzy-navbar .brand-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0;
 }
 
-.sidebar-brand .brand-link {
-  color: #fff;
-  border-bottom: 1px solid rgba(210, 162, 78, 0.3);
-}
-
-.sidebar-brand .brand-link:hover {
-  color: var(--sboi-gold);
-}
-
-.sidebar-brand .brand-text {
-  display: none;
-}
-
-.sidebar-brand .brand-image {
+#jazzy-navbar .brand-link .brand-image {
   height: 34px;
   width: auto;
-}
-
-.sidebar-wrapper .sidebar-menu .nav-item > .nav-link {
-  color: rgba(255, 255, 255, 0.82);
-  border-radius: 8px;
-  margin: 0.1rem 0.5rem;
-  width: auto;
-}
-
-.sidebar-wrapper .sidebar-menu .nav-item > .nav-link:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--sboi-gold);
-}
-
-.sidebar-wrapper .sidebar-menu .nav-item > .nav-link.active {
-  background: linear-gradient(135deg, var(--sboi-gold), var(--sboi-gold-2));
-  color: var(--sboi-green);
-  font-weight: 600;
-  box-shadow: 0 6px 18px rgba(210, 162, 78, 0.18);
-}
-
-.sidebar-wrapper .sidebar-menu .nav-item > .nav-link.active .nav-icon {
-  color: var(--sboi-green);
-}
-
-.sidebar-wrapper .sidebar-menu .nav-item > .nav-link .nav-icon {
-  color: var(--sboi-gold);
-}
-
-.sidebar-wrapper .sidebar-menu .nav-header {
-  color: var(--sboi-gold);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-}
-
-.sidebar-wrapper .sidebar-menu .nav-treeview .nav-link {
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.sidebar-wrapper .sidebar-menu .nav-treeview .nav-link:hover {
-  color: var(--sboi-gold);
-}
-
-.sidebar-wrapper .sidebar-menu .nav-treeview .nav-link.active {
-  color: var(--sboi-gold);
-  background: rgba(210, 162, 78, 0.12);
-}
-
-.sidebar-wrapper .user-panel .info a {
-  color: rgba(255, 255, 255, 0.85);
+  max-width: 220px;
+  object-fit: contain;
+  opacity: 1 !important;
 }
 
 /* ---------- Content ---------- */
@@ -289,7 +213,7 @@ a.dropdown-item {
 .form-control:focus,
 .form-select:focus {
   border-color: var(--sboi-gold);
-  box-shadow: 0 0 0 0.2rem rgba(210, 162, 78, 0.25);
+  box-shadow: none;
 }
 
 .input-group-text {
@@ -305,7 +229,7 @@ a.dropdown-item {
 
 .form-check-input:focus {
   border-color: var(--sboi-gold);
-  box-shadow: 0 0 0 0.2rem rgba(210, 162, 78, 0.25);
+  box-shadow: none;
 }
 
 /* ---------- Text / links ---------- */
@@ -395,10 +319,6 @@ a.dropdown-item {
   color: var(--sboi-green);
 }
 
-.pagination .page-item.active .page-link:focus {
-  box-shadow: 0 0 0 0.2rem rgba(210, 162, 78, 0.25);
-}
-
 /* ---------- Tables ---------- */
 .table thead th {
   color: var(--sboi-green);
@@ -410,7 +330,7 @@ a.dropdown-item {
 }
 
 .table-hover tbody tr:hover {
-  background-color: var(--sboi-cream-2);
+  background-color: rgba(210, 162, 78, 0.12);
 }
 
 /* ---------- Pagination ---------- */
@@ -633,11 +553,6 @@ a.dropdown-item {
   color: var(--sboi-gold);
 }
 
-.login-page :focus-visible {
-  outline: 2px solid var(--sboi-gold);
-  outline-offset: 2px;
-}
-
 @media (max-width: 480px) {
   .login-box .card-body.login-card-body {
     padding: 1.6rem 1.4rem 2rem;
@@ -653,98 +568,11 @@ a.dropdown-item {
   background: linear-gradient(90deg, var(--sboi-gold), var(--sboi-gold-2));
   border: none;
 }
-/* ---------- Dashboard (admin index) ---------- */
-.sboi-dash-wrap { max-width: 1280px; }
-
-.sboi-dash-hero {
-  display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
-  padding: 1.25rem 1.5rem; margin-bottom: 1.25rem;
-  background: linear-gradient(135deg, var(--sboi-green), var(--sboi-green-bg));
-  border-radius: 12px; color: #fff; box-shadow: 0 8px 22px rgba(0, 100, 75, 0.12);
-}
-.sboi-dash-hero h1 {
-  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
-  font-size: 1.5rem; margin: 0; color: #fff;
-}
-.sboi-dash-hero p { margin: 0.25rem 0 0; color: rgba(255, 255, 255, 0.78); font-size: 0.95rem; }
-.sboi-dash-date {
-  font-weight: 600; color: var(--sboi-gold); background: rgba(255, 255, 255, 0.08);
-  padding: 0.45rem 0.9rem; border-radius: 8px; font-size: 0.92rem; white-space: nowrap;
-}
-
-.sboi-panel {
-  background: #fff; border: 1px solid rgba(0, 100, 75, 0.1); border-radius: 12px;
-  padding: 1.1rem 1.25rem; margin-bottom: 1.25rem;
-  box-shadow: 0 2px 10px rgba(0, 100, 75, 0.02);
-}
-.sboi-panel h2 {
-  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
-  font-size: 1.05rem; margin: 0 0 0.9rem; color: var(--sboi-green);
-  padding-bottom: 0.5rem; border-bottom: 2px solid rgba(210, 162, 78, 0.35);
-}
-.sboi-none { color: var(--sboi-muted); font-size: 0.9rem; }
-
-.sboi-stats {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.85rem;
-}
-a.stat-card {
-  display: flex; align-items: baseline; gap: 0.85rem; padding: 1rem 1.1rem;
-  background: var(--sboi-cream); border: 1px solid rgba(0, 100, 75, 0.08);
-  border-left: 4px solid var(--sboi-gold); border-radius: 10px;
-  text-decoration: none; color: var(--sboi-green);
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
-}
-a.stat-card:hover { box-shadow: 0 8px 22px rgba(0, 100, 75, 0.08); transform: translateY(-2px); }
-.stat-count { font-size: 1.7rem; font-weight: 700; line-height: 1; color: var(--sboi-gold-2); }
-.stat-count.zero { color: var(--sboi-muted); }
-.stat-label { font-size: 0.85rem; color: var(--sboi-muted); line-height: 1.3; }
-
-.sboi-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
-a.action-btn {
-  display: inline-flex; align-items: center; gap: 0.5rem;
-  padding: 0.5rem 0.95rem; border-radius: 8px;
-  background: var(--sboi-green); color: #fff; text-decoration: none;
-  font-weight: 600; font-size: 0.88rem;
-  transition: background 0.15s, transform 0.15s;
-}
-a.action-btn:hover { background: var(--sboi-green-bg); transform: translateY(-1px); }
-a.action-btn i { color: var(--sboi-gold); }
-
-.sboi-grid { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
-@media (max-width: 1100px) { .sboi-grid { grid-template-columns: 1fr; } }
-
-.sboi-media-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.8rem;
-}
-a.media-tile {
-  display: block; text-decoration: none; border-radius: 10px; overflow: hidden;
-  border: 1px solid rgba(0, 100, 75, 0.12); background: var(--sboi-cream);
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
-}
-a.media-tile:hover { box-shadow: 0 8px 20px rgba(0, 100, 75, 0.09); transform: translateY(-2px); }
-a.media-tile img { display: block; width: 100%; height: 100px; object-fit: cover; }
-.media-caption {
-  display: block; padding: 0.4rem 0.6rem; font-size: 0.8rem; color: var(--sboi-green);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-
-ul.sboi-list { list-style: none; margin: 0; padding: 0; }
-ul.sboi-list li { padding: 0.55rem 0; border-bottom: 1px solid rgba(0, 100, 75, 0.07); }
-ul.sboi-list li:last-child { border-bottom: none; }
-ul.sboi-list a { color: var(--sboi-green); font-weight: 600; text-decoration: none; }
-ul.sboi-list a:hover { color: var(--sboi-gold-2); text-decoration: underline; }
-.list-meta { display: block; font-size: 0.8rem; color: var(--sboi-muted); margin-top: 0.15rem; }
-.sboi-badge {
-  display: inline-block; margin-right: 0.35rem; padding: 0.1rem 0.5rem;
-  background: var(--sboi-gold); color: var(--sboi-green); border-radius: 999px;
-  font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
-}
-
 /* ---------- Global admin search page ---------- */
 .sboi-global-search { max-width: 860px; }
 .sboi-search-form { display: flex; gap: 0.6rem; margin-bottom: 1.4rem; }
 .sboi-search-form .form-control { flex: 1; border-radius: 8px; border-color: rgba(0, 100, 75, 0.25); }
-.sboi-search-form .form-control:focus { border-color: var(--sboi-gold); box-shadow: 0 0 0 0.2rem rgba(210, 162, 78, 0.25); }
+.sboi-search-form .form-control:focus { border-color: var(--sboi-gold); box-shadow: none; }
 .sboi-search-form .btn { border-radius: 8px; white-space: nowrap; }
 .sboi-search-summary { color: var(--sboi-muted); margin-bottom: 1.2rem; }
 .sboi-search-none { color: var(--sboi-muted); padding: 1.5rem 0; }
@@ -793,3 +621,612 @@ img.admin-thumb {
   border-radius: 8px; border: 1px solid rgba(0, 100, 75, 0.2);
   box-shadow: 0 2px 8px rgba(0, 100, 75, 0.05);
 }
+
+/* ================================================================
+   DARK + GOLD ADMIN THEME
+   Brings the admin (dashboard, changelists, forms, search and the
+   login screen) in line with the public site: deep plum surfaces,
+   cream text and gold accents. Loaded last so it overrides the
+   original green/light rules above.
+   ================================================================ */
+
+:root,
+[data-bs-theme='light'],
+[data-bs-theme='dark'] {
+  --sboi-green: #d2a24e;          /* repurposed: gold accent                    */
+  --sboi-green-2: #b07f3a;
+  --sboi-green-3: #100d1c;        /* deep band                                  */
+  --sboi-green-bg: #14111f;       /* band                                        */
+  --sboi-cream: #221e33;          /* surface                                     */
+  --sboi-cream-2: #2a2540;        /* raised surface                              */
+  --sboi-ink: #ece6d9;            /* body text                                   */
+  --sboi-muted: #b0a695;
+  --sboi-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+
+  --bs-primary: #d2a24e;
+  --bs-primary-rgb: 210, 162, 78;
+  --bs-primary-text-emphasis: #e7c47c;
+  --bs-primary-bg-subtle: rgba(210, 162, 78, 0.12);
+  --bs-primary-border-subtle: rgba(210, 162, 78, 0.3);
+  --bs-link-color: #d2a24e;
+  --bs-link-color-rgb: 210, 162, 78;
+  --bs-link-hover-color: #e7c47c;
+  --bs-link-hover-color-rgb: 231, 196, 124;
+  --bs-body-bg: #1b1729;
+  --bs-body-color: #ece6d9;
+  --bs-secondary-bg: #221e33;
+  --bs-tertiary-bg: #262138;
+  --bs-border-color: rgba(210, 162, 78, 0.16);
+  --bs-secondary-color: #b0a695;
+  --bs-emphasis-color: #f4efe4;
+  --bs-heading-color: #ece6d9;
+  --bs-card-bg: #221e33;
+  --bs-card-border-color: rgba(210, 162, 78, 0.16);
+  --bs-card-cap-bg: #262138;
+  --bs-dropdown-bg: #221e33;
+  --bs-modal-bg: #221e33;
+}
+
+/* ---------- Surfaces ---------- */
+body,
+body.bg-body-secondary,
+body.bg-body-tertiary {
+  background-color: #1b1729 !important;
+  color: var(--sboi-ink);
+}
+
+.app-main {
+  background-color: #1b1729;
+}
+
+.app-content-header h3 {
+  color: var(--sboi-ink);
+}
+
+/* ---------- Navbar ---------- */
+.app-header.navbar {
+  background: linear-gradient(90deg, #14111f, #0f0d1a);
+  border-bottom: 1px solid rgba(210, 162, 78, 0.3);
+}
+
+/* "View Website" pill: gold with dark text */
+.app-header .navbar-nav:not(.ms-auto) .nav-link:not([data-lte-toggle]):not(.dropdown-toggle) {
+  color: #1b1729;
+}
+
+/* ---------- Cards ---------- */
+.card {
+  border-color: rgba(210, 162, 78, 0.16);
+  background-color: #221e33;
+  box-shadow: var(--sboi-shadow);
+  color: var(--sboi-ink);
+}
+
+.card .card-header {
+  background-color: #262138;
+  border-bottom: 1px solid rgba(210, 162, 78, 0.16);
+}
+
+.card .card-header .card-title {
+  color: var(--sboi-ink);
+}
+
+.card-primary:not(.card-outline) > .card-header {
+  background: linear-gradient(90deg, #14111f, #0f0d1a);
+}
+
+/* ---------- Buttons ---------- */
+.btn-primary,
+.btn-outline-primary:hover {
+  background: linear-gradient(135deg, var(--sboi-gold), var(--sboi-gold-2));
+  border-color: var(--sboi-gold-2);
+  color: #1b1729;
+  box-shadow: 0 6px 16px rgba(210, 162, 78, 0.2);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background: linear-gradient(135deg, #e0b96a, #c69a4e);
+  border-color: #c69a4e;
+  color: #1b1729;
+}
+
+.btn-primary:not(:disabled):not(.disabled):active,
+.btn-primary:not(:disabled):not(.disabled).active {
+  background: linear-gradient(135deg, #c69a4e, #b07f3a);
+  border-color: #b07f3a;
+  color: #1b1729;
+}
+
+.btn-primary.disabled,
+.btn-primary:disabled {
+  background-color: #3a3352;
+  border-color: #3a3352;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.btn-outline-primary:not(:disabled):not(.disabled):active,
+.btn-outline-primary:not(:disabled):not(.disabled).active {
+  background-color: var(--sboi-gold-2);
+  border-color: var(--sboi-gold-2);
+  color: #1b1729;
+}
+
+/* ---------- Links ---------- */
+.app-content a:not(.btn):not(.nav-link):not(.brand-link):hover,
+.btn-link:hover {
+  color: #e7c47c;
+}
+
+/* ---------- Nav pills / tabs ---------- */
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+  background-color: var(--sboi-gold);
+  color: #1b1729;
+}
+
+.nav-pills .nav-link:hover:not(.active) {
+  color: #e7c47c;
+}
+
+.nav-tabs .nav-link {
+  color: var(--sboi-muted);
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--sboi-ink);
+  border-bottom-color: var(--sboi-gold);
+}
+
+.nav-tabs .nav-link:hover {
+  color: #e7c47c;
+}
+
+/* ---------- Callouts / list groups ---------- */
+.callout.callout-primary {
+  background-color: #221e33;
+  color: var(--sboi-ink);
+}
+
+.list-group-item {
+  background-color: #221e33;
+  border-color: rgba(210, 162, 78, 0.16);
+  color: var(--sboi-ink);
+}
+
+.list-group-item.active {
+  background-color: var(--sboi-gold);
+  border-color: var(--sboi-gold-2);
+  color: #1b1729;
+}
+
+/* ---------- Tables ---------- */
+.table {
+  --bs-table-color: #ece6d9;
+  --bs-table-bg: transparent;
+  --bs-table-striped-color: #ece6d9;
+  --bs-table-striped-bg: rgba(255, 255, 255, 0.03);
+  --bs-table-hover-color: #ffffff;
+  --bs-table-hover-bg: rgba(210, 162, 78, 0.09);
+  --bs-table-border-color: rgba(210, 162, 78, 0.16);
+  color: var(--sboi-ink);
+}
+
+.table thead th {
+  color: var(--sboi-gold);
+  border-bottom: 2px solid var(--sboi-gold);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(210, 162, 78, 0.09);
+}
+
+/* ---------- Pagination ---------- */
+.pagination .page-link {
+  color: var(--sboi-ink);
+  background-color: #2a2540;
+  border-color: rgba(210, 162, 78, 0.22);
+}
+
+.pagination .page-link:hover {
+  color: #ffffff;
+  background-color: #352f52;
+}
+
+.pagination .page-item.active .page-link {
+  color: #1b1729;
+}
+
+/* ---------- Dropdowns / selects / badges ---------- */
+.dropdown-menu {
+  background-color: #221e33;
+  border-color: rgba(210, 162, 78, 0.22);
+  color: var(--sboi-ink);
+}
+
+.dropdown-item {
+  color: var(--sboi-ink);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background-color: rgba(210, 162, 78, 0.14);
+  color: var(--sboi-gold);
+}
+
+.input-group-text {
+  background-color: #2a2540;
+  border-color: rgba(210, 162, 78, 0.22);
+  color: var(--sboi-ink);
+}
+
+.bg-primary {
+  background-color: var(--sboi-gold) !important;
+  color: #1b1729 !important;
+}
+
+.badge-primary {
+  background-color: var(--sboi-gold) !important;
+  color: #1b1729 !important;
+}
+
+.select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--multiple {
+  background-color: #2a2540;
+  border-color: rgba(210, 162, 78, 0.22);
+  color: var(--sboi-ink);
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+  color: var(--sboi-ink);
+}
+
+.select2-dropdown {
+  background-color: #221e33;
+  border-color: rgba(210, 162, 78, 0.22);
+}
+
+.select2-container--default .select2-results__option[aria-selected] {
+  color: var(--sboi-ink);
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+  background-color: var(--sboi-gold-2);
+  color: #1b1729;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+  background-color: var(--sboi-gold);
+  border-color: var(--sboi-gold-2);
+  color: #1b1729;
+}
+
+/* ---------- Modals ---------- */
+.modal-content {
+  background-color: #221e33;
+  color: var(--sboi-ink);
+}
+
+.modal-header,
+.modal-footer {
+  border-color: rgba(210, 162, 78, 0.16);
+}
+
+/* ---------- Footer ---------- */
+.app-footer {
+  background-color: #14111f;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* ---------- Global admin search ---------- */
+.sboi-search-group {
+  background: #221e33;
+  border-color: rgba(210, 162, 78, 0.16);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+.sboi-search-group h2 {
+  color: var(--sboi-ink);
+}
+
+.sboi-search-count {
+  background: var(--sboi-gold);
+  color: #1b1729;
+}
+
+.sboi-search-group a {
+  color: var(--sboi-ink);
+}
+
+.sboi-search-group a:hover {
+  color: var(--sboi-gold);
+}
+
+.sboi-search-form .form-control {
+  border-color: rgba(210, 162, 78, 0.25);
+}
+
+/* ---------- Thumbnails ---------- */
+img.admin-thumb {
+  border-color: rgba(210, 162, 78, 0.25);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+  background: #2a2540;
+}
+
+.admin-thumb-empty {
+  border-color: rgba(210, 162, 78, 0.3);
+  background: #2a2540;
+  color: var(--sboi-muted);
+}
+
+.form-row .file-upload img,
+.aligned .file-upload img,
+.form-row.field-image img {
+  border-color: rgba(210, 162, 78, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- Auth pages (login / password reset) ---------- */
+.login-page,
+.register-page {
+  background: radial-gradient(circle at 50% 0%, #262138, #100d1c 70%);
+}
+
+.login-page .btn.btn-gold {
+  background: linear-gradient(135deg, var(--sboi-gold), var(--sboi-gold-2));
+  color: #1b1729;
+  box-shadow: 0 8px 22px rgba(210, 162, 78, 0.28);
+}
+
+.login-page .btn.btn-gold:hover {
+  background: linear-gradient(135deg, #e0b96a, #c69a4e);
+  color: #1b1729;
+  box-shadow: 0 12px 28px rgba(210, 162, 78, 0.34);
+}
+
+/* ================================================================
+   ACCENT REFRESH
+   Glassy white->violet primary action buttons (matching the public
+   site) and a muted "View Website" pill.
+   ================================================================ */
+
+/* Primary action buttons + login button */
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:not(:disabled):not(.disabled):active,
+.btn-primary:not(:disabled):not(.disabled).active,
+.login-page .btn.btn-gold,
+.login-page .btn.btn-gold:hover {
+  background: linear-gradient(135deg, #ffffff, #280047);
+  border-color: transparent;
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(40, 0, 71, 0.55);
+  box-shadow: 0 8px 22px rgb(119 0 246);
+}
+
+.btn-primary:hover,
+.login-page .btn.btn-gold:hover {
+  background: linear-gradient(135deg, #f1e6ff, #3a0066);
+  box-shadow: 0 12px 28px rgb(119 0 246);
+}
+
+.btn-primary i {
+  color: #ffffff;
+}
+
+/* "View Website": small and centred */
+.app-header .navbar-nav:not(.ms-auto) .nav-link:not([data-lte-toggle]):not(.dropdown-toggle) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 26px !important;
+  min-height: 26px !important;
+  padding: 0 0.6rem;
+  font-size: 0.68rem;
+  line-height: 1;
+  border-radius: 999px;
+}
+
+.sboi-quickadd-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  height: 28px !important;
+  min-height: 28px !important;
+  padding: 0 0.7rem !important;
+  font-size: 0.72rem;
+  line-height: 1;
+  border-radius: 999px;
+  background: #ffffff !important;
+  color: #1b1729 !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.sboi-quickadd-toggle i {
+  color: #7a1fd6;
+}
+
+.sboi-quickadd-toggle:hover {
+  background: #f2ecff !important;
+}
+
+.sboi-quickadd-menu {
+  background: #221e33;
+  border: 1px solid rgba(210, 162, 78, 0.2);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  min-width: 220px;
+  padding: 0.35rem;
+}
+
+.sboi-quickadd-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--sboi-ink) !important;
+  border-radius: 6px;
+}
+
+.sboi-quickadd-item i {
+  color: #b39cff;
+  width: 18px;
+  text-align: center;
+}
+
+.sboi-quickadd-item:hover,
+.sboi-quickadd-item:focus {
+  background: rgba(119, 0, 246, 0.22) !important;
+  color: #ffffff !important;
+}
+
+/* Readable placeholders across the admin */
+.app-header .form-control-navbar::placeholder,
+.login-page .input::placeholder,
+.sboi-search-form .form-control::placeholder,
+input::placeholder,
+textarea::placeholder {
+  color: rgba(236, 230, 217, 0.6) !important;
+  opacity: 1;
+}
+
+/* ================================================================
+   CHURCH MEMBERSHIP ADMIN FORMS
+   Native (non-select2) selects, native date inputs, tidy errors
+   ================================================================ */
+body.app-members.model-churchmembership #content-main form select {
+  min-height: 38px;
+  padding: 0.375rem 0.7rem;
+  background-color: #2a2540;
+  color: var(--sboi-ink);
+  border: 1px solid rgba(210, 162, 78, 0.25);
+  border-radius: 6px;
+  font: inherit;
+  line-height: 1.4;
+}
+
+body.app-members.model-churchmembership #content-main form select:focus {
+  border-color: var(--sboi-gold);
+  outline: none;
+}
+
+body.app-members.model-churchmembership #content-main form input[type='date'] {
+  min-height: 38px;
+  padding: 0.375rem 0.7rem;
+  background-color: #2a2540;
+  color: var(--sboi-ink);
+  border: 1px solid rgba(210, 162, 78, 0.25);
+  border-radius: 6px;
+}
+
+/* Tidy validation messages (no stray text under fields) */
+#content-main .errorlist {
+  margin: 0.3rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+#content-main .errorlist li {
+  color: #ff9d9d;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  margin: 0.15rem 0;
+}
+
+/* ================================================================
+   NAVBAR LAYOUT
+   Logo left, search centred, account actions right — all vertically
+   aligned on a single row.
+   ================================================================ */
+#jazzy-navbar > .container-fluid {
+  align-items: center;
+}
+
+/* Keep every navbar item on the same vertical centre line. The matching is
+   scoped to >=sm so the items that are hidden on phones stay hidden. */
+@media (min-width: 576px) {
+  #jazzy-navbar .navbar-nav > .nav-item {
+    display: flex !important;
+    align-items: center !important;
+  }
+}
+
+/* The two side groups grow equally, so the search form lands dead
+   centre between them instead of hugging the left group. */
+#jazzy-navbar .navbar-nav:not(.ms-auto) {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+#jazzy-navbar .navbar-nav.ms-auto {
+  flex: 1 1 0;
+  min-width: 0;
+  justify-content: flex-end;
+  margin-left: 0 !important;
+}
+
+/* Fixed-width, centred search bar. */
+#jazzy-navbar > .container-fluid > form.d-flex {
+  flex: 0 0 auto;
+  width: clamp(220px, 26vw, 360px);
+  margin: 0 0.75rem !important;
+}
+
+#jazzy-navbar > .container-fluid > form.d-flex .input-group {
+  width: 100%;
+}
+
+/* ================================================================
+   FLAT INTERACTION STATES
+   Focus outlines and rings are removed everywhere in the admin
+   chrome and content; hover carries the affordance instead.
+   ================================================================ */
+.app-header a:focus,
+.app-header a:focus-visible,
+.app-header button:focus,
+.app-header button:focus-visible,
+.app-header .nav-link:focus,
+.app-header .nav-link:focus-visible,
+.app-header input:focus,
+.app-header .form-control:focus,
+.app-content a:focus,
+.app-content a:focus-visible,
+.app-content button:focus,
+.app-content button:focus-visible,
+.app-content input:focus,
+.app-content select:focus,
+.app-content textarea:focus,
+.btn:focus,
+.btn:focus-visible,
+.btn-check:focus + .btn,
+.btn.active:focus,
+.nav-link:focus,
+.nav-link:focus-visible,
+.navbar-toggler:focus,
+.navbar-toggler:focus-visible,
+.page-link:focus,
+.page-link:focus-visible,
+.dropdown-item:focus,
+.dropdown-item:focus-visible,
+.list-group-item:focus,
+.form-control:focus-visible,
+.form-select:focus,
+.form-select:focus-visible,
+.form-check-input:focus,
+.form-check-input:focus-visible,
+input:focus,
+select:focus,
+textarea:focus,
+a:focus,
+a:focus-visible,
+button:focus,
+button:focus-visible {
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+

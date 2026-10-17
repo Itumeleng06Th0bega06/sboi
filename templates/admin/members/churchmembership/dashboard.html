@@ -1,0 +1,32 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'admin/css/church_membership.css' %}?v=2">
+{% endblock %}
+
+{% block content_title %}{% trans 'Church Membership' %}{% endblock %}
+
+{% block breadcrumbs %}
+  <ol class="breadcrumb float-sm-end">
+    <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">{% trans 'Home' %}</a></li>
+    <li class="breadcrumb-item"><a href="{{ directory_url }}">{% trans 'Church memberships' %}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{% trans 'Dashboard' %}</li>
+  </ol>
+{% endblock %}
+
+{% block page_actions %}
+  {% if can_add %}
+    <a class="btn btn-sm btn-outline-primary" href="{{ add_member_url }}">{% trans 'Add member (admin form)' %}</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  {% include "admin/members/churchmembership/_church_membership.html" %}
+{% endblock %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <script src="{% static 'admin/js/church_membership.js' %}?v=1" defer></script>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% if form.non_field_errors %}
+<div class="form-errors">{{ form.non_field_errors }}</div>
+{% endif %}
+
+{% for section in form.personal_sections %}
+<section class="form-section" id="{{ section.id }}">
+    <h2 class="form-section-title">{{ section.title }}</h2>
+    {% if section.blurb %}<p class="form-section-note">{{ section.blurb }}</p>{% endif %}
+    <div class="form-grid">
+        {% for field in section.fields %}{% include 'members/_church_field.html' with field=field %}{% endfor %}
+    </div>
+</section>
+{% endfor %}
+
+{% for section in form.sections %}
+<section class="form-section" id="{{ section.id }}">
+    <h2 class="form-section-title">{{ section.title }}</h2>
+    {% if section.blurb %}<p class="form-section-note">{{ section.blurb }}</p>{% endif %}
+    <div class="form-grid">
+        {% for field in section.fields %}{% include 'members/_church_field.html' with field=field %}{% endfor %}
+    </div>
+</section>
+{% endfor %}
+
+<div class="form-actions">
+    {% if is_joining %}
+    <button type="submit" class="btn btn-gold">Save my details</button>
+    {% else %}
+    <button type="submit" class="btn btn-gold">Create Account &amp; Register</button>
+    <a href="{% url 'members:register' %}" class="btn btn-ghost">Back</a>
+    {% endif %}
+</div>

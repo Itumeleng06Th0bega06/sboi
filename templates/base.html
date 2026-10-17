@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=6">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20">
 </head>
 <body>
     {% block nav %}
@@ -53,7 +53,6 @@
                     <form method="post" action="{% url 'members:logout' %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Logout</button></form>
                     {% else %}
                     <a href="{% url 'members:login' %}" class="nav-subtab">Login</a>
-                    <a href="{% url 'members:register' %}" class="nav-subtab">Register</a>
                     {% endif %}
                 </div>
             </nav>
@@ -75,7 +74,7 @@
             <div class="footer-col">
                 <h4>Reach Us</h4>
                 <ul class="footer-contact">
-                    {% if site_contact.phone %}<li><a href="tel:{{ site_contact.phone }}">{{ site_contact.phone }}</a></li>{% endif %}
+                    {% comment %}Phone hidden until the correct number is supplied.{% endcomment %}
                     {% if site_contact.email %}<li><a href="mailto:{{ site_contact.email }}">{{ site_contact.email }}</a></li>{% endif %}
                     {% if site_contact.address %}<li>{{ site_contact.address }}</li>{% endif %}
                 </ul>
@@ -120,7 +119,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"/></svg>
     </button>
 
-    <script src="{% static 'js/script.js' %}"></script>
+    <script src="{% static 'js/script.js' %}?v=2"></script>
     <script src="{% static 'js/ajax-forms.js' %}"></script>
 </body>
 </html>

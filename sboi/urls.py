@@ -4,6 +4,10 @@ from django.contrib import admin
 from django.urls import include, path
 
 from . import views
+from .admin_forms import EmailOrUsernameAdminAuthenticationForm
+
+# Staff sign in to the admin with a username *or* an email address.
+admin.site.login_form = EmailOrUsernameAdminAuthenticationForm
 
 handler400 = views.handler400
 handler403 = views.handler403
@@ -13,6 +17,7 @@ handler500 = views.handler500
 urlpatterns = [
     path(settings.ADMIN_URL + 'notifications/', admin.site.admin_view(views.admin_notifications_api), name='admin_notifications'),
     path(settings.ADMIN_URL + 'search/', admin.site.admin_view(views.admin_search), name='admin_search'),
+    path(settings.ADMIN_URL + 'section/<str:app_label>/', admin.site.admin_view(views.admin_section), name='admin_section'),
     path(settings.ADMIN_URL, admin.site.urls),
     path('', include('home.urls')),
     path('about/', include('about.urls')),

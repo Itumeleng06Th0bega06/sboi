@@ -14,7 +14,7 @@
             <form method="post" action="{% url 'members:login' %}" class="form-stack">
                 {% csrf_token %}
                 <div class="form-field">
-                    <label for="{{ form.username.id_for_label }}">Username</label>
+                    <label for="{{ form.username.id_for_label }}">Email or username</label>
                     {{ form.username }}
                 </div>
                 <div class="form-field">

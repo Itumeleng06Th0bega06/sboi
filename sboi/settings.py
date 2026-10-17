@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 from pathlib import Path
-import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +25,11 @@ SECRET_KEY = 'django-insecure-qv&sk8dv*%&4x$u-&4wqt$c(oik5e=smc(4+b&4i^0-^+q!cgt
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver', 'shekinahblaze.org', 'www.shekinahblaze.org', '.onrender.com']
+ALLOWED_HOSTS = [
+    'localhost', '127.0.0.1', 'testserver',
+    'shekinahblaze.org', 'www.shekinahblaze.org',
+    'mail.shekinahblaze.org', '.shekinahblaze.org',
+]
 
 # Admin URL — production overrides this with a secret path (see .env.example).
 ADMIN_URL = 'admin/'
@@ -135,22 +138,11 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Media files live on Cloudinary whenever CLOUDINARY_CLOUD_NAME is set
-# (production and local .env smoke tests); otherwise fall back to the
-# local disk for plain development.
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
-    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', ''),
-    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
-}
-
+# Uploaded files are stored on the local disk: media/ in development and
+# public_html/media in production (see sboi/settings_prod.py).
 STORAGES = {
     'default': {
-        'BACKEND': (
-            'sboi.cloudinary_storage.CloudinaryMediaStorage'
-            if CLOUDINARY_STORAGE['CLOUD_NAME']
-            else 'django.core.files.storage.FileSystemStorage'
-        ),
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
     },
     'staticfiles': {
         'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
@@ -178,18 +170,31 @@ JAZZMIN_SETTINGS = {
     'topmenu_links': [
         {'name': 'View Website', 'url': '/', 'new_window': False, 'icon': 'fas fa-globe'},
     ],
-    'show_sidebar': True,
+    'show_sidebar': False,
     'navigation_expanded': True,
     'hide_apps': [],
-    'hide_models': [],
-    'order_with_respect_to': ['home', 'about', 'blackboard', 'gallery', 'contact', 'auth'],
-    # Loaded by Jazzmin on every admin page AND the auth pages
-    # (login / password reset), which don't extend admin/base_site.html.
-    'custom_css': 'admin/css/admin-brand.css',
+    # The Church Membership section is reached through its dashboard tile
+    # (which links on to the record list); the raw changelist entry is
+    # therefore not listed as a separate section tile.
+    'hide_models': ['members.churchmembership'],
+    'order_with_respect_to': ['home', 'about', 'blackboard', 'gallery', 'contact', 'members', 'auth'],
+    # admin-brand.css is linked from templates/admin/base_site.html (admin
+    # pages) and templates/registration/base.html (login / password reset)
+    # so the URL can carry a cache-busting ?v= query.
+    'custom_css': None,
     'custom_js': None,
     'show_ui_builder': False,
     'language_chooser': False,
     'icons': {
+        # Top-level menu sections (keyed by app_label).
+        'home': 'fas fa-house',
+        'about': 'fas fa-circle-info',
+        'blackboard': 'fas fa-chalkboard-user',
+        'gallery': 'fas fa-images',
+        'contact': 'fas fa-address-book',
+        'members': 'fas fa-people-roof',
+        'auth': 'fas fa-user-shield',
+        # Individual models.
         'auth.Group': 'fas fa-users',
         'auth.User': 'fas fa-user',
         'home.HomeStat': 'fas fa-chart-line',
@@ -213,6 +218,19 @@ JAZZMIN_SETTINGS = {
         'contact.ContactInfo': 'fas fa-address-book',
         'contact.ContactMessage': 'fas fa-envelope',
         'gallery.SliderImage': 'fas fa-images',
+        'members.ChurchMembership': 'fas fa-users',
+    },
+    # A custom link rendered inside the existing "Church Membership" app
+    # section (Jazzmin appends custom_links to the matching app_label).
+    'custom_links': {
+        'members': [
+            {
+                'name': 'Membership dashboard',
+                'url': 'admin:members_churchmembership_dashboard',
+                'icon': 'fas fa-chart-line',
+                'permissions': ['members.view_churchmembership'],
+            },
+        ],
     },
     'default_icon_parents': 'fas fa-chevron-circle-right',
     'default_icon_children': 'fas fa-circle',
@@ -221,7 +239,7 @@ JAZZMIN_SETTINGS = {
 
 JAZZMIN_UI_TWEAKS = {
     'theme': 'flatly',
-    'default_theme_mode': 'light',
+    'default_theme_mode': 'dark',
     'light_theme': 'flatly',
     'dark_theme': 'slate',
     'navbar': 'navbar-dark navbar-primary',

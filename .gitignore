@@ -32,3 +32,7 @@ data.json
 Thumbs.db
 .idea/
 .vscode/
+
+# Local dev / agent artifacts
+.playwright-mcp/
+shot-*.png

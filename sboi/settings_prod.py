@@ -1,17 +1,28 @@
 """
-Production settings for the Shekinah Blaze site (Render.com).
+Production settings for the Shekinah Blaze site on shared cPanel hosting.
 
-Run with:  python manage.py runserver --settings=sboi.settings_prod
-Deploy as: DJANGO_SETTINGS_MODULE=sboi.settings_prod gunicorn sboi.wsgi:application
+  * Database .... MariaDB / MySQL (via the pure-Python PyMySQL driver)
+  * Static ........ served by Apache from the account's ``public_html``
+  * Uploaded media  served by Apache from ``public_html/media``
+  * WSGI .......... run by Phusion Passenger through ``passenger_wsgi.py``
+
+Every command runs with this settings module, e.g.::
+
+    python manage.py migrate --settings=sboi.settings_prod
+    python manage.py collectstatic --settings=sboi.settings_prod
+
+Configuration comes from a ``.env`` file in the project root (copy
+``.env.example`` and fill it in). See DEPLOYMENT.md for the full walkthrough.
 """
 import os
-import dj_database_url
-from dotenv import load_dotenv
+from pathlib import Path
+
 from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
+
 from sboi.settings import *  # noqa: F401,F403
 
-# Load a local .env file if present (e.g. for smoke-testing prod settings locally).
-# On Render, environment variables are set in the dashboard and this is a no-op.
+# Load the environment variables created from .env.example.
 load_dotenv(BASE_DIR / '.env')
 
 # ---------------------------------------------------------------------------
@@ -23,16 +34,17 @@ DEBUG = False
 SECRET_KEY = os.environ.get('SECRET_KEY')
 if not SECRET_KEY:
     raise ImproperlyConfigured(
-        'SECRET_KEY is not set. Go to Render → your Web Service → Environment '
-        '→ Add Environment Variable: key=SECRET_KEY, value=(click Generate). '
-        'Then redeploy.'
+        'SECRET_KEY is not set. Copy .env.example to .env and set SECRET_KEY '
+        'to a long random string. Generate one with:\n'
+        '  python -c "from django.core.management.utils import '
+        'get_random_secret_key; print(get_random_secret_key())"'
     )
 
 ALLOWED_HOSTS = [
     h.strip()
     for h in os.environ.get(
         'ALLOWED_HOSTS',
-        'shekinahblaze.org,www.shekinahblaze.org,.onrender.com',
+        'shekinahblaze.org,www.shekinahblaze.org,mail.shekinahblaze.org,.shekinahblaze.org',
     ).split(',')
     if h.strip()
 ]
@@ -41,12 +53,12 @@ CSRF_TRUSTED_ORIGINS = [
     o.strip()
     for o in os.environ.get(
         'CSRF_TRUSTED_ORIGINS',
-        'https://shekinahblaze.org,https://www.shekinahblaze.org,https://*.onrender.com',
+        'https://shekinahblaze.org,https://www.shekinahblaze.org',
     ).split(',')
     if o.strip()
 ]
 
-# Renamed admin URL (secret path in production).
+# Renamed admin URL (unguessable secret path in production).
 ADMIN_URL = os.environ.get('ADMIN_URL', 'admin/').strip('/') + '/'
 
 # ---------------------------------------------------------------------------
@@ -54,6 +66,8 @@ ADMIN_URL = os.environ.get('ADMIN_URL', 'admin/').strip('/') + '/'
 # ---------------------------------------------------------------------------
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# Set SECURE_SSL_REDIRECT=false in .env if cPanel's AutoSSL/redirect setup
+# causes a redirect loop (Django -> HTTPS -> Django).
 SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'true').lower() == 'true'
 
 SESSION_COOKIE_SECURE = True
@@ -70,34 +84,28 @@ SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 X_FRAME_OPTIONS = 'DENY'
 
 # ---------------------------------------------------------------------------
-# Static files (WhiteNoise) and media (Cloudinary CDN)
+# Static & media files (served directly by Apache from public_html)
 # ---------------------------------------------------------------------------
 #
-# Media note: image files are uploaded to Cloudinary (durable CDN storage),
-# so they survive deploys and restarts. Seed a FRESH database once with:
-#   python manage.py seed --settings=sboi.settings_prod
-# NEVER run seed automatically on boot (start command / build command) —
-# it must not overwrite or prune admin-managed content. The default mode
-# only fills in missing rows, but boot-time seeding is still wrong.
+# On cPanel the web root is /home/<account>/public_html. We collect static
+# files and keep uploads there so Apache serves them without going through
+# Django. Override PUBLIC_HTML in .env if your account layout differs.
+#
+# Run once after every deploy that changes static files:
+#   python manage.py collectstatic --noinput --settings=sboi.settings_prod
 
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
-    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', ''),
-    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
-}
-if not CLOUDINARY_STORAGE['CLOUD_NAME']:
-    raise ImproperlyConfigured(
-        'CLOUDINARY_CLOUD_NAME is not set. Create a free account at '
-        'https://cloudinary.com → Dashboard → copy the Cloud name, API key and '
-        'API secret. Then add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and '
-        'CLOUDINARY_API_SECRET to Render → Environment, and redeploy.'
-    )
+PUBLIC_HTML = Path(os.environ.get('PUBLIC_HTML') or (Path.home() / 'public_html'))
 
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_URL = '/static/'
+STATIC_ROOT = PUBLIC_HTML / 'static'
+
+MEDIA_URL = '/media/'
+# Uploaded images/files land in public_html/media and are served by Apache.
+MEDIA_ROOT = PUBLIC_HTML / 'media'
 
 STORAGES = {
     'default': {
-        'BACKEND': 'sboi.cloudinary_storage.CloudinaryMediaStorage',
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
     },
     # See sboi/storage.py: non-strict manifest storage — Jazzmin's base
     # template requests a bare directory path that can never exist in the
@@ -107,6 +115,8 @@ STORAGES = {
     },
 }
 
+# WhiteNoise serves static files as a fallback if Apache's mapping is not set
+# up; Apache serving them directly is faster and used first.
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     *MIDDLEWARE,
@@ -115,21 +125,40 @@ MIDDLEWARE = [
 WHITENOISE_MAX_AGE = 31536000
 
 # ---------------------------------------------------------------------------
-# Database (PostgreSQL via DATABASE_URL; Render includes sslmode in the URL)
+# Database (MariaDB / MySQL)
 # ---------------------------------------------------------------------------
 
+DB_NAME = os.environ.get('DB_NAME', '')
+if not DB_NAME:
+    raise ImproperlyConfigured(
+        'DB_NAME is not set. Create a database and user in cPanel -> MySQL '
+        'Databases, then put DB_NAME, DB_USER and DB_PASSWORD in .env.'
+    )
+
 DATABASES = {
-    # CONN_HEALTH_CHECKS pings the persistent connection per request, so the
-    # first request after an idle period (Render free-tier spin-down) reopens
-    # a dropped Postgres connection instead of failing with a 500.
     'default': {
-        **dj_database_url.config(conn_max_age=600),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': DB_NAME,
+        'USER': os.environ.get('DB_USER', ''),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            # Django expects strict mode; this mirrors the recommendation in
+            # the Django MySQL notes.
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
+        # Persistent connections are off by default: shared cPanel MariaDB
+        # instances cap connections per user. Raise DB_CONN_MAX_AGE in .env if
+        # the host allows it.
+        'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', '0')),
         'CONN_HEALTH_CHECKS': True,
     },
 }
 
 # ---------------------------------------------------------------------------
-# Email (optional — the site currently stores messages in the DB)
+# Email (optional — the site stores contact messages in the DB)
 # ---------------------------------------------------------------------------
 
 EMAIL_BACKEND = (
@@ -142,10 +171,20 @@ EMAIL_PORT = int(os.environ.get('SMTP_PORT', '587'))
 EMAIL_HOST_USER = os.environ.get('SMTP_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
 EMAIL_USE_TLS = os.environ.get('SMTP_USE_TLS', 'true').lower() == 'true'
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Shekinah Blaze <no-reply@shekinahblaze.org>')
+
+# Admin/site email address. Receives Django error reports (when DEBUG=False)
+# and is used as the "from" address for outgoing mail. Override via
+# ADMIN_EMAIL in .env.
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@shekinahblaze.org')
+ADMINS = [('Shekinah Blaze Admin', ADMIN_EMAIL)]
+MANAGERS = ADMINS
+SERVER_EMAIL = ADMIN_EMAIL
+DEFAULT_FROM_EMAIL = os.environ.get(
+    'DEFAULT_FROM_EMAIL', f'Shekinah Blaze <{ADMIN_EMAIL}>'
+)
 
 # ---------------------------------------------------------------------------
-# Logging (Render captures stdout/stderr)
+# Logging (Passenger captures stderr into the app's error log)
 # ---------------------------------------------------------------------------
 
 LOGGING = {

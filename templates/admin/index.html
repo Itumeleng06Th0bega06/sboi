@@ -1,102 +1,66 @@
 {% extends "admin/base_site.html" %}
-{% load i18n static admin_filters media_tags %}
+{% load i18n static jazzmin %}
 
-{% block coltype %}colMS{% endblock %}
+{% block bodyclass %}{{ block.super }} sboi-dashboard{% endblock %}
 
-{% block bodyclass %}{{ block.super }} dashboard{% endblock %}
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'admin/css/admin-dashboard.css' %}?v=9">
+{% endblock %}
 
-{% block nav-breadcrumbs %}{% endblock %}
+{% block content_title %}{% endblock %}
 
 {% block content %}
-<div id="content-main" class="sboi-dash-wrap">
-  <header class="sboi-dash-hero">
-    <div class="sboi-dash-hero-text">
+<div id="content-main" class="sboi-dash">
+  <header class="sboi-dash__hero">
+    <div class="sboi-dash__hero-text">
       <h1>{% translate 'Dashboard' %}</h1>
-      <p>{{ site_header }} &mdash; {{ welcome_sign }}</p>
+      <p>{{ site_header }}{% if welcome_sign %} &mdash; {{ welcome_sign }}{% endif %}</p>
     </div>
-    <time class="sboi-dash-date" datetime="{% now 'Y-m-d' %}">{% now 'l, j F Y' %}</time>
+    <div class="sboi-dash__hero-side">
+      {# The signed-in user panel used to live in the sidebar; the sidebar has #}
+      {# been removed, so it now sits on the dashboard instead. #}
+      <div class="sboi-user">
+        <span class="sboi-user__avatar">
+          {% if jazzmin_settings|has_jazzmin_setting:"user_avatar" %}
+            <img src="{% get_user_avatar request.user %}" alt="{{ request.user }}">
+          {% else %}
+            <i class="fas fa-user-circle" aria-hidden="true"></i>
+          {% endif %}
+        </span>
+        <span class="sboi-user__info">
+          <span class="sboi-user__label">{% translate 'Signed in as' %}</span>
+          {% if perms|can_view_self %}
+            <a class="sboi-user__name" href="{% jazzy_admin_url request.user request.current_app|default:'admin' %}">{{ request.user }}</a>
+          {% else %}
+            <span class="sboi-user__name">{{ request.user }}</span>
+          {% endif %}
+        </span>
+      </div>
+      <time class="sboi-dash__date" datetime="{% now 'Y-m-d' %}">{% now 'l, j F Y' %}</time>
+    </div>
   </header>
 
-  <section class="sboi-panel" aria-labelledby="sboi-actions-title">
-    <h2 id="sboi-actions-title">{% translate 'Quick actions' %}</h2>
-    <div class="sboi-actions">
-      {% for action in admin_dashboard.quick_actions %}
-      <a class="action-btn" href="{{ action.url }}">
-        <i class="{{ action.icon }}" aria-hidden="true"></i>
-        <span>{{ action.label }}</span>
-      </a>
-      {% endfor %}
-    </div>
-  </section>
+  {# Generated from Django's permission-filtered ``available_apps`` via #}
+  {# Jazzmin's ``get_side_menu``. Each card opens that section's own page, #}
+  {# so new apps appear here automatically and permissions are respected.  #}
+  {% get_side_menu as side_menu_list %}
 
-  <div class="sboi-grid">
-    <div class="sboi-grid-main">
-      <section class="sboi-panel" aria-labelledby="sboi-slider-title">
-        <h2 id="sboi-slider-title">{% translate 'Latest slider images' %}</h2>
-        <div class="sboi-media-grid">
-          {% for img in admin_dashboard.slider_latest %}
-          <a class="media-tile" href="{{ img.url }}" title="{{ img.image }}">
-            <img src="{% opt_img img.image width=400 %}" alt="{{ img.title }}" loading="lazy">
-            <span class="media-caption">{{ img.title }}</span>
-          </a>
-          {% empty %}
-          <span class="sboi-none">{% translate 'No slider images yet.' %}</span>
-          {% endfor %}
-        </div>
-      </section>
-
-      <section class="sboi-panel" aria-labelledby="sboi-devotions-title">
-        <h2 id="sboi-devotions-title">{% translate 'Latest devotions' %}</h2>
-        <ul class="sboi-list">
-          {% for item in admin_dashboard.devotions_latest %}
-          <li><a href="{{ item.url }}">{{ item.title }}</a><span class="list-meta">{{ item.date }}</span></li>
-          {% empty %}
-          <li class="sboi-none">{% translate 'No devotions yet.' %}</li>
-          {% endfor %}
-        </ul>
-      </section>
-    </div>
-
-    <aside class="sboi-grid-side">
-      <section class="sboi-panel" aria-labelledby="sboi-inbox-title">
-        <h2 id="sboi-inbox-title">{% translate 'Inbox' %}</h2>
-        <ul class="sboi-list">
-          {% for msg in admin_dashboard.messages_latest %}
-          <li>
-            <a href="{{ msg.url }}">
-              {% if not msg.is_read %}<span class="sboi-badge" aria-label="unread">{% translate 'New' %}</span>{% endif %}
-              {{ msg.subject|default:msg.name }}
-            </a>
-            <span class="list-meta">{{ msg.name }} &middot; {{ msg.created_at|date:'j M Y' }}</span>
-          </li>
-          {% empty %}
-          <li class="sboi-none">{% translate 'No messages.' %}</li>
-          {% endfor %}
-        </ul>
-      </section>
-
-      <section class="sboi-panel" aria-labelledby="sboi-testimonies-title">
-        <h2 id="sboi-testimonies-title">{% translate 'Pending testimonies' %}</h2>
-        <ul class="sboi-list">
-          {% for item in admin_dashboard.testimonies_pending %}
-          <li><a href="{{ item.url }}">{{ item.name }}</a><span class="list-meta">{{ item.submitted_at|date:'j M Y' }}</span></li>
-          {% empty %}
-          <li class="sboi-none">{% translate 'All testimonies approved.' %}</li>
-          {% endfor %}
-        </ul>
-      </section>
-
-      <section class="sboi-panel" aria-labelledby="sboi-events-title">
-        <h2 id="sboi-events-title">{% translate 'Upcoming events' %}</h2>
-        <ul class="sboi-list">
-          {% for item in admin_dashboard.events_latest %}
-          <li><a href="{{ item.url }}">{{ item.title }}</a><span class="list-meta">{{ item.date }}</span></li>
-          {% empty %}
-          <li class="sboi-none">{% translate 'No events yet.' %}</li>
-          {% endfor %}
-        </ul>
-      </section>
-    </aside>
+  <div class="sboi-apps">
+    {% for app in side_menu_list %}
+    <a class="sboi-app" href="{% url 'admin_section' app.app_label %}">
+      <span class="sboi-app__body">
+        <i class="{{ app.icon|default:'fas fa-folder' }} sboi-app__icon" aria-hidden="true"></i>
+        <span class="sboi-app__text">
+          <span class="sboi-app__title">{{ app.name }}</span>
+          <span class="sboi-app__count">{{ app.models|length }} {% translate 'items' %}</span>
+        </span>
+      </span>
+      <i class="fas fa-arrow-right sboi-app__go" aria-hidden="true"></i>
+    </a>
+    {% empty %}
+    <p class="sboi-dash__empty">{% translate 'No admin modules are available for your account.' %}</p>
+    {% endfor %}
   </div>
 </div>
 {% endblock %}

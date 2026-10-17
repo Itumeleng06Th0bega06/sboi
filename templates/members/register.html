@@ -1,28 +1,35 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Member Registration · {{ site_profile.church_name }}{% endblock %}
+{% block title %}Create an Account · {{ site_profile.church_name }}{% endblock %}
 
 {% block content %}
 <section class="auth-page">
     <div class="container auth-wrap">
-        <div class="auth-card">
+        <div class="auth-card auth-card--choice">
             <img src="{% static 'images/home/Logo.png.png' %}" alt="" class="auth-logo">
-            <h1 class="auth-title">Join the Blackboard</h1>
-            <p class="auth-sub">Create an account to access the members portal.</p>
-            <form method="post" action="{% url 'members:register' %}" class="form-stack">
-                {% csrf_token %}
-                {% for field in form %}
-                <div class="form-field">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.help_text %}<small class="form-help">{{ field.help_text|safe }}</small>{% endif %}
-                    {% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
-                </div>
-                {% endfor %}
-                <button type="submit" class="btn btn-gold btn-block">Create Account</button>
-            </form>
-            <p class="auth-foot">Already have an account? <a href="{% url 'members:login' %}">Login here</a></p>
+            <h1 class="auth-title">Create an Account</h1>
+            <p class="auth-sub">Choose the option that fits you.</p>
+
+            <div class="register-options">
+                <a class="register-option" href="{% url 'members:register_user' %}">
+                    <span class="register-option-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z"/></svg>
+                    </span>
+                    <span class="register-option-text">Visitor</span>
+                    <span class="register-option-cta">Register</span>
+                </a>
+
+                <a class="register-option register-option--church" href="{% url 'members:register_church' %}">
+                    <span class="register-option-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 2 4 7v2h16V7l-8-5ZM6 10v8H4v2h16v-2h-2v-8h-3v8h-2v-8h-2v8H9v-8H6Z"/></svg>
+                    </span>
+                    <span class="register-option-text">Member</span>
+                    <span class="register-option-cta">Register</span>
+                </a>
+            </div>
+
+            <p class="auth-foot">Already have an account? <a href="{% url 'members:login' %}">Login here</a> &middot; <a href="{% url 'members:join_church' %}">Join the church membership</a></p>
         </div>
     </div>
 </section>

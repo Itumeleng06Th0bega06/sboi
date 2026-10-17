@@ -90,8 +90,6 @@ class Command(BaseCommand):
                 if apply_changes:
                     try:
                         # _save writes at exactly `name`; public save() would rename.
-                        # Cloudinary backend uploads with overwrite+invalidate;
-                        # FileSystemStorage overwrites the local file directly.
                         storage._save(name, ContentFile(data))
                     except Exception as exc:
                         failed += 1

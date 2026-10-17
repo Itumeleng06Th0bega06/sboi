@@ -161,3 +161,41 @@
   margin-right: 0.3rem;
   color: var(--sboi-gold-2, #b07f3a);
 }
+
+/* ================================================================
+   DARK + GOLD overrides
+   ================================================================ */
+.sboi-bell-menu {
+  background: #221e33;
+  border-color: rgba(210, 162, 78, 0.18);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+}
+
+.sboi-bell-head {
+  background: #262138;
+  border-bottom: 2px solid rgba(210, 162, 78, 0.35);
+}
+
+.sboi-bell-item {
+  color: var(--sboi-ink, #ece6d9);
+}
+
+.sboi-bell-item:hover,
+.sboi-bell-item:focus {
+  background: var(--sboi-cream-2, #2a2540);
+  color: var(--sboi-gold, #d2a24e);
+}
+
+.sboi-bell-icon {
+  background: rgba(210, 162, 78, 0.14);
+}
+
+.sboi-bell-count {
+  background: var(--sboi-gold, #d2a24e);
+  color: #1b1729;
+}
+
+.sboi-bell-foot {
+  background: #262138;
+  border-top: 1px solid rgba(210, 162, 78, 0.16);
+}

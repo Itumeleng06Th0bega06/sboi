@@ -1,7 +1,6 @@
 """Image optimization helpers — downscale and recompress uploads with Pillow.
 
-Keeps the stored originals small (fast first paint, cheap storage); the
-opt_img template tag then serves further-scaled versions from Cloudinary.
+Keeps stored originals small so pages load fast and disk use stays low.
 """
 import io
 import os

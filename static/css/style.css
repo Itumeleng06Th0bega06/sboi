@@ -42,7 +42,6 @@ img { max-width: 100%; display: block; }
 a { color: inherit; text-decoration: none; }
 
 button:focus, a:focus, .btn:focus { outline: none; }
-:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
 .container { width: min(1200px, 92%); margin-inline: auto; }
 .narrow { width: min(720px, 92%); }
@@ -51,6 +50,8 @@ button:focus, a:focus, .btn:focus { outline: none; }
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 0.45rem;
   padding: 0.85rem 1.8rem;
   border-radius: 999px;
@@ -353,6 +354,7 @@ img[src$=".png" i] { object-fit: contain !important; }
 .method-label { font-family: var(--serif); color: var(--green); font-size: 1.15rem; font-weight: 600; }
 .method-value { color: var(--muted); }
 .contact-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 2rem; align-items: start; }
+.contact-solo { max-width: 680px; margin-inline: auto; }
 .form-card, .info-card { background: var(--white); border-radius: var(--radius); padding: 2.2rem; box-shadow: var(--shadow); }
 .info-block { margin-top: 1.2rem; }
 .info-block h4 { font-family: var(--serif); color: var(--green); margin-bottom: 0.3rem; }
@@ -450,7 +452,7 @@ textarea.input { resize: vertical; }
 .lightbox-close { position: absolute; top: 18px; right: 24px; background: none; border: none; color: var(--cream); font-size: 2.6rem; cursor: pointer; line-height: 1; }
 
 /* Footer */
-.site-footer { background: var(--green-bg); color: #c6cede; margin-top: 4rem; }
+.site-footer { background: rgb(14 6 42 / 92%); color: #c6cede; margin-top: 4rem; }
 .footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.4rem; padding: 4rem 0 2.5rem; }
 .footer-logo { height: 256px; width: auto; object-fit: contain; margin-bottom: 1rem; }
 .footer-tagline { font-family: var(--serif); color: #ff9500; font-style: italic; }
@@ -678,6 +680,104 @@ html { scroll-behavior: smooth; }
 .to-top.show { opacity: 1; transform: translateY(0); visibility: visible; }
 .to-top:hover { box-shadow: 0 12px 26px rgba(0, 0, 0, 0.45), var(--glow-lg); transform: translateY(-2px); }
 
+/* ============================================================
+   DARK + GOLD THEME
+   Flips the light/cream site to a near-black plum canvas with
+   gold accents. Layout, class names and responsive rules are
+   untouched — only the palette and light surfaces change.
+   ============================================================ */
+:root {
+  --green: #14111e;                 /* dark plum (on-gold text + dark base) */
+  --green-2: #24304f;
+  --green-3: #211d33;
+  --green-bg: rgb(37 32 56 / 92%);
+  --gold: #d2a24e;
+  --gold-2: #b07f3a;
+  --cream: #f4efe4;
+  --cream-2: #272235;               /* alt section surface (was light) */
+  --ink: #ece6d9;
+  --muted: #c3b9a8;
+  --surface: #2d2845;
+  --surface-2: #38325a;
+  --line: rgba(210, 162, 78, 0.24);
+  --shadow: 0 14px 38px rgba(0, 0, 0, 0.42);
+  --shadow-lg: 0 28px 70px rgba(0, 0, 0, 0.55);
+  --btn-green: linear-gradient(160deg, #e7c47c, var(--gold));
+  --btn-green-hover: linear-gradient(160deg, #f0d79b, #c8963f);
+}
+
+body { background: #211d33; color: var(--ink); }
+
+/* Surfaces that were white cards */
+.stat-card, .card, .vm-card, .value-card, .leader-card, .story-card,
+.testimony-card, .method-card, .form-card, .info-card, .founder-card,
+.practice-chip, .pathway-step, .list-item, .modal-dialog, .pill-btn,
+.share-btn, .nav-dropdown-menu, .culture-box, .notice {
+  background: var(--surface);
+}
+
+/* Image placeholders */
+.card-media, .thumb, .mosaic-item, .leader-media, .list-media { background: #272235; }
+
+/* Headings that were dark-on-light -> light */
+.section-title, .card-title, .card-title-link, .list-title, .vm-text.lead,
+.sub-title, .story-title, .value-title, .leader-name, .method-label,
+.info-block h4, .founder-byline, .founder-signature p, .founder-signature strong,
+.culture-title, .pathway-step h4, .practice-chip > span:last-child,
+.nav-dropdown-menu a, .pill-btn { color: var(--cream); }
+
+/* Accent / secondary text */
+.date-day,
+.value-label { color: var(--gold); }
+.culture-item p, .culture-box p, .culture-intro { color: var(--muted); }
+.tab-btn:hover, .tab-btn.active { color: var(--gold); }
+.share-btn { color: var(--gold); border-color: var(--line); }
+.notice { border-color: var(--gold); color: var(--cream); }
+.founder-signature { border-top-color: var(--line); }
+.tabbar { border-bottom-color: var(--line); }
+
+/* Warm nav + footer tones */
+.nav-tab { color: #cfc7b8; }
+.nav-subtab { color: #b3a894; }
+.footer-tagline { color: var(--gold); }
+.soc-x { fill: var(--cream); }
+
+/* Buttons */
+.btn-gold, .btn-primary { color: var(--green); box-shadow: 0 10px 24px rgba(210, 162, 78, 0.25); }
+.btn-gold:hover, .btn-primary:hover { color: var(--green); }
+.btn-outline-gold { border-color: var(--gold); color: var(--gold); }
+.action-strip .btn { background: var(--green); color: var(--gold); border-color: var(--green); }
+.action-strip .btn:hover { background: #000; color: var(--gold); }
+
+/* "Mission in action" chips: cool plum gradient surfaces */
+.action-chip {
+  background: linear-gradient(160deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--line);
+  color: var(--ink);
+  padding: 1rem 1.3rem;
+  border-radius: 16px;
+  gap: 0.4rem;
+}
+.action-chip svg { fill: var(--gold); }
+.action-chip-main { color: var(--cream); }
+.action-chip-desc { color: var(--muted); }
+
+/* Inputs */
+.input { background: #272235; border-color: var(--line); color: var(--ink); }
+.input::placeholder { color: #6f6a60; }
+
+/* Overlays that used brand green */
+.slider-arrow { background: rgba(37, 32, 56, 0.65); }
+.video-play { background: rgba(37, 32, 56, 0.4); }
+
+/* Flash messages */
+.flash-item.success { background: rgba(46, 160, 80, 0.14); color: #a6e3b6; border-color: rgba(46, 160, 80, 0.34); }
+.flash-item.error { background: rgba(200, 70, 70, 0.14); color: #ffb6b6; border-color: rgba(200, 70, 70, 0.34); }
+.flash-item.info { background: rgba(80, 130, 230, 0.14); color: #c2d3ff; border-color: rgba(80, 130, 230, 0.34); }
+
+/* Form errors */
+.form-error, .form-stack p .errorlist { color: #ff9b9b; }
+
 /* Responsive */
 @media (max-width: 960px) {
   .split, .vm-grid, .contact-grid { grid-template-columns: 1fr; }
@@ -739,41 +839,6 @@ html { scroll-behavior: smooth; }
   .gallery-tabs { flex-wrap: wrap; }
 }
 
-/* ---------- Gold accent glow ---------- */
-.stat-card,
-.vm-card,
-.value-card,
-.method-card,
-.founder-card,
-.story-card,
-.testimony-card,
-.practice-chip {
-  box-shadow: var(--shadow), 0 0 22px rgba(210, 162, 78, 0.15);
-}
-
-.value-icon,
-.practice-icon,
-.pathway-num,
-.chapter-badge {
-  box-shadow: 0 8px 20px rgba(210, 162, 78, 0.15), var(--glow);
-}
-
-.chapter-rule,
-.tab-btn.active {
-  box-shadow: 0 0 14px rgba(210, 162, 78, 0.3);
-}
-
-.share-btn:hover,
-.share-btn.copied,
-.slider-arrow:hover,
-.dot.active,
-.gallery-tab.active,
-.gallery-tab:hover,
-.pill-btn.active {
-  box-shadow: var(--glow-lg);
-}
-
-
 .ajax-popup {
   position: fixed;
   bottom: 24px;
@@ -801,3 +866,336 @@ html { scroll-behavior: smooth; }
   opacity: 0;
   transform: translateX(-50%) translateY(10px);
 }
+
+/* ============================================================
+   BUTTON POLISH
+   One shared gold treatment so every primary button reads the
+   same across pages, plus readable placeholders.
+   ============================================================ */
+.btn-gold, .btn-primary,
+.action-strip .btn-gold, .action-strip .btn-primary {
+  background: var(--btn-green);
+  color: var(--green);
+  border-color: transparent;
+  box-shadow: 0 10px 24px rgba(210, 162, 78, 0.25);
+}
+.btn-gold:hover, .btn-primary:hover,
+.action-strip .btn-gold:hover, .action-strip .btn-primary:hover {
+  background: var(--btn-green-hover);
+  color: var(--green);
+  box-shadow: 0 14px 30px rgba(210, 162, 78, 0.32);
+}
+.btn-gold:active, .btn-primary:active,
+.action-strip .btn-gold:active, .action-strip .btn-primary:active {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(210, 162, 78, 0.25);
+}
+
+/* Readable placeholder text everywhere on the dark theme */
+.input::placeholder,
+.form-stack p .input::placeholder,
+.contact-page .input::placeholder {
+  color: rgba(236, 230, 217, 0.62);
+}
+.auth-page .input::placeholder,
+.section-green .form-stack .input::placeholder {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+/* --- Registration choice cards ----------------------------- */
+.auth-card--form { width: min(900px, 100%); text-align: left; }
+.register-options { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin: 1.6rem 0 1.2rem; }
+.register-option {
+  display: flex; flex-direction: column; gap: 0.5rem;
+  padding: 1.6rem 1.4rem; border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(210, 162, 78, 0.3);
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.register-option:hover { transform: translateY(-3px); border-color: var(--gold); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4); }
+.register-option-icon {
+  width: 46px; height: 46px; display: grid; place-items: center;
+  border-radius: 12px; background: rgba(210, 162, 78, 0.16); color: var(--gold);
+}
+.register-option-icon svg { width: 24px; height: 24px; fill: currentColor; }
+.register-option h2 { font-family: var(--serif); font-size: 1.35rem; color: var(--white); }
+.register-option p { color: rgba(255, 255, 255, 0.75); font-size: 0.92rem; line-height: 1.5; }
+.register-option-cta { margin-top: 0.4rem; font-weight: 600; color: var(--gold); }
+.register-option--church { border-color: rgba(155, 92, 255, 0.5); }
+.register-option--church .register-option-icon { background: rgba(119, 0, 246, 0.22); color: #cbb0ff; }
+.register-option--church .register-option-cta { color: #cbb0ff; }
+
+/* --- Church membership form -------------------------------- */
+.church-form { text-align: left; }
+.form-section { margin-top: 1.6rem; padding-top: 1.2rem; border-top: 1px solid rgba(210, 162, 78, 0.2); }
+.form-section-title { font-family: var(--serif); color: var(--gold); font-size: 1.15rem; margin-bottom: 0.2rem; }
+.form-section-note { color: rgba(255, 255, 255, 0.7); font-size: 0.85rem; margin-bottom: 0.9rem; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.1rem; }
+.form-grid .form-field--multi,
+.form-grid .form-field--check,
+.form-grid .form-field--choice { grid-column: 1 / -1; }
+.form-field--multi .field-label { display: block; font-weight: 500; color: var(--white); margin-bottom: 0.45rem; font-size: 0.92rem; }
+.optional { color: rgba(255, 255, 255, 0.5); font-weight: 400; font-size: 0.82rem; }
+/* Checkbox-style choice groups: pill options, gold when ticked. */
+.choice-group { border: 0; margin: 0; padding: 0; min-width: 0; }
+.choice-group legend {
+  padding: 0; margin-bottom: 0.55rem;
+  font-weight: 500; color: var(--white); font-size: 0.92rem;
+}
+.choice-group ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.choice-group ul li { margin: 0; padding: 0; }
+.choice-group ul label {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.55rem 0.95rem; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.88); font-size: 0.9rem; font-weight: 400;
+  cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease;
+}
+.choice-group ul label:hover { background: rgba(255, 255, 255, 0.1); }
+.choice-group ul label:has(> input:checked) {
+  background: linear-gradient(135deg, var(--gold), var(--gold-2));
+  color: var(--green); font-weight: 600;
+}
+.choice-group ul input { accent-color: var(--gold); width: 15px; height: 15px; flex-shrink: 0; margin: 0; }
+.check-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 0.5rem 1rem;
+}
+.check-grid label,
+.check-line {
+  display: flex; align-items: center; gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.88); font-size: 0.9rem; font-weight: 400;
+}
+.check-grid input,
+.check-line input { accent-color: var(--gold); width: 16px; height: 16px; flex-shrink: 0; }
+.church-form .form-field--check { margin-top: 0.2rem; }
+.form-actions { display: flex; flex-wrap: wrap; gap: 0.9rem; align-items: center; margin-top: 1.6rem; }
+.form-errors { background: rgba(160, 48, 48, 0.22); border: 1px solid rgba(255, 120, 120, 0.5); color: #ffd0d0; border-radius: 10px; padding: 0.9rem 1.1rem; margin-bottom: 1rem; }
+.form-errors ul { margin: 0; padding-left: 1.2rem; }
+
+@media (max-width: 720px) {
+  .register-options { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   FLAT SURFACES + FORM POLISH
+   Outline borders (the thin lines around boxes) are removed
+   across strips, cards, nav pills and form fields. Depth comes
+   from fills and soft shadows instead. Labels sit inside the
+   fields as placeholders, so hidden labels keep them accessible.
+   ============================================================ */
+
+/* Accessible, visually hidden labels + required marker */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.req { color: var(--gold); font-weight: 600; }
+
+/* --- Outline borders removed --- */
+.site-header { border-bottom: 0; }
+.nav-dropdown-menu { border: 0; }
+.nav-subtab,
+.nav-subtab:hover,
+.nav-subtab.active { border: 0; }
+.slider-arrow { border: 0; }
+.share-btn { border: 0; }
+.gallery-tab { border: 0; background: rgba(210, 162, 78, 0.12); }
+.auth-card { border: 0; }
+.action-chip { border: 0; }
+.notice { border: 0; }
+.culture-box { border: 0; }
+.form-section { border-top: 0; }
+.form-errors { border: 0; }
+.contact-page .method-card,
+.contact-page .form-card,
+.contact-page .info-card { border: 0; }
+.flash-item { border: 0; }
+.ajax-popup { border: 0; }
+.main-nav { border-bottom: 0; }
+.footer-social a { border: 0; }
+.input,
+.section-green .form-stack .input,
+.auth-page .input,
+.contact-page .input { border-color: transparent; }
+
+/* --- Registration choice: one compact card, two clean rows --- */
+.auth-card--choice {
+  width: min(440px, 100%);
+  padding: 2.1rem 1.9rem;
+}
+.auth-card--choice .auth-logo { height: 74px; margin-bottom: 0.9rem; }
+.auth-card--choice .auth-title { font-size: 1.55rem; }
+.auth-card--choice .auth-sub { margin: 0.25rem 0 1.1rem; font-size: 0.93rem; }
+.auth-card--choice .auth-foot { margin-top: 1rem; font-size: 0.85rem; }
+
+.register-options {
+  grid-template-columns: 1fr;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  margin: 1.1rem 0 0.9rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+}
+.register-option {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.8rem 0.95rem;
+  border-radius: 12px;
+  background: transparent;
+  border: 0;
+}
+.register-option:hover {
+  transform: translateY(-1px);
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+}
+.register-option-icon { width: 40px; height: 40px; border-radius: 11px; }
+.register-option-icon svg { width: 20px; height: 20px; }
+.register-option-text {
+  flex: 1;
+  font-family: var(--serif);
+  font-size: 1.12rem;
+  color: var(--white);
+}
+.register-option-cta { margin-top: 0; font-size: 0.86rem; }
+.register-option--church { border: 0; }
+
+/* --- Dropdowns: keep the option list readable on dark surfaces --- */
+.input { color-scheme: dark; }
+select.input option,
+select.input optgroup {
+  background-color: #241f35;
+  color: #ffffff;
+}
+select.input:not([multiple]) {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23d2a24e' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1.05rem center;
+  background-size: 15px 15px;
+  padding-right: 2.8rem;
+}
+select.input[multiple] {
+  padding: 0.4rem;
+  min-height: 152px;
+}
+select.input[multiple] option {
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  margin-bottom: 2px;
+}
+select.input[multiple] option:checked {
+  background: linear-gradient(135deg, var(--gold), var(--gold-2)) !important;
+  color: var(--green) !important;
+}
+
+/* ============================================================
+   PREMIUM CHURCH MEMBERSHIP FORM
+   A solid elevated panel, numbered section badges and clean
+   field controls. No outline borders, depth comes from fills
+   and shadows.
+   ============================================================ */
+.auth-card--form {
+  width: min(920px, 100%);
+  padding: clamp(1.5rem, 4vw, 3rem);
+  text-align: left;
+  background:
+    radial-gradient(130% 110% at 0% 0%, rgba(210, 162, 78, 0.10), transparent 42%),
+    linear-gradient(180deg, #241f35 0%, #1c1827 100%);
+  border: 0;
+  border-radius: 26px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.auth-card--form::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: min(260px, 62%);
+  height: 3px;
+  border-radius: 0 0 6px 6px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.auth-card--form .auth-logo { height: 66px; margin-bottom: 0.5rem; }
+.auth-card--form .auth-title { font-size: 1.75rem; letter-spacing: 0.015em; }
+
+/* Section headers with an automatic number badge */
+.church-form { counter-reset: church-section; }
+.church-form .form-section {
+  margin-top: 2rem;
+  padding-top: 0;
+  border-top: 0;
+  counter-increment: church-section;
+}
+.church-form .form-section:first-of-type { margin-top: 1rem; }
+.church-form .form-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  color: var(--white);
+  margin-bottom: 1.05rem;
+}
+.church-form .form-section-title::before {
+  content: counter(church-section, decimal-leading-zero);
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 34px; height: 34px;
+  border-radius: 11px;
+  font-family: var(--serif);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--green);
+  background: linear-gradient(135deg, var(--gold), var(--gold-2));
+  box-shadow: 0 8px 18px rgba(210, 162, 78, 0.26);
+}
+
+/* Field grid + controls */
+.church-form .form-grid { gap: 1.05rem 1.1rem; }
+.church-form .input {
+  width: 100%;
+  min-height: 50px;
+  padding: 0.85rem 1.05rem;
+  border: 0;
+  border-radius: 13px;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--white);
+  font-size: 0.96rem;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.church-form textarea.input { min-height: 96px; line-height: 1.55; }
+.church-form .input::placeholder { color: rgba(255, 255, 255, 0.42); }
+.church-form .input:hover { background-color: rgba(255, 255, 255, 0.075); }
+.church-form .input:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 0 0 3px rgba(210, 162, 78, 0.30);
+}
+.church-form .form-help { color: rgba(255, 255, 255, 0.6); }
+
+/* Actions */
+.church-form .form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 2.2rem;
+}
+.church-form .form-actions .btn {
+  min-height: 50px;
+  padding: 0.85rem 1.7rem;
+  border-radius: 13px;
+}
+.church-form .form-actions .btn-gold { flex: 1 1 240px; }
+

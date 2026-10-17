@@ -1,0 +1,39 @@
+---
+# ===========================================================================
+# cPanel Git™ Version Control — deployment recipe
+# ===========================================================================
+#
+# cPanel -> Git Version Control -> (your repo) -> "Pull or Deploy" ->
+# "Deploy HEAD Commit" runs the tasks below, in order, on the server.
+#
+# BEFORE FIRST USE, set the two values at the top of `tasks`
+# (APP_NAME and PY_VER) to match what you chose in "Setup Python App".
+# If you did NOT clone the repo straight into ~/sboi, also change APP_ROOT
+# to the folder that contains manage.py.
+# ===========================================================================
+
+deployment:
+  tasks:
+    # --- Edit these two to match your account ---------------------------
+    - export APP_NAME=sboi
+    - export PY_VER=3.13
+    # --------------------------------------------------------------------
+    - export APP_ROOT=$HOME/$APP_NAME
+    - export VENV_BIN=$HOME/virtualenv/$APP_NAME/$PY_VER/bin
+    - export DJANGO_SETTINGS_MODULE=sboi.settings_prod
+
+    - echo "==> Installing Python dependencies"
+    - $VENV_BIN/pip install --upgrade pip
+    - $VENV_BIN/pip install -r $APP_ROOT/requirements.txt
+
+    - echo "==> Applying database migrations"
+    - $VENV_BIN/python $APP_ROOT/manage.py migrate --noinput
+
+    - echo "==> Collecting static files into public_html/static"
+    - $VENV_BIN/python $APP_ROOT/manage.py collectstatic --noinput
+
+    - echo "==> Restarting the Passenger application"
+    - mkdir -p $APP_ROOT/tmp
+    - touch $APP_ROOT/tmp/restart.txt
+
+    - echo "==> Deployment finished"

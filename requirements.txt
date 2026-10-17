@@ -5,13 +5,9 @@ asgiref==3.12.1
 sqlparse==0.5.5
 tzdata==2026.3
 
-# Production
-gunicorn==25.3.0
-psycopg2-binary==2.9.12
-dj-database-url==3.1.2
+# Production (shared cPanel hosting)
+# PyMySQL is the pure-Python MariaDB/MySQL driver — no compiler or MySQL
+# development headers required, which is what shared cPanel accounts have.
+PyMySQL==1.1.1
 whitenoise==6.12.0
 python-dotenv==1.2.2
-
-# Media storage (Cloudinary CDN — durable, not tied to Render's disk)
-cloudinary==1.45.0
-requests==2.34.2

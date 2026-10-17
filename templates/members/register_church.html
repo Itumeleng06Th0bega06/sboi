@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Church Membership Registration · {{ site_profile.church_name }}{% endblock %}
+
+{% block content %}
+<section class="auth-page auth-page--wide">
+    <div class="container auth-wrap">
+        <div class="auth-card auth-card--form">
+            <img src="{% static 'images/home/Logo.png.png' %}" alt="" class="auth-logo">
+            <h1 class="auth-title">Church Membership</h1>
+            <form method="post" action="{% url 'members:register_church' %}" class="form-stack church-form">
+                {% csrf_token %}
+                {% include 'members/_church_form.html' %}
+            </form>
+            <p class="auth-foot">Already have an account? <a href="{% url 'members:login' %}">Login</a>, then <a href="{% url 'members:join_church' %}">join the church membership</a>.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

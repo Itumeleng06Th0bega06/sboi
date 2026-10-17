@@ -373,6 +373,79 @@
         }
     }
 
+    /* ---------- Collapsible sidebar sections (nav headers) ---------- */
+    function initCollapsibleSections() {
+        var nav = document.getElementById('jazzy-navigation');
+        if (!nav) {
+            return;
+        }
+        var headers = Array.prototype.slice.call(nav.querySelectorAll('.nav-header'));
+        headers.forEach(function (header) {
+            var items = [];
+            var node = header.nextElementSibling;
+            while (node && !(node.classList && node.classList.contains('nav-header'))) {
+                items.push(node);
+                node = node.nextElementSibling;
+            }
+            if (!items.length) {
+                return;
+            }
+            var key = 'sboi-section-' + (header.textContent || '').trim();
+            var collapsed = false;
+            try {
+                collapsed = localStorage.getItem(key) === 'collapsed';
+            } catch (err) { /* storage unavailable */ }
+
+            header.setAttribute('role', 'button');
+            header.setAttribute('tabindex', '0');
+            header.setAttribute('title', 'Collapse or expand this section');
+
+            function reflect() {
+                header.classList.toggle('sboi-section-collapsed', collapsed);
+                items.forEach(function (item) {
+                    item.style.display = collapsed ? 'none' : '';
+                });
+            }
+
+            function toggle(evt) {
+                if (evt && evt.target && evt.target.closest && evt.target.closest('a')) {
+                    return;
+                }
+                collapsed = !collapsed;
+                try {
+                    localStorage.setItem(key, collapsed ? 'collapsed' : 'open');
+                } catch (err) { /* ignore */ }
+                reflect();
+            }
+
+            header.addEventListener('click', toggle);
+            header.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggle(e);
+                }
+            });
+
+            reflect();
+        });
+
+        // Never leave the section containing the active link collapsed.
+        var active = nav.querySelector('a.nav-link.active');
+        if (active) {
+            var header = active.closest ? active.closest('.nav-header') : null;
+            if (header) {
+                var key = 'sboi-section-' + (header.textContent || '').trim();
+                try { localStorage.setItem(key, 'open'); } catch (err) { /* ignore */ }
+                header.classList.remove('sboi-section-collapsed');
+                var n = header.nextElementSibling;
+                while (n && !(n.classList && n.classList.contains('nav-header'))) {
+                    n.style.display = '';
+                    n = n.nextElementSibling;
+                }
+            }
+        }
+    }
+
     document.addEventListener('click', function (e) {
         var link = e.target.closest ? e.target.closest('a[href]') : null;
         if (!link || !isEligibleLink(link, e)) {
@@ -419,4 +492,5 @@
         jazzifyChangelist();
     }
     setupNavbarSearch();
+    initCollapsibleSections();
 })();

@@ -1,0 +1,55 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static jazzmin admin_menu %}
+
+{% block bodyclass %}{{ block.super }} sboi-dashboard{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'admin/css/admin-dashboard.css' %}?v=9">
+{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+<div id="content-main" class="sboi-dash">
+  {% get_side_menu as side_menu_list %}
+  {% for app in side_menu_list %}{% if app.app_label == section_label %}
+  <nav class="sboi-backbar">
+    <a class="sboi-backtab" href="{{ dashboard_url }}">
+      <i class="fas fa-arrow-left" aria-hidden="true"></i>
+      <span>{% translate 'Dashboard' %}</span>
+    </a>
+  </nav>
+
+  <header class="sboi-dash__hero">
+    <div class="sboi-dash__hero-text">
+      <h1><i class="{{ app.icon|default:'fas fa-folder' }}" aria-hidden="true"></i> {{ app.name }}</h1>
+      <p>{{ app.models|length }} {% translate 'items in this section' %}</p>
+    </div>
+  </header>
+
+  <div class="sboi-apps">
+    {% for model in app.models %}
+    {% if model.url %}
+    <a class="sboi-tile" href="{{ model.url }}">
+      <i class="{{ model.icon|default:'fas fa-circle' }} sboi-tile__icon" aria-hidden="true"></i>
+      <span class="sboi-tile__body">
+        <span class="sboi-tile__name">{{ model.name }}</span>
+        {% with desc=model|module_description %}{% if desc %}<span class="sboi-tile__desc">{{ desc }}</span>{% endif %}{% endwith %}
+      </span>
+      <i class="fas fa-arrow-right sboi-tile__go" aria-hidden="true"></i>
+    </a>
+    {% else %}
+    <span class="sboi-tile" aria-disabled="true">
+      <i class="{{ model.icon|default:'fas fa-circle' }} sboi-tile__icon" aria-hidden="true"></i>
+      <span class="sboi-tile__body">
+        <span class="sboi-tile__name">{{ model.name }}</span>
+        {% with desc=model|module_description %}{% if desc %}<span class="sboi-tile__desc">{{ desc }}</span>{% endif %}{% endwith %}
+      </span>
+    </span>
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}{% endfor %}
+</div>
+{% endblock %}

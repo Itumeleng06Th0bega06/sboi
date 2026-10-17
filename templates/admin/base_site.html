@@ -1,15 +1,33 @@
 {% extends 'admin/base.html' %}
-{% load static %}
+{% load i18n static %}
+
+{# The sidebar has been removed for good: this override blanks Jazzmin's #}
+{# sidebar block so it can never render, regardless of JAZZMIN_SETTINGS. #}
+{% block sidebar %}{% endblock %}
+
+{% block page_content %}
+    {% if opts %}
+        <div class="sboi-backbar">
+            <a class="sboi-backtab" href="{% url 'admin_section' opts.app_label %}">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                <span>{% translate 'Back to' %} {{ opts.app_config.verbose_name }}</span>
+            </a>
+        </div>
+    {% endif %}
+    {{ block.super }}
+{% endblock %}
 {% block extrahead %}
     {{ block.super }}
     <link rel="icon" href="{% static 'icons/favicon.ico' %}">
+    {{ admin_dashboard.quick_actions|json_script:"sboi-quick-actions-data" }}
     <script src="{% static 'admin/js/delete-modal.js' %}?v=7" defer></script>
-    <script src="{% static 'admin/js/sidebar-nav.js' %}?v=15" defer></script>
+    <script src="{% static 'admin/js/sidebar-nav.js' %}?v=16" defer></script>
     <script src="{% static 'admin/js/notification-bell.js' %}?v=1" defer></script>
+    <script src="{% static 'admin/js/quick-actions.js' %}?v=1" defer></script>
 {% endblock %}
 {% block extrastyle %}
     {{ block.super }}
-    {# admin-brand.css is loaded globally via JAZZMIN_SETTINGS.custom_css #}
-    <link rel="stylesheet" href="{% static 'admin/css/delete-modal.css' %}?v=5">
-    <link rel="stylesheet" href="{% static 'admin/css/notification-bell.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'admin/css/admin-brand.css' %}?v=15">
+    <link rel="stylesheet" href="{% static 'admin/css/delete-modal.css' %}?v=6">
+    <link rel="stylesheet" href="{% static 'admin/css/notification-bell.css' %}?v=2">
 {% endblock %}

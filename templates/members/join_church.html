@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Church Membership · {{ site_profile.church_name }}{% endblock %}
+
+{% block content %}
+<section class="auth-page auth-page--wide">
+    <div class="container auth-wrap">
+        <div class="auth-card auth-card--form">
+            <img src="{% static 'images/home/Logo.png.png' %}" alt="" class="auth-logo">
+            <h1 class="auth-title">Church Membership</h1>
+            {% if membership and membership.membership_id %}
+            <p class="auth-sub">
+                Welcome back, {{ request.user.first_name|default:request.user.username }}.
+                Your membership number is <strong>{{ membership.membership_id }}</strong>.
+                You can update any of the details below at any time.
+            </p>
+            {% else %}
+            <p class="auth-sub">
+                Add or update your church membership details. <strong>Every question is optional</strong> &mdash;
+                skip anything you would rather not share, and come back to it any time.
+            </p>
+            {% endif %}
+            <form method="post" action="{% url 'members:join_church' %}" class="form-stack church-form">
+                {% csrf_token %}
+                {% include 'members/_church_form.html' %}
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

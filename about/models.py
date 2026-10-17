@@ -7,6 +7,11 @@ class ChurchProfile(models.Model):
     church_name = models.CharField(max_length=200, default='Shekinah Blaze Outreach International')
     tagline = models.CharField(max_length=200, blank=True)
     location = models.CharField(max_length=300, blank=True)
+    founded_year = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Year the ministry was established. Drives the automatically '
+                  'updating "Years Established" stat on the home page.',
+    )
 
     founder_name = models.CharField(max_length=200, blank=True)
     founder_role = models.CharField(max_length=200, blank=True)

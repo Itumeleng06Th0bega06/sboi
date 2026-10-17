@@ -19,7 +19,7 @@ class ChurchProfileAdmin(ImageThumbMixin, admin.ModelAdmin):
     list_display = ['thumb', 'church_name', 'tagline', 'location']
     list_display_links = ['church_name']
     fieldsets = (
-        (None, {'fields': ['church_name', 'tagline', 'location']}),
+        (None, {'fields': ['church_name', 'tagline', 'location', 'founded_year']}),
         ('Founder', {'fields': ['founder_name', 'founder_role', 'founder_byline', 'founder_scripture', 'founder_message', 'founder_signature', 'founder_tagline']}),
         ('Our Story', {'fields': ['story', 'story_subtitle', 'story_image']}),
         (

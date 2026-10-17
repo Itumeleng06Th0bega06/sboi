@@ -8,7 +8,12 @@ app_name = 'members'
 
 urlpatterns = [
     path('', views.members_home, name='home'),
+    # Step 1: choose User or Church Member.
     path('register/', views.register, name='register'),
+    path('register/user/', views.register_user, name='register_user'),
+    path('register/church/', views.register_church, name='register_church'),
+    # Existing account joins the church membership later.
+    path('join-church/', views.join_church, name='join_church'),
     path(
         'login/',
         auth_views.LoginView.as_view(

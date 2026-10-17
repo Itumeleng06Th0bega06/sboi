@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Visitor Registration · {{ site_profile.church_name }}{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+    <div class="container auth-wrap">
+        <div class="auth-card">
+            <img src="{% static 'images/home/Logo.png.png' %}" alt="" class="auth-logo">
+            <h1 class="auth-title">Create a Visitor Account</h1>
+            <p class="auth-sub">For website visitors and customers. Access the members portal, announcements, events and sermons.</p>
+            <form method="post" action="{% url 'members:register_user' %}" class="form-stack">
+                {% csrf_token %}
+                {% if form.non_field_errors %}<p class="form-error">{{ form.non_field_errors }}</p>{% endif %}
+                {% for field in form %}
+                <div class="form-field">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="req">*</span>{% endif %}</label>
+                    {{ field }}
+                    {% if field.help_text %}<small class="form-help">{{ field.help_text|safe }}</small>{% endif %}
+                    {% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-gold btn-block">Create Account</button>
+            </form>
+            <p class="auth-foot">
+                <a href="{% url 'members:register' %}">&larr; Back to options</a><br>
+                Already have an account? <a href="{% url 'members:login' %}">Login here</a>
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}

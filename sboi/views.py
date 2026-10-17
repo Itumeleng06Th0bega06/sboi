@@ -1,8 +1,10 @@
 from django.apps import apps
+from django.contrib import admin
 from django.contrib import messages
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
+from django.template.response import TemplateResponse
 from django.urls import reverse
 
 
@@ -23,6 +25,7 @@ ADMIN_SEARCH_MODELS = [
     ('blackboard', 'PdfMaterial', 'PDF Materials', ['title']),
     ('blackboard', 'EventRsvp', 'Event RSVPs', ['name', 'email', 'phone']),
     ('blackboard', 'MemberProfile', 'Members', ['user__username', 'user__email', 'user__first_name', 'user__last_name']),
+    ('members', 'ChurchMembership', 'Church Members', ['membership_id', 'user__username', 'user__first_name', 'user__last_name', 'user__email', 'phone']),
     ('auth', 'User', 'Users', ['username', 'email', 'first_name', 'last_name']),
     ('home', 'FeaturedSection', 'Featured Sections', ['title', 'subtitle', 'body']),
     ('home', 'HomeStat', 'Home Stats', ['value', 'label']),
@@ -71,6 +74,24 @@ def admin_search(request):
         'results': results,
         'total': total,
     })
+
+
+def admin_section(request, app_label):
+    """Drill-down page: the sub-menus of one dashboard section, as cards."""
+    section = next(
+        (a for a in admin.site.get_app_list(request) if a['app_label'] == app_label),
+        None,
+    )
+    if section is None:
+        raise Http404('Unknown admin section')
+    context = admin.site.each_context(request)
+    context.update({
+        'title': section['name'],
+        'section_label': app_label,
+        'section_name': section['name'],
+        'dashboard_url': reverse('admin:index'),
+    })
+    return TemplateResponse(request, 'admin/section_index.html', context)
 
 
 def admin_notifications_api(request):

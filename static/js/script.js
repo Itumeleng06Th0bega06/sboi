@@ -272,5 +272,16 @@
   } else {
     revealEls.forEach(function (el) { el.classList.add('visible'); });
   }
+
+  /* ---------- Date inputs ----------
+     Date fields render as text boxes so they can show a placeholder.
+     They switch to a native date picker on focus, and back to text when
+     left empty, which keeps the form clean without losing the calendar. */
+  document.querySelectorAll('input[data-date]').forEach(function (el) {
+    el.addEventListener('focus', function () { el.type = 'date'; });
+    el.addEventListener('blur', function () {
+      if (!el.value) el.type = 'text';
+    });
+  });
 })();
 

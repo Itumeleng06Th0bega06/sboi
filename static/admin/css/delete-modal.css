@@ -146,3 +146,39 @@
     border-color: #ecc9c9;
 }
 .sboi-row-actions a.sboi-row-delete:hover { background: #fdecec; }
+
+/* ================================================================
+   DARK + GOLD overrides
+   ================================================================ */
+.sboi-row-actions a {
+    background: #2a2540;
+    border-color: rgba(210, 162, 78, 0.3);
+    color: var(--sboi-ink, #ece6d9);
+}
+.sboi-row-actions a:hover { background: #352f52; }
+.sboi-row-actions a.sboi-row-delete {
+    color: #ff9a9a;
+    border-color: rgba(220, 120, 120, 0.5);
+}
+.sboi-row-actions a.sboi-row-delete:hover { background: rgba(180, 50, 50, 0.18); }
+
+.sboi-delete-modal {
+    background: #221e33;
+    color: var(--sboi-ink, #ece6d9);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+.sboi-delete-icon {
+    background: rgba(200, 60, 60, 0.18);
+    color: #ff9a9a;
+}
+.sboi-delete-body ul.deleted {
+    background: #2a2540;
+    color: var(--sboi-ink, #ece6d9);
+}
+.sboi-delete-body .btn-cancel {
+    background: #3a3352;
+    color: var(--sboi-ink, #ece6d9);
+}
+.sboi-delete-body .btn-cancel:hover { background: #453d63; }
+.sboi-delete-loading,
+.sboi-delete-msg { color: var(--sboi-muted, #b0a695); }

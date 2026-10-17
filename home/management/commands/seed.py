@@ -11,8 +11,8 @@ opt-in only, e.g. to reset a scratch database:
 
     python manage.py seed --refresh
 
-NEVER put this command in the Render start command — it would revert admin
-changes on every deploy/restart.
+NEVER run this command automatically on deploy/restart (e.g. from a cron job
+or a startup script) — it would revert admin changes every time.
 """
 from django.core.management.base import BaseCommand
 from django.conf import settings
@@ -42,13 +42,13 @@ STATIC = Path(settings.BASE_DIR) / 'static' / 'images'
 
 
 def _safe_name(name: str) -> str:
-    """Cloudinary public IDs cannot contain spaces or unusual characters."""
+    """Storage names should contain only safe, URL-friendly characters."""
     return re.sub(r'[^A-Za-z0-9._-]+', '_', name).strip('_')
 
 
 def copy(src: Path, sub: str) -> str:
-    """Upload a static image to the default media storage (Cloudinary in
-    production, local disk in development) and return its relative path."""
+    """Copy a static image into the default media storage and return its
+    relative path."""
     if not src.exists():
         return ''
     dst = f'{sub}/{_safe_name(src.name)}'
@@ -113,6 +113,7 @@ class Command(BaseCommand):
             'church_name': 'Shekinah Blaze Outreach International',
             'tagline': 'Governed by Heaven, Established on Earth.',
             'location': 'Mapoteng Village, Mothibistad, near Kuruman, Northern Cape, South Africa',
+            'founded_year': 2008,
             'founder_name': 'Apostle G.V. Mosokini',
             'founder_role': 'Founder & Senior Pastor · Vision Bearer',
             'founder_byline': MANUAL['founder_byline'],
@@ -310,7 +311,7 @@ class Command(BaseCommand):
             'address': 'Mapoteng Village, Mothibistad, near Kuruman, Northern Cape, South Africa',
             'phone': '+27 53 712 0000',
             'whatsapp': '+27 53 712 0000',
-            'email': 'info@shekinahblaze.org',
+            'email': 'admin@shekinahblaze.org',
             'service_times': 'Sundays: 09:00 & 11:00\nWednesdays: 17:00 — Bible Study\nFridays: 17:00 — Intercession',
             'facebook': 'https://facebook.com/ShekinahBlazeOutreachInternational',
             'twitter': '',
