@@ -8,6 +8,7 @@ env/
 .pytest_cache/
 .coverage
 htmlcov/
+.superuser.py
 
 # Django
 db.sqlite3
@@ -26,6 +27,10 @@ data.json
 .env
 .env.*
 !.env.example
+
+# Terminal-free superuser creator — contains a password. Keep it local (or
+# upload it to the server by hand); never commit it.
+superuser.py
 
 # OS / editors
 .DS_Store
