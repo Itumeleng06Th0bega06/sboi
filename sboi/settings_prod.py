@@ -2,7 +2,7 @@
 Production settings for the Shekinah Blaze site on shared cPanel hosting.
 
   * Database .... MariaDB / MySQL (via the pure-Python PyMySQL driver)
-  * Static ........ served by Apache from the account's ``public_html``
+  * Static ........ collected into ``staticfiles/`` and served by WhiteNoise
   * Uploaded media  served by Apache from ``public_html/media``
   * WSGI .......... run by Phusion Passenger through ``passenger_wsgi.py``
 
@@ -84,12 +84,12 @@ SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 X_FRAME_OPTIONS = 'DENY'
 
 # ---------------------------------------------------------------------------
-# Static & media files (served directly by Apache from public_html)
+# Static files (collected into the project, served by WhiteNoise)
 # ---------------------------------------------------------------------------
 #
-# On cPanel the web root is /home/<account>/public_html. We collect static
-# files and keep uploads there so Apache serves them without going through
-# Django. Override PUBLIC_HTML in .env if your account layout differs.
+# Static files are collected into ``staticfiles/`` next to manage.py and served
+# by WhiteNoise through Passenger. They deliberately do NOT go into
+# public_html, which is left for uploads only.
 #
 # Run once after every deploy that changes static files:
 #   python manage.py collectstatic --noinput --settings=sboi.settings_prod
@@ -97,10 +97,16 @@ X_FRAME_OPTIONS = 'DENY'
 PUBLIC_HTML = Path(os.environ.get('PUBLIC_HTML') or (Path.home() / 'public_html'))
 
 STATIC_URL = '/static/'
-STATIC_ROOT = PUBLIC_HTML / 'static'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# ---------------------------------------------------------------------------
+# Uploaded media (served directly by Apache from public_html/media)
+# ---------------------------------------------------------------------------
+#
+# Uploads are the only thing kept in the web root: Apache returns them directly
+# without waking Django. Override PUBLIC_HTML in .env if the layout differs.
 
 MEDIA_URL = '/media/'
-# Uploaded images/files land in public_html/media and are served by Apache.
 MEDIA_ROOT = PUBLIC_HTML / 'media'
 
 STORAGES = {
@@ -115,12 +121,10 @@ STORAGES = {
     },
 }
 
-# WhiteNoise serves static files as a fallback if Apache's mapping is not set
-# up; Apache serving them directly is faster and used first.
-MIDDLEWARE = [
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    *MIDDLEWARE,
-]
+# WhiteNoise serves the collected static files. They live in the project rather
+# than public_html, so Apache never sees them and Passenger must serve them.
+# It belongs directly after SecurityMiddleware (Django's recommended order).
+MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 WHITENOISE_MAX_AGE = 31536000
 

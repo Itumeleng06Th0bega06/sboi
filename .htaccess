@@ -7,9 +7,9 @@
 #   "Setup Python App" writes its Passenger block there:
 #
 #       # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
-#       PassengerAppRoot "/home/<acct>/sboi"
+#       PassengerAppRoot "/home/<acct>/repositories/sboi"
 #       PassengerBaseURI "/"
-#       PassengerPython "/home/<acct>/virtualenv/sboi/3.13/bin/python"
+#       PassengerPython "/home/<acct>/virtualenv/repositories/sboi/3.13/bin/python"
 #       # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
 #
 #   Instead APPEND this file to it — or let the .cpanel.yml deploy do it
@@ -68,8 +68,10 @@ Options -Indexes +FollowSymLinks
     </FilesMatch>
 </IfModule>
 
-# --- Serve /static/ and /media/ straight from disk (never through Passenger) -
-# Those folders live inside public_html, so Apache can return them directly.
+# --- Uploaded media is served straight from disk (never through Passenger) ---
+# public_html/media sits inside the web root, so Apache returns it directly.
+# Static files are NOT in the web root: they are collected into the project's
+# staticfiles/ folder and served by WhiteNoise through Passenger.
 <IfModule mod_headers.c>
     <FilesMatch "\.(css|js|png|jpg|jpeg|gif|svg|webp|ico)$">
         Header always set X-Content-Type-Options "nosniff"

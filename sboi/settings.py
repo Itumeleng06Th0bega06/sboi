@@ -134,8 +134,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-# collectstatic destination in development. Production collects into
-# public_html/static instead (see sboi/settings_prod.py).
+# collectstatic destination. Production collects into this same folder and
+# serves it with WhiteNoise (see sboi/settings_prod.py).
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'

@@ -41,14 +41,17 @@ deployment:
     - echo "==> Applying database migrations"
     - $VENV_BIN/python $APP_ROOT/manage.py migrate --noinput --settings=sboi.settings_prod
 
-    - echo "==> Collecting static files into public_html/static"
+    - echo "==> Collecting static files into the project (staticfiles/)"
     - $VENV_BIN/python $APP_ROOT/manage.py collectstatic --noinput --settings=sboi.settings_prod
 
     - echo "==> Installing web-server rules in public_html"
-    - mkdir -p $HOME/public_html/static $HOME/public_html/media
+    # Static files live in the project now, so drop the old public_html/static
+    # copy: otherwise Apache would keep serving stale files. collectstatic
+    # regenerates everything into $APP_ROOT/staticfiles.
+    - rm -rf $HOME/public_html/static
+    - mkdir -p $HOME/public_html/media
     - touch $HOME/public_html/.htaccess
     - grep -q SBOI-DEPLOY-MARKER $HOME/public_html/.htaccess || cat $APP_ROOT/.htaccess >> $HOME/public_html/.htaccess
-    - printf 'PassengerEnabled off\n' > $HOME/public_html/static/.htaccess
     - printf 'PassengerEnabled off\n' > $HOME/public_html/media/.htaccess
 
     - echo "==> Restarting the Passenger application"

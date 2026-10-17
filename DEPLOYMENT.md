@@ -3,8 +3,8 @@
 Production domain: **shekinahblaze.org** · Settings module: `sboi.settings_prod`
 
 The app runs under **Phusion Passenger** (cPanel's "Setup Python App"), stores
-data in **MariaDB**, and serves static files and uploads from the account's
-**`public_html`** directory.
+data in **MariaDB**, serves **static files via WhiteNoise** out of the project
+folder, and serves **uploads from `public_html/media`**.
 
 ---
 
@@ -16,7 +16,7 @@ data in **MariaDB**, and serves static files and uploads from the account's
 | Config file | none | **`.env`** (copied from `.env.example`) |
 | Database | SQLite (`db.sqlite3`) | **MariaDB** |
 | `DEBUG` | `True` | `False` |
-| Static / media | `static/`, `media/` | **`public_html/static`, `public_html/media`** |
+| Static / media | `static/`, `media/` | **`staticfiles/` (WhiteNoise), `public_html/media` (Apache)** |
 | Served by | `runserver` | Passenger → `passenger_wsgi.py` |
 
 **`.env.example` is only a template.** The real production configuration is the
@@ -145,8 +145,9 @@ its own runs the full publish step (migrations + static files), so it is the
 one entry to keep. It lives in the repo, so a Git deploy already places it next
 to `manage.py`.
 
-`collectstatic` writes CSS/JS/images into `public_html/static`, and uploads are
-stored in `public_html/media`.
+`collectstatic` writes CSS/JS/images into `staticfiles/` inside the project
+(WhiteNoise serves them), and uploads are stored in `public_html/media`
+(Apache serves them).
 
 ### Create the admin without a terminal
 
@@ -213,31 +214,34 @@ python manage.py loaddata data.json
 
 | URL | Served from | By |
 | --- | --- | --- |
-| `/static/...` | `public_html/static` | Apache (after `collectstatic`) |
+| `/static/...` | `repositories/sboi/staticfiles` | WhiteNoise (after `collectstatic`) |
 | `/media/...` | `public_html/media` | Apache (uploaded files) |
 | everything else | the Django app | Passenger → `passenger_wsgi.py` |
 
-Because these live inside `public_html`, Apache returns them directly — fast and
-without waking Django. `MEDIA_ROOT`/`STATIC_ROOT` already point there via
-`PUBLIC_HTML` in `sboi/settings_prod.py`.
+Only **uploads** live in `public_html`, so Apache returns those directly.
+Collected static files stay in the project (`STATIC_ROOT = BASE_DIR/'staticfiles'`)
+and are served by WhiteNoise, which `sboi/settings_prod.py` places in
+`MIDDLEWARE`. That is why `public_html` contains `media` and no `static`.
 
 ### public_html/.htaccess
 
 Apache needs a few rules for caching, compression and hidden-file protection,
-and Passenger must be switched **off** inside `static/` and `media/` so those
-files are served from disk instead of being handed to Django.
+and Passenger must be switched **off** inside `public_html/media` so uploads
+are served from disk instead of being handed to Django. (Static files no longer
+need this — they are not in the web root.)
 
 The repo ships a `.htaccess` with those rules. **Do not replace**
 `public_html/.htaccess` with it — cPanel writes the Passenger block
 (`PassengerAppRoot` / `PassengerBaseURI` / `PassengerPython`) into that same
 file. The `.cpanel.yml` deploy handles it safely: it appends the repo's
-`.htaccess` **once** (guarded by an `SBOI-DEPLOY-MARKER` comment) and writes
-`PassengerEnabled off` into `public_html/static/.htaccess` and
-`public_html/media/.htaccess`.
+`.htaccess` **once** (guarded by an `SBOI-DEPLOY-MARKER` comment), writes
+`PassengerEnabled off` into `public_html/media/.htaccess`, and deletes the old
+`public_html/static` folder so Apache cannot serve stale files.
 
 If you deploy by hand, do the same: **append** the repo's `.htaccess` to
-`public_html/.htaccess` (keeping the existing Passenger block) and create those
-two one-line files containing `PassengerEnabled off`.
+`public_html/.htaccess` (keeping the existing Passenger block), create
+`public_html/media/.htaccess` containing `PassengerEnabled off`, and delete any
+`public_html/static` folder left over from an earlier setup.
 
 > If the host forbids the `Options` directive in `.htaccess` (HTTP 500 on the
 > whole site), delete the `Options …` line from `.htaccess`.
@@ -276,5 +280,8 @@ two one-line files containing `PassengerEnabled off`.
   settings. Add `--settings=sboi.settings_prod`, or point the run field at
   `manage_prod.py`, which sets it for you. A cron job does not run a previous
   `export DJANGO_SETTINGS_MODULE=...` line.
-- **Static files 404** — re-run `collectstatic` and confirm
-  `public_html/static` exists; verify `STATIC_ROOT` in `sboi/settings_prod.py`.
+- **Static files 404** — re-run `collectstatic` and confirm `staticfiles/`
+  exists next to `manage.py`; confirm WhiteNoise is in `MIDDLEWARE` (added by
+  `sboi/settings_prod.py`) and that the app was **restarted**.
+- **Uploads 404** — confirm `public_html/media` exists and that
+  `public_html/media/.htaccess` contains `PassengerEnabled off`.

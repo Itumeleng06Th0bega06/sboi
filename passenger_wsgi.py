@@ -11,7 +11,7 @@ import sys
 # Make the project importable regardless of Passenger's working directory.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Use the production settings (MariaDB + public_html static/media).
+# Use the production settings (MariaDB + WhiteNoise static + public_html media).
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sboi.settings_prod')
 
 from sboi.wsgi import application  # noqa: E402  (import after env setup)
