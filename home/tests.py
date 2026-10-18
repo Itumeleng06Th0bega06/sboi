@@ -1,5 +1,10 @@
+from io import StringIO
+from urllib.parse import urlsplit
+
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.core import mail
+from django.core.management import call_command
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from about.models import ChurchProfile
@@ -79,3 +84,67 @@ class SiteSmokeTests(TestCase):
         self.client.force_login(user)
         response = self.client.get(reverse('admin_section', args=['home']))
         self.assertEqual(response.status_code, 404)
+
+
+class AdminPasswordResetTests(TestCase):
+    """The admin "forgot password" flow and the offline recovery command."""
+
+    def setUp(self):
+        mail.outbox.clear()
+        self.user = User.objects.create_user(
+            'resetme', 'resetme@example.com', 'old-pass-123', is_staff=True,
+        )
+
+    def _request_reset(self):
+        response = self.client.post(
+            reverse('admin_password_reset'), {'email': 'resetme@example.com'},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(mail.outbox), 1)
+        for token in mail.outbox[0].body.split():
+            if '/reset/' in token and token.startswith('http'):
+                return token
+        self.fail('No reset link found in the reset email.')
+
+    def test_login_page_links_to_reset(self):
+        response = self.client.get(reverse('admin:login'))
+        self.assertContains(response, reverse('admin_password_reset'))
+
+    @override_settings(
+        EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+    )
+    def test_reset_email_sets_a_new_password(self):
+        link = self._request_reset()
+        path = urlsplit(link).path
+        # The first GET hands the token over to the set-password step.
+        final = self.client.get(path, follow=True).redirect_chain[-1][0]
+        response = self.client.post(final, {
+            'new_password1': 'brand-new-pass-987',
+            'new_password2': 'brand-new-pass-987',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('brand-new-pass-987'))
+
+    @override_settings(
+        EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+    )
+    def test_reset_link_is_single_use(self):
+        link = self._request_reset()
+        path = urlsplit(link).path
+        final = self.client.get(path, follow=True).redirect_chain[-1][0]
+        self.client.post(final, {
+            'new_password1': 'brand-new-pass-987',
+            'new_password2': 'brand-new-pass-987',
+        })
+        response = self.client.get(path, follow=True)
+        self.assertContains(response, 'Link expired')
+
+    def test_recovery_command_prints_a_working_link(self):
+        out = StringIO()
+        call_command('reset_admin_password', 'resetme', stdout=out)
+        self.assertIn('resetme', out.getvalue())
+        link = next(t for t in out.getvalue().split() if t.startswith('http'))
+        response = self.client.get(urlsplit(link).path, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Set a new password')

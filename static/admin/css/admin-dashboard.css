@@ -26,11 +26,11 @@
   display: none;
 }
 
-/* Light canvas: the dashboard page sits on white while the hero and the
-   cards keep their dark brand panels. */
+/* The dashboard sits on the admin's dark canvas; the hero and the
+   cards keep their own, slightly lighter brand panels. */
 body.sboi-dashboard .app-main,
 body.sboi-dashboard .app-content {
-  background-color: #ffffff;
+  background-color: #0c091b;
 }
 
 /* ---------- Back tab (top of model pages + section pages) ---------- */

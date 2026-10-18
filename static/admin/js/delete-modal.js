@@ -298,13 +298,16 @@
                 td.className = 'sboi-row-actions';
                 var edit = document.createElement('a');
                 edit.href = base + cb.value + '/change/' + preserved;
-                edit.textContent = 'Edit';
+                edit.className = 'sboi-row-edit';
                 edit.title = 'Edit';
+                edit.setAttribute('aria-label', 'Edit');
+                edit.innerHTML = '<i class="fa fa-pencil" aria-hidden="true"></i>';
                 var del = document.createElement('a');
                 del.href = base + cb.value + '/delete/' + preserved;
                 del.className = 'sboi-row-delete';
-                del.textContent = 'Delete';
                 del.title = 'Delete';
+                del.setAttribute('aria-label', 'Delete');
+                del.innerHTML = '<i class="fa fa-trash" aria-hidden="true"></i>';
                 td.appendChild(edit);
                 td.appendChild(del);
                 tr.appendChild(td);

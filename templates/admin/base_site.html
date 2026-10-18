@@ -20,14 +20,14 @@
     {{ block.super }}
     <link rel="icon" href="{% static 'icons/favicon.ico' %}">
     {{ admin_dashboard.quick_actions|json_script:"sboi-quick-actions-data" }}
-    <script src="{% static 'admin/js/delete-modal.js' %}?v=7" defer></script>
+    <script src="{% static 'admin/js/delete-modal.js' %}?v=8" defer></script>
     <script src="{% static 'admin/js/sidebar-nav.js' %}?v=16" defer></script>
     <script src="{% static 'admin/js/notification-bell.js' %}?v=1" defer></script>
     <script src="{% static 'admin/js/quick-actions.js' %}?v=1" defer></script>
 {% endblock %}
 {% block extrastyle %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'admin/css/admin-brand.css' %}?v=20">
-    <link rel="stylesheet" href="{% static 'admin/css/delete-modal.css' %}?v=6">
+    <link rel="stylesheet" href="{% static 'admin/css/admin-brand.css' %}?v=28">
+    <link rel="stylesheet" href="{% static 'admin/css/delete-modal.css' %}?v=7">
     <link rel="stylesheet" href="{% static 'admin/css/notification-bell.css' %}?v=2">
 {% endblock %}

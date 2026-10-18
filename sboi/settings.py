@@ -159,6 +159,14 @@ LOGIN_URL = 'members:login'
 LOGIN_REDIRECT_URL = 'blackboard:blackboard'
 LOGOUT_REDIRECT_URL = 'home:home'
 
+# Outgoing email. Development prints messages to the runserver console; the
+# production settings use SMTP when SMTP_HOST is set and fall back to the
+# console otherwise (see sboi/settings_prod.py). This matters for the admin
+# "forgot password" flow: without a mail server the reset link would otherwise
+# raise on send. Use `manage.py reset_admin_password <user>` to get a link
+# directly instead of digging through the console.
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 
 # Jazzmin — premium admin theme
 JAZZMIN_SETTINGS = {

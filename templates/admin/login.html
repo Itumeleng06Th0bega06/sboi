@@ -5,7 +5,6 @@
 {% get_jazzmin_ui_tweaks as jazzmin_ui %}
 
 {% block content %}
-    <h1 class="auth-title">{{ jazzmin_settings.site_header }}</h1>
     <p class="auth-sub">{{ jazzmin_settings.welcome_sign }}</p>
     <form action="{{ app_path }}" method="post" class="form-stack">
         {% csrf_token %}

@@ -440,12 +440,18 @@ a.dropdown-item {
 }
 
 .login-logo {
-  margin-bottom: 1.2rem;
+  margin: 0 0 1.2rem;
+  text-align: center;
+}
+
+.login-logo a {
+  display: inline-block;
 }
 
 .login-logo img {
   width: 110px;
   height: auto;
+  margin: 0 auto;
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
 }
 
@@ -551,6 +557,24 @@ a.dropdown-item {
 
 .login-page .auth-foot .auth-back:hover {
   color: var(--sboi-gold);
+}
+
+/* Password reset / set-password extras */
+.login-page .error-text {
+  color: #ffb0b0;
+  font-size: 0.8rem;
+  margin: 0.3rem 0 0;
+}
+
+.login-page .auth-help {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.login-page .auth-help ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
 }
 
 @media (max-width: 480px) {
@@ -1001,46 +1025,42 @@ img.admin-thumb {
 }
 
 .login-page .btn.btn-gold {
-  background: linear-gradient(135deg, var(--sboi-gold), var(--sboi-gold-2));
-  color: #0c091b;
-  box-shadow: 0 8px 22px rgba(210, 162, 78, 0.28);
+  background: linear-gradient(160deg, #e7c47c, var(--sboi-gold));
+  color: #14111e;
+  box-shadow: 0 10px 24px rgba(210, 162, 78, 0.25);
 }
 
 .login-page .btn.btn-gold:hover {
-  background: linear-gradient(135deg, #e0b96a, #c69a4e);
-  color: #0c091b;
-  box-shadow: 0 12px 28px rgba(210, 162, 78, 0.34);
+  background: linear-gradient(160deg, #f0d79a, #e7c47c);
+  color: #14111e;
+  box-shadow: 0 14px 30px rgba(210, 162, 78, 0.32);
 }
 
 /* ================================================================
    ACCENT REFRESH
-   Glassy white->violet primary action buttons (matching the public
-   site) and a muted "View Website" pill.
+   Primary action buttons share the public site's gold treatment.
    ================================================================ */
 
-/* Primary action buttons + login button */
+/* Primary action buttons */
 .btn-primary,
 .btn-primary:hover,
 .btn-primary:focus,
 .btn-primary:not(:disabled):not(.disabled):active,
-.btn-primary:not(:disabled):not(.disabled).active,
-.login-page .btn.btn-gold,
-.login-page .btn.btn-gold:hover {
-  background: linear-gradient(135deg, #ffffff, #280047);
+.btn-primary:not(:disabled):not(.disabled).active {
+  background: linear-gradient(160deg, #e7c47c, var(--sboi-gold));
   border-color: transparent;
-  color: #ffffff;
-  text-shadow: 0 1px 4px rgba(40, 0, 71, 0.55);
-  box-shadow: 0 8px 22px rgb(119 0 246);
+  color: #14111e;
+  text-shadow: none;
+  box-shadow: 0 10px 24px rgba(210, 162, 78, 0.25);
 }
 
-.btn-primary:hover,
-.login-page .btn.btn-gold:hover {
-  background: linear-gradient(135deg, #f1e6ff, #3a0066);
-  box-shadow: 0 12px 28px rgb(119 0 246);
+.btn-primary:hover {
+  background: linear-gradient(160deg, #f0d79b, #c8963f);
+  box-shadow: 0 14px 30px rgba(210, 162, 78, 0.32);
 }
 
 .btn-primary i {
-  color: #ffffff;
+  color: #14111e;
 }
 
 /* "View Website": small and centred */
@@ -1074,11 +1094,11 @@ img.admin-thumb {
 }
 
 .sboi-quickadd-toggle i {
-  color: #7a1fd6;
+  color: var(--sboi-gold-2);
 }
 
 .sboi-quickadd-toggle:hover {
-  background: #f2ecff !important;
+  background: #f3ecdd !important;
 }
 
 .sboi-quickadd-menu {
@@ -1098,15 +1118,15 @@ img.admin-thumb {
 }
 
 .sboi-quickadd-item i {
-  color: #b39cff;
+  color: var(--sboi-gold);
   width: 18px;
   text-align: center;
 }
 
 .sboi-quickadd-item:hover,
 .sboi-quickadd-item:focus {
-  background: rgba(119, 0, 246, 0.22) !important;
-  color: #ffffff !important;
+  background: rgba(210, 162, 78, 0.18) !important;
+  color: var(--sboi-gold) !important;
 }
 
 /* Readable placeholders across the admin */
@@ -1214,6 +1234,60 @@ body.app-members.model-churchmembership #content-main form input[type='date'] {
   width: 100%;
 }
 
+/* Jazzmin ships Bootstrap 4, where the Bootstrap 5 `dropdown-menu-end`
+   utility does nothing — so the account, notifications and quick-add
+   menus anchored to the toggle's left edge and spilled off the right
+   of the screen (badly so on phones). Right-align them and stop them
+   from ever exceeding the viewport. */
+#jazzy-navbar .dropdown-menu {
+  left: auto;
+  right: 0;
+  max-width: calc(100vw - 1rem);
+}
+
+/* ================================================================
+   NAVBAR — phones
+   The two nav groups were forced to `flex: 1 1 0`, so on a narrow
+   screen they collapsed to a few pixels and their contents spilled
+   out of the bar — the logo was clipped and the action buttons
+   overlapped it. Give each group its natural width, push the account
+   actions to the right, and let the search take a full-width row of
+   its own underneath.
+   ================================================================ */
+@media (max-width: 767.98px) {
+  #jazzy-navbar > .container-fluid {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  #jazzy-navbar .navbar-nav:not(.ms-auto),
+  #jazzy-navbar .navbar-nav.ms-auto {
+    flex: 0 0 auto;
+    min-width: 0;
+    justify-content: flex-start;
+  }
+
+  #jazzy-navbar .navbar-nav.ms-auto {
+    margin-left: auto !important;
+    justify-content: flex-end;
+  }
+
+  #jazzy-navbar > .container-fluid > form.d-flex {
+    order: 3;
+    flex: 1 1 100%;
+    width: 100%;
+    margin: 0.4rem 0 0 !important;
+  }
+
+  #jazzy-navbar .navbar-nav {
+    gap: 0.35rem;
+  }
+
+  #jazzy-navbar .nav-link {
+    padding: 0.4rem 0.55rem;
+  }
+}
+
 /* ================================================================
    FLAT INTERACTION STATES
    Focus outlines and rings are removed everywhere in the admin
@@ -1264,69 +1338,113 @@ button:focus-visible {
 }
 
 /* ================================================================
-   CONTEXTUAL BUTTONS
-   Bootswatch pairs near-white labels with light teal, blue and grey
-   fills. On the admin surface that lands around 2:1, so the labels on
-   the "Add ..." buttons, "Save and add another", History and Delete
-   are hard to read. Re-point each variant at the brand palette,
-   keeping the gradient treatment already used by .btn-primary.
+   BUTTONS
+   One solid gold primary ("Add ...", "Save") and quiet ghost
+   secondaries, so the hierarchy reads at a glance and every label
+   keeps a high contrast against the dark surface.
    ================================================================ */
 .app-content .btn-success {
-  background: linear-gradient(135deg, var(--sboi-green), var(--sboi-green-3));
-  border-color: var(--sboi-green);
-  color: var(--sboi-cream);
+  background: linear-gradient(160deg, #e7c47c, var(--sboi-gold));
+  border-color: transparent;
+  color: #14111e;
+  box-shadow: 0 10px 24px rgba(210, 162, 78, 0.25);
 }
 
 .app-content .btn-success:hover,
 .app-content .btn-success:focus {
-  background: linear-gradient(135deg, var(--sboi-green-3), var(--sboi-green-2));
-  border-color: var(--sboi-green-3);
-  color: var(--sboi-cream);
+  background: linear-gradient(160deg, #f0d79b, #c8963f);
+  border-color: transparent;
+  color: #14111e;
 }
 
 /* "Save and add another" / "Save and continue editing" */
 .app-content .btn-info,
 .app-content .btn-warning {
-  background: linear-gradient(135deg, var(--sboi-gold), var(--sboi-gold-2));
-  border-color: var(--sboi-gold-2);
-  color: var(--sboi-ink);
+  background: rgba(210, 162, 78, 0.1);
+  border-color: rgba(210, 162, 78, 0.45);
+  color: #e7c47c;
+  box-shadow: none;
 }
 
 .app-content .btn-info:hover,
 .app-content .btn-info:focus,
 .app-content .btn-warning:hover,
 .app-content .btn-warning:focus {
-  background: linear-gradient(135deg, var(--sboi-gold-2), #96682c);
-  border-color: #96682c;
-  color: var(--sboi-ink);
+  background: rgba(210, 162, 78, 0.2);
+  border-color: var(--sboi-gold);
+  color: #f0d79b;
 }
 
-/* Destructive actions: deep red with a cream label. */
+/* Destructive actions: quiet red. */
 .app-content .btn-danger {
-  background: linear-gradient(135deg, #a03030, #8c2626);
-  border-color: #8c2626;
-  color: var(--sboi-cream);
+  background: rgba(214, 88, 88, 0.1);
+  border-color: rgba(214, 88, 88, 0.45);
+  color: #ff9a9a;
+  box-shadow: none;
 }
 
 .app-content .btn-danger:hover,
 .app-content .btn-danger:focus {
-  background: linear-gradient(135deg, #8c2626, #6f1d1d);
-  border-color: #6f1d1d;
-  color: var(--sboi-cream);
+  background: rgba(214, 88, 88, 0.2);
+  border-color: #e06666;
+  color: #ffb3b3;
 }
 
 /* "History" and the other secondary actions. */
 .app-content .btn-secondary {
-  background: linear-gradient(135deg, var(--sboi-muted), #46524c);
-  border-color: #46524c;
-  color: var(--sboi-cream);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(236, 230, 217, 0.22);
+  color: var(--sboi-ink);
+  box-shadow: none;
 }
 
 .app-content .btn-secondary:hover,
 .app-content .btn-secondary:focus {
-  background: linear-gradient(135deg, #46524c, var(--sboi-ink));
-  border-color: var(--sboi-ink);
-  color: var(--sboi-cream);
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(236, 230, 217, 0.34);
+  color: #ffffff;
+}
+
+/* ================================================================
+   CHANGE-FORM CARD
+   The add/change page wrapped every fieldset in one heavy elevated
+   card with a full-width tab strip. Flatten it: a hairline border,
+   no shadow, tighter padding and a compact pill tab bar.
+   ================================================================ */
+.app-content #content-main .card {
+  background-color: #171327;
+  border: 1px solid rgba(210, 162, 78, 0.14);
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.app-content #content-main .card > .card-body {
+  padding: 1rem 1.15rem 1.15rem;
+}
+
+.app-content #jazzy-tabs {
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(210, 162, 78, 0.16);
+}
+
+.app-content #jazzy-tabs .nav-link {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.79rem;
+  color: var(--sboi-muted);
+}
+
+.app-content #jazzy-tabs .nav-link:hover {
+  color: var(--sboi-ink);
+  background: rgba(210, 162, 78, 0.1);
+}
+
+.app-content #jazzy-tabs .nav-link.active {
+  background: rgba(210, 162, 78, 0.16);
+  color: #e7c47c;
 }
 
 /* ================================================================
@@ -1377,9 +1495,12 @@ button:focus-visible {
 
   /* Jazzmin pins the search box to a 250px minimum inline, which on
      its own forces a horizontal scrollbar on a phone. */
+  /* The `:not(...)` excludes select2's visually hidden companion
+     <select>, which must keep its 1px box. Stretching it to 100%
+     made the page scroll sideways by its left offset. */
   #changelist-search #searchbar,
-  #changelist-search .form-control,
-  #changelist-search .form-select {
+  #changelist-search .form-control:not(.select2-hidden-accessible),
+  #changelist-search .form-select:not(.select2-hidden-accessible) {
     width: 100% !important;
     min-width: 0 !important;
   }
@@ -1404,7 +1525,7 @@ button:focus-visible {
     margin: 0;
   }
 
-  .change-list-actions .actions select,
+  .change-list-actions .actions select:not(.select2-hidden-accessible),
   .change-list-actions .select2-container {
     width: 100% !important;
   }
@@ -1504,6 +1625,35 @@ button:focus-visible {
 
   .sboi-backtab {
     min-height: 40px;
+  }
+}
+
+/* ================================================================
+   NAVBAR DROPDOWNS — phones
+   The account, notifications and quick-add panels are 200-360px
+   wide, which is wider than the gap beside their toggle on a phone,
+   so no toggle-anchored alignment fits them: they used to hang off
+   either edge of the screen. Anchor them to the navbar instead so
+   each one spans the width of the screen, and drop them just below
+   the bar.
+   ================================================================ */
+@media (max-width: 575.98px) {
+  #jazzy-navbar {
+    position: relative;
+  }
+
+  #jazzy-navbar .nav-item.dropdown {
+    position: static;
+  }
+
+  #jazzy-navbar .dropdown-menu {
+    left: 0.5rem;
+    right: 0.5rem;
+    top: calc(100% + 0.35rem);
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    margin-top: 0.35rem !important;
   }
 }
 

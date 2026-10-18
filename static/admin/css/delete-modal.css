@@ -129,38 +129,45 @@
     white-space: nowrap;
     text-align: right;
 }
-.sboi-row-actions a {
-    display: inline-block;
-    margin-left: 0.5rem;
-    font-size: 0.8rem;
-    text-decoration: none;
-    padding: 0.2rem 0.6rem;
-    border-radius: 6px;
-    border: 1px solid #d7dbe6;
-    color: #1e2b26;
-    background: #fff;
-}
-.sboi-row-actions a:hover { background: #f2f4fa; }
-.sboi-row-actions a.sboi-row-delete {
-    color: #a03030;
-    border-color: #ecc9c9;
-}
-.sboi-row-actions a.sboi-row-delete:hover { background: #fdecec; }
 
-/* ================================================================
-   DARK + GOLD overrides
-   ================================================================ */
+/* Compact icon actions — a pencil and a bin rather than a pair of
+   wordy buttons. Keeps the row quiet and the column narrow. */
 .sboi-row-actions a {
-    background: #2a2540;
-    border-color: rgba(210, 162, 78, 0.3);
-    color: var(--sboi-ink, #ece6d9);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    margin-left: 0.3rem;
+    font-size: 0.78rem;
+    line-height: 1;
+    text-decoration: none;
+    border-radius: 8px;
+    border: 1px solid rgba(210, 162, 78, 0.3);
+    background: rgba(210, 162, 78, 0.08);
+    color: #e7c47c;
+    transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
-.sboi-row-actions a:hover { background: #352f52; }
+
+.sboi-row-actions a:hover,
+.sboi-row-actions a:focus-visible {
+    background: rgba(210, 162, 78, 0.2);
+    border-color: var(--sboi-gold, #d2a24e);
+    color: #f0d79b;
+}
+
 .sboi-row-actions a.sboi-row-delete {
+    border-color: rgba(214, 88, 88, 0.4);
+    background: rgba(214, 88, 88, 0.08);
     color: #ff9a9a;
-    border-color: rgba(220, 120, 120, 0.5);
 }
-.sboi-row-actions a.sboi-row-delete:hover { background: rgba(180, 50, 50, 0.18); }
+
+.sboi-row-actions a.sboi-row-delete:hover,
+.sboi-row-actions a.sboi-row-delete:focus-visible {
+    background: rgba(214, 88, 88, 0.2);
+    border-color: #e06666;
+    color: #ffb3b3;
+}
 
 .sboi-delete-modal {
     background: #221e33;

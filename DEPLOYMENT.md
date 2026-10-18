@@ -207,6 +207,29 @@ without needing a terminal. It is **git-ignored**, so upload it next to
 
 > **Change the password after your first sign-in** (Admin → Users).
 
+### Recover a forgotten admin password
+
+Two ways back in; neither needs the old password.
+
+1. **Reset link by email.** The sign-in page shows a *"Forgotten your password
+   or username?"* link that emails a one-time reset link. For the mail to be
+   delivered, set the `SMTP_*` values in `.env` (see `.env.example`). With no
+   SMTP configured Django writes the message to the app log instead.
+
+2. **Reset link without email** (locked out, or no SMTP configured). Run the
+   bundled command, which prints a ready-to-use link:
+
+   ```bash
+   manage_prod.py reset_admin_password <username>
+   ```
+
+   Open the printed URL while signed out and set a new password. The link can
+   only be used once and expires after a few days. If the guessed base URL is
+   wrong, set `SITE_URL` in `.env` or pass `--site-url`.
+
+Either way, once you can sign in you can change the password at any time from
+**Admin → user menu → Change password** — that needs no email at all.
+
 ### (Optional) Import existing content
 
 ```bash

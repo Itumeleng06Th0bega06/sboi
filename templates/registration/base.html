@@ -37,7 +37,7 @@
     <link rel="stylesheet" href="{% static "jazzmin/css/main.css" %}">
 
     <!-- Brand theme (versioned so browsers always pick up changes) -->
-    <link rel="stylesheet" href="{% static 'admin/css/admin-brand.css' %}?v=20">
+    <link rel="stylesheet" href="{% static 'admin/css/admin-brand.css' %}?v=28">
 
     <!-- favicons -->
     <link rel="shortcut icon" href="{% static jazzmin_settings.site_icon %}" type="image/png">
@@ -54,15 +54,15 @@
 <body class="login-page bg-body-secondary">
 
 <div class="login-box">
-    <div class="login-logo">
-        {% if jazzmin_settings.login_logo %}
-            <a href="/"><img src="{% static jazzmin_settings.login_logo %}" alt="{{ jazzmin_settings.site_title }}"></a>
-        {% else %}
-            <a href="/">{{ jazzmin_settings.site_title }}</a>
-        {% endif %}
-    </div>
     <div class="card">
         <div class="card-body login-card-body">
+            {% if jazzmin_settings.login_logo %}
+                <div class="login-logo">
+                    <a href="/"><img src="{% static jazzmin_settings.login_logo %}" alt="{{ jazzmin_settings.site_title }}"></a>
+                </div>
+            {% else %}
+                <h1 class="auth-title">{{ jazzmin_settings.site_header }}</h1>
+            {% endif %}
             {% block content %}{% endblock %}
         </div>
     </div>

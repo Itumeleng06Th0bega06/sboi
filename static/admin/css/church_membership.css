@@ -88,7 +88,7 @@
 .cm-panel-heading { padding:15px 16px 12px; }
 .cm-panel-heading h2 { margin:0 0 4px; font-family:'Playfair Display', Georgia, 'Times New Roman', serif; color:var(--cm-text); font-size:1.05rem; font-weight:600; }
 .cm-panel-heading p { margin:0; color:var(--cm-muted); font-size:.76rem; }
-.cm-table-wrap { width:100%; overflow-x:auto; }
+.cm-table-wrap { position:relative; width:100%; overflow-x:auto; }
 .cm-table { width:100%; min-width:660px; border-collapse:collapse; font-size:.77rem; text-align:left; }
 .cm-table th { padding:11px 10px; background:var(--table-header-bg); color:var(--cm-muted); border-top:1px solid var(--cm-border); border-bottom:1px solid var(--cm-border); font-size:.69rem; font-weight:650; white-space:nowrap; }
 .cm-table td { padding:11px 10px; border-bottom:1px solid var(--cm-border); vertical-align:middle; color:var(--cm-text); }

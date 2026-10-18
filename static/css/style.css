@@ -716,6 +716,9 @@ textarea.input { resize: vertical; }
 .pill-btn:hover { background: var(--gold); color: var(--green); }
 .pillbar { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2.5rem; }
 .pillbar .pill-btn.active, .pill-btn.active { background: var(--gold); color: var(--green); box-shadow: var(--glow); }
+/* Blackboard tabs are icon-only (accessible names live in .sr-only spans) */
+.pillbar .pill-btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.55rem 0.9rem; }
+.pillbar .pill-btn svg { width: 22px; height: 22px; fill: currentColor; display: block; }
 .tabpanel.hidden { display: none; }
 
 /* Video frames (sermons) */
@@ -932,8 +935,7 @@ main > .section:first-child { padding-top: calc(var(--header-h) + 2rem); }
 body.page-home .card,
 body.page-home .stat-card,
 body.page-home .vm-card,
-body.page-home .testimony-card,
-body.page-home .list-item { background: var(--nav-surface); }
+body.page-home .testimony-card { background: var(--nav-surface); }
 
 /* Image placeholders */
 .card-media, .thumb, .mosaic-item, .leader-media, .list-media { background: #272235; }
@@ -1013,6 +1015,37 @@ body.page-home .list-item { background: var(--nav-surface); }
   .list-item { flex-wrap: wrap; }
   .list-media { width: 100%; }
   main > .section:first-child { padding-top: 4.5rem; }
+}
+
+/* Blackboard: the pill tabs become a sticky top nav on small screens only */
+@media (max-width: 960px) {
+  body.page-blackboard .pillbar {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 0.45rem;
+    width: auto;
+    margin-inline: -4.348%;
+    margin-bottom: 1.6rem;
+    padding: 0.7rem 4vw;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    background: rgba(12, 9, 27, 0.94);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(231, 196, 124, 0.22);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.38);
+    scrollbar-width: none;
+  }
+  body.page-blackboard .pillbar::-webkit-scrollbar { display: none; }
+  body.page-blackboard .pillbar .pill-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    min-width: 46px;
+    padding: 0.55rem 0.85rem;
+  }
 }
 
 @media (max-width: 640px) {
