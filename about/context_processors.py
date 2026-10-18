@@ -1,4 +1,4 @@
-from .models import ChurchProfile, CoreValue, Leader
+from .models import ChurchProfile, Leader
 
 
 def about_chapters(request):
@@ -9,6 +9,5 @@ def about_chapters(request):
         ('ch-story', 'Our Story', bool(profile and profile.story)),
         ('ch-vision', 'Our Vision', bool(profile and profile.vision)),
         ('ch-mission', 'Our Mission', bool(profile and profile.mission)),
-        ('ch-values', 'Core Values', CoreValue.objects.exists()),
     ]
     return {'about_chapters': [{'id': cid, 'title': title} for cid, title, show in chapters if show]}
