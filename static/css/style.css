@@ -195,7 +195,6 @@ button:focus, a:focus, .btn:focus { outline: none; }
   transition: background 0.15s, color 0.15s;
 }
 .nav-dropdown-menu a:hover { background: linear-gradient(135deg, var(--gold), var(--gold-2)); color: var(--green); }
-.nav-subtabs { display: flex; gap: 0.35rem; list-style: none; }
 .nav-subtab {
   padding: 0.35rem 0.9rem;
   font-size: 0.82rem;

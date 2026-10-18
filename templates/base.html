@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=46">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=47">
 </head>
 <body class="{% block body_class %}{% endblock %}">
     {% block nav %}
@@ -40,14 +40,6 @@
                     <li><a href="{% url 'gallery:gallery' %}" class="nav-tab{% if request.resolver_match.namespace == 'gallery' %} active{% endif %}">Gallery</a></li>
                     <li><a href="{% url 'contact:contact' %}" class="nav-tab{% if request.resolver_match.namespace == 'contact' %} active{% endif %}">Contact</a></li>
                 </ul>
-                {% if request.resolver_match.namespace == 'blackboard' and request.user.is_authenticated %}
-                <ul class="nav-subtabs">
-                    <li><a href="#panel-announcements" data-pill="announcements" class="nav-subtab">Announcements</a></li>
-                    <li><a href="#panel-events" data-pill="events" class="nav-subtab">Events</a></li>
-                    <li><a href="#panel-sermons" data-pill="sermons" class="nav-subtab">Sermons</a></li>
-                    <li><a href="#panel-materials" data-pill="materials" class="nav-subtab">PDF Material</a></li>
-                </ul>
-                {% endif %}
                 <div class="nav-auth">
                     {% if request.user.is_authenticated %}
                     <span class="nav-user">Hi, {{ request.user.first_name|default:request.user.username }}</span>
