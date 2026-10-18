@@ -636,7 +636,7 @@ img.admin-thumb {
   --sboi-green: #d2a24e;          /* repurposed: gold accent                    */
   --sboi-green-2: #b07f3a;
   --sboi-green-3: #100d1c;        /* deep band                                  */
-  --sboi-green-bg: #14111f;       /* band                                        */
+  --sboi-green-bg: #0c091b;       /* band                                        */
   --sboi-cream: #221e33;          /* surface                                     */
   --sboi-cream-2: #2a2540;        /* raised surface                              */
   --sboi-ink: #ece6d9;            /* body text                                   */
@@ -652,7 +652,7 @@ img.admin-thumb {
   --bs-link-color-rgb: 210, 162, 78;
   --bs-link-hover-color: #e7c47c;
   --bs-link-hover-color-rgb: 231, 196, 124;
-  --bs-body-bg: #1b1729;
+  --bs-body-bg: #0c091b;
   --bs-body-color: #ece6d9;
   --bs-secondary-bg: #221e33;
   --bs-tertiary-bg: #262138;
@@ -671,12 +671,12 @@ img.admin-thumb {
 body,
 body.bg-body-secondary,
 body.bg-body-tertiary {
-  background-color: #1b1729 !important;
+  background-color: #0c091b !important;
   color: var(--sboi-ink);
 }
 
 .app-main {
-  background-color: #1b1729;
+  background-color: #0c091b;
 }
 
 .app-content-header h3 {
@@ -685,13 +685,13 @@ body.bg-body-tertiary {
 
 /* ---------- Navbar ---------- */
 .app-header.navbar {
-  background: linear-gradient(90deg, #14111f, #0f0d1a);
+  background: linear-gradient(90deg, #0c091b, #0c091b);
   border-bottom: 1px solid rgba(210, 162, 78, 0.3);
 }
 
 /* "View Website" pill: gold with dark text */
 .app-header .navbar-nav:not(.ms-auto) .nav-link:not([data-lte-toggle]):not(.dropdown-toggle) {
-  color: #1b1729;
+  color: #0c091b;
 }
 
 /* ---------- Cards ---------- */
@@ -712,7 +712,7 @@ body.bg-body-tertiary {
 }
 
 .card-primary:not(.card-outline) > .card-header {
-  background: linear-gradient(90deg, #14111f, #0f0d1a);
+  background: #262138;
 }
 
 /* ---------- Buttons ---------- */
@@ -720,7 +720,7 @@ body.bg-body-tertiary {
 .btn-outline-primary:hover {
   background: linear-gradient(135deg, var(--sboi-gold), var(--sboi-gold-2));
   border-color: var(--sboi-gold-2);
-  color: #1b1729;
+  color: #0c091b;
   box-shadow: 0 6px 16px rgba(210, 162, 78, 0.2);
 }
 
@@ -728,14 +728,14 @@ body.bg-body-tertiary {
 .btn-primary:focus {
   background: linear-gradient(135deg, #e0b96a, #c69a4e);
   border-color: #c69a4e;
-  color: #1b1729;
+  color: #0c091b;
 }
 
 .btn-primary:not(:disabled):not(.disabled):active,
 .btn-primary:not(:disabled):not(.disabled).active {
   background: linear-gradient(135deg, #c69a4e, #b07f3a);
   border-color: #b07f3a;
-  color: #1b1729;
+  color: #0c091b;
 }
 
 .btn-primary.disabled,
@@ -749,7 +749,7 @@ body.bg-body-tertiary {
 .btn-outline-primary:not(:disabled):not(.disabled).active {
   background-color: var(--sboi-gold-2);
   border-color: var(--sboi-gold-2);
-  color: #1b1729;
+  color: #0c091b;
 }
 
 /* ---------- Links ---------- */
@@ -762,7 +762,7 @@ body.bg-body-tertiary {
 .nav-pills .nav-link.active,
 .nav-pills .show > .nav-link {
   background-color: var(--sboi-gold);
-  color: #1b1729;
+  color: #0c091b;
 }
 
 .nav-pills .nav-link:hover:not(.active) {
@@ -797,7 +797,7 @@ body.bg-body-tertiary {
 .list-group-item.active {
   background-color: var(--sboi-gold);
   border-color: var(--sboi-gold-2);
-  color: #1b1729;
+  color: #0c091b;
 }
 
 /* ---------- Tables ---------- */
@@ -838,7 +838,7 @@ body.bg-body-tertiary {
 }
 
 .pagination .page-item.active .page-link {
-  color: #1b1729;
+  color: #0c091b;
 }
 
 /* ---------- Dropdowns / selects / badges ---------- */
@@ -866,12 +866,12 @@ body.bg-body-tertiary {
 
 .bg-primary {
   background-color: var(--sboi-gold) !important;
-  color: #1b1729 !important;
+  color: #0c091b !important;
 }
 
 .badge-primary {
   background-color: var(--sboi-gold) !important;
-  color: #1b1729 !important;
+  color: #0c091b !important;
 }
 
 .select2-container--default .select2-selection--single,
@@ -896,13 +896,13 @@ body.bg-body-tertiary {
 
 .select2-container--default .select2-results__option--highlighted[aria-selected] {
   background-color: var(--sboi-gold-2);
-  color: #1b1729;
+  color: #0c091b;
 }
 
 .select2-container--default .select2-selection--multiple .select2-selection__choice {
   background-color: var(--sboi-gold);
   border-color: var(--sboi-gold-2);
-  color: #1b1729;
+  color: #0c091b;
 }
 
 /* ---------- Modals ---------- */
@@ -918,7 +918,7 @@ body.bg-body-tertiary {
 
 /* ---------- Footer ---------- */
 .app-footer {
-  background-color: #14111f;
+  background-color: #0c091b;
   color: rgba(255, 255, 255, 0.72);
 }
 
@@ -935,7 +935,7 @@ body.bg-body-tertiary {
 
 .sboi-search-count {
   background: var(--sboi-gold);
-  color: #1b1729;
+  color: #0c091b;
 }
 
 .sboi-search-group a {
@@ -973,18 +973,18 @@ img.admin-thumb {
 /* ---------- Auth pages (login / password reset) ---------- */
 .login-page,
 .register-page {
-  background: radial-gradient(circle at 50% 0%, #262138, #100d1c 70%);
+  background: #0c091b;
 }
 
 .login-page .btn.btn-gold {
   background: linear-gradient(135deg, var(--sboi-gold), var(--sboi-gold-2));
-  color: #1b1729;
+  color: #0c091b;
   box-shadow: 0 8px 22px rgba(210, 162, 78, 0.28);
 }
 
 .login-page .btn.btn-gold:hover {
   background: linear-gradient(135deg, #e0b96a, #c69a4e);
-  color: #1b1729;
+  color: #0c091b;
   box-shadow: 0 12px 28px rgba(210, 162, 78, 0.34);
 }
 
@@ -1045,7 +1045,7 @@ img.admin-thumb {
   line-height: 1;
   border-radius: 999px;
   background: #ffffff !important;
-  color: #1b1729 !important;
+  color: #0c091b !important;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
@@ -1228,5 +1228,228 @@ button:focus,
 button:focus-visible {
   outline: 0 !important;
   box-shadow: none !important;
+}
+
+/* ================================================================
+   CONTEXTUAL BUTTONS
+   Bootswatch pairs near-white labels with light teal, blue and grey
+   fills. On the admin surface that lands around 2:1, so the labels on
+   the "Add ..." buttons, "Save and add another", History and Delete
+   are hard to read. Re-point each variant at the brand palette,
+   keeping the gradient treatment already used by .btn-primary.
+   ================================================================ */
+.app-content .btn-success {
+  background: linear-gradient(135deg, var(--sboi-green), var(--sboi-green-3));
+  border-color: var(--sboi-green);
+  color: var(--sboi-cream);
+}
+
+.app-content .btn-success:hover,
+.app-content .btn-success:focus {
+  background: linear-gradient(135deg, var(--sboi-green-3), var(--sboi-green-2));
+  border-color: var(--sboi-green-3);
+  color: var(--sboi-cream);
+}
+
+/* "Save and add another" / "Save and continue editing" */
+.app-content .btn-info,
+.app-content .btn-warning {
+  background: linear-gradient(135deg, var(--sboi-gold), var(--sboi-gold-2));
+  border-color: var(--sboi-gold-2);
+  color: var(--sboi-ink);
+}
+
+.app-content .btn-info:hover,
+.app-content .btn-info:focus,
+.app-content .btn-warning:hover,
+.app-content .btn-warning:focus {
+  background: linear-gradient(135deg, var(--sboi-gold-2), #96682c);
+  border-color: #96682c;
+  color: var(--sboi-ink);
+}
+
+/* Destructive actions: deep red with a cream label. */
+.app-content .btn-danger {
+  background: linear-gradient(135deg, #a03030, #8c2626);
+  border-color: #8c2626;
+  color: var(--sboi-cream);
+}
+
+.app-content .btn-danger:hover,
+.app-content .btn-danger:focus {
+  background: linear-gradient(135deg, #8c2626, #6f1d1d);
+  border-color: #6f1d1d;
+  color: var(--sboi-cream);
+}
+
+/* "History" and the other secondary actions. */
+.app-content .btn-secondary {
+  background: linear-gradient(135deg, var(--sboi-muted), #46524c);
+  border-color: #46524c;
+  color: var(--sboi-cream);
+}
+
+.app-content .btn-secondary:hover,
+.app-content .btn-secondary:focus {
+  background: linear-gradient(135deg, #46524c, var(--sboi-ink));
+  border-color: var(--sboi-ink);
+  color: var(--sboi-cream);
+}
+
+/* ================================================================
+   NARROW SCREENS (PHONES AND SMALL TABLETS)
+   The admin is laid out for a desktop table. On a phone the bulk
+   actions bar overflows, the changelist needs sideways scrolling to
+   reach Edit/Delete, and the Save buttons sit below the fold on long
+   forms. These rules keep every control on screen and thumb sized,
+   and leave the desktop layout untouched.
+   ================================================================ */
+@media (max-width: 991.98px) {
+  /* Keep the primary action reachable while scrolling a long form. */
+  #jazzy-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    margin-top: 0.75rem;
+    padding: 0.6rem 0;
+    background: var(--sboi-cream);
+    border-top: 1px solid rgba(0, 47, 43, 0.15);
+    box-shadow: 0 -6px 14px rgba(0, 47, 43, 0.08);
+  }
+
+  /* Buttons keep a thumb-sized target but stay on two rows at most,
+     so the sticky bar never swallows the form. */
+  #jazzy-actions .btn,
+  #jazzy-actions input[type='submit'],
+  .object-tools .btn {
+    flex: 0 1 auto;
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Jazzmin stretches the History/Delete links to a full row each on
+     every screen; let them share one row on narrow ones. */
+  .object-tools .btn {
+    width: auto;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .app-content > .container-fluid,
+  .app-content-header > .container-fluid {
+    padding-inline: 0.75rem;
+  }
+
+  /* Jazzmin pins the search box to a 250px minimum inline, which on
+     its own forces a horizontal scrollbar on a phone. */
+  #changelist-search #searchbar,
+  #changelist-search .form-control,
+  #changelist-search .form-select {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  #changelist-search .btn,
+  #change-list-filters > .d-flex > .btn {
+    flex: 1 1 100%;
+    min-height: 42px;
+  }
+
+  /* Bulk actions: stack the select, the Go button and the counter so
+     nothing is clipped and every target is thumb sized. */
+  .change-list-actions .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .change-list-actions .actions label {
+    flex: 1 1 100%;
+    margin: 0;
+  }
+
+  .change-list-actions .actions select,
+  .change-list-actions .select2-container {
+    width: 100% !important;
+  }
+
+  /* Clears the inline margin on Jazzmin's Go button. */
+  .change-list-actions .actions .btn {
+    flex: 1 1 100%;
+    margin: 0 !important;
+    min-height: 42px;
+  }
+
+  .change-list-actions .action-counter {
+    flex: 1 1 100%;
+    font-size: 0.82rem;
+  }
+
+  /* Changelist: trim the cells, then pin the Actions column to the
+     right edge so Edit/Delete stay visible while the rest of the row
+     scrolls sideways. */
+  #result_list {
+    font-size: 0.86rem;
+  }
+
+  #result_list th,
+  #result_list td {
+    padding: 0.4rem 0.5rem;
+    vertical-align: middle;
+  }
+
+  #result_list th.sboi-row-actions-head,
+  #result_list td.sboi-row-actions {
+    position: sticky;
+    right: 0;
+    background-color: var(--bs-body-bg, #0c091b);
+    box-shadow: -8px 0 10px -8px rgba(0, 0, 0, 0.35);
+    z-index: 2;
+  }
+
+  #result_list th.sboi-row-actions-head {
+    z-index: 3;
+  }
+
+  .sboi-row-actions {
+    text-align: center;
+  }
+
+  .sboi-row-actions a {
+    display: block;
+    margin: 0.2rem 0;
+    padding: 0.4rem 0.6rem;
+    min-height: 34px;
+  }
+
+  /* Shrink the changelist thumbnail so more columns fit at once, but
+     keep the stored path on screen. */
+  img.admin-thumb,
+  .admin-thumb-empty {
+    width: 56px;
+    height: 40px;
+  }
+
+  .admin-thumb-path {
+    max-width: 110px;
+    font-size: 0.68rem;
+  }
+
+  /* A long text area keeps the width implied by its cols attribute and
+     pushes the whole page sideways; cap every control at the column. */
+  .app-content input,
+  .app-content textarea,
+  .app-content select,
+  .app-content .form-control,
+  .app-content .select2-container {
+    max-width: 100%;
+  }
+
+  .sboi-backtab {
+    min-height: 40px;
+  }
 }
 

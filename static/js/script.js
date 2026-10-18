@@ -1,20 +1,35 @@
 ﻿(function () {
   'use strict';
 
-  /* ---------- Mobile nav ---------- */
-  var toggle = document.getElementById('navToggle');
-  var nav = document.getElementById('mainNav');
-  if (toggle && nav) {
-    function closeNav() {
-      nav.classList.remove('open');
-      toggle.classList.remove('open');
+  /* ---------- Mobile bottom nav: About bottom sheet ---------- */
+  var aboutBtn = document.getElementById('bottomAboutBtn');
+  var navSheet = document.getElementById('navSheet');
+  if (aboutBtn && navSheet) {
+    var sheetTimer = null;
+    function closeSheet() {
+      navSheet.classList.remove('open');
+      aboutBtn.setAttribute('aria-expanded', 'false');
+      document.body.classList.remove('sheet-open');
+      if (sheetTimer) window.clearTimeout(sheetTimer);
+      sheetTimer = window.setTimeout(function () { navSheet.hidden = true; sheetTimer = null; }, 300);
     }
-    toggle.addEventListener('click', function () {
-      nav.classList.toggle('open');
-      toggle.classList.toggle('open');
+    function openSheet() {
+      if (sheetTimer) { window.clearTimeout(sheetTimer); sheetTimer = null; }
+      navSheet.hidden = false;
+      window.requestAnimationFrame(function () { navSheet.classList.add('open'); });
+      aboutBtn.setAttribute('aria-expanded', 'true');
+      document.body.classList.add('sheet-open');
+    }
+    aboutBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (navSheet.hidden) { openSheet(); } else { closeSheet(); }
     });
-    nav.addEventListener('click', function (e) {
-      if (e.target.closest('a') && !e.target.closest('#navAboutDropdown')) closeNav();
+    navSheet.addEventListener('click', function (e) {
+      if (e.target.closest('[data-sheet-close]') || e.target.closest('a')) closeSheet();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !navSheet.hidden) closeSheet();
     });
   }
 
@@ -231,8 +246,6 @@
       navMenu.addEventListener('click', function (e) {
         if (e.target.closest('a')) {
           closeNavDropdown();
-          nav.classList.remove('open');
-          toggle.classList.remove('open');
         }
       });
     }

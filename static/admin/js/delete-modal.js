@@ -233,7 +233,8 @@
 
     function wireChangelistPage() {
     var form = document.getElementById('changelist-form');
-    if (form) {
+    if (form && !form.dataset.sboiActionsWired) {
+        form.dataset.sboiActionsWired = '1';
         form.addEventListener('submit', function (e) {
             var select = form.querySelector('select[name="action"]');
             if (!select || select.value !== 'delete_selected') {
@@ -272,6 +273,17 @@
             var preserved = window.location.search
                 ? '?_changelist_filters=' + encodeURIComponent(window.location.search.slice(1))
                 : '';
+            // Idempotent. This runs once on a full page load and again after
+            // every in-place (SPA) navigation, so drop anything a previous run
+            // injected before rebuilding the column. Without this the
+            // "Actions" header and its Edit/Delete cells would be appended a
+            // second time and appear duplicated.
+            table.querySelectorAll('th.sboi-row-actions-head').forEach(function (old) {
+                old.remove();
+            });
+            table.querySelectorAll('td.sboi-row-actions').forEach(function (old) {
+                old.remove();
+            });
             var th = document.createElement('th');
             th.scope = 'col';
             th.className = 'sboi-row-actions-head';

@@ -10,32 +10,33 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=32">
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
     {% block nav %}
     <header class="site-header" id="siteHeader">
-        <div class="header-inner container">
+        <div class="nav-pill container">
+            <ul class="nav-tabs nav-tabs-left">
+                <li><a href="{% url 'home:home' %}" class="nav-tab{% if request.resolved_match.namespace == 'home' %} active{% endif %}">Home</a></li>
+                <li class="nav-item nav-dropdown" id="navAboutDropdown">
+                    <a href="{% url 'about:about' %}" class="nav-tab{% if request.resolved_match.namespace == 'about' %} active{% endif %}" id="navAboutToggle" aria-haspopup="true" aria-expanded="false">About
+                        <svg class="nav-chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41Z"/></svg>
+                    </a>
+                    <ul class="nav-dropdown-menu">
+                        {% for chapter in about_chapters %}
+                        <li><a href="{% url 'about:about' %}#{{ chapter.id }}">{{ chapter.title }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </li>
+                <li><a href="{% url 'blackboard:blackboard' %}" class="nav-tab{% if request.resolved_match.namespace == 'blackboard' %} active{% endif %}">Blackboard</a></li>
+            </ul>
+
             <a href="{% url 'home:home' %}" class="brand">
                 <img src="{% static 'images/home/Logo.png.png' %}" alt="{{ site_profile.church_name }}" class="brand-logo">
             </a>
-            <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
-                <span></span><span></span><span></span>
-            </button>
-            <nav class="main-nav" id="mainNav">
-                <ul class="nav-tabs">
-                    <li><a href="{% url 'home:home' %}" class="nav-tab{% if request.resolved_match.namespace == 'home' %} active{% endif %}">Home</a></li>
-                    <li class="nav-item nav-dropdown" id="navAboutDropdown">
-                        <a href="{% url 'about:about' %}" class="nav-tab{% if request.resolved_match.namespace == 'about' %} active{% endif %}" id="navAboutToggle" aria-haspopup="true" aria-expanded="false">About
-                            <svg class="nav-chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41Z"/></svg>
-                        </a>
-                        <ul class="nav-dropdown-menu">
-                            {% for chapter in about_chapters %}
-                            <li><a href="{% url 'about:about' %}#{{ chapter.id }}">{{ chapter.title }}</a></li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                    <li><a href="{% url 'blackboard:blackboard' %}" class="nav-tab{% if request.resolved_match.namespace == 'blackboard' %} active{% endif %}">Blackboard</a></li>
+
+            <div class="nav-right">
+                <ul class="nav-tabs nav-tabs-right">
                     <li><a href="{% url 'gallery:gallery' %}" class="nav-tab{% if request.resolved_match.namespace == 'gallery' %} active{% endif %}">Gallery</a></li>
                     <li><a href="{% url 'contact:contact' %}" class="nav-tab{% if request.resolved_match.namespace == 'contact' %} active{% endif %}">Contact</a></li>
                 </ul>
@@ -55,9 +56,64 @@
                     <a href="{% url 'members:login' %}" class="nav-subtab">Login</a>
                     {% endif %}
                 </div>
-            </nav>
+            </div>
         </div>
     </header>
+
+    <nav class="bottom-nav" id="bottomNav" aria-label="Mobile navigation">
+        <a class="bnav-item{% if request.resolved_match.namespace == 'home' %} active{% endif %}" href="{% url 'home:home' %}">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3.2l9 7.3"/><path d="M5.6 9.3V21h12.8V9.3"/><path d="M10 21v-5.2h4V21"/></svg>
+            <span>Home</span>
+        </a>
+        <button type="button" class="bnav-item{% if request.resolved_match.namespace == 'about' %} active{% endif %}" id="bottomAboutBtn" aria-haspopup="true" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.2"/><path d="M12 7.6h.01"/></svg>
+            <span>About</span>
+        </button>
+        <a class="bnav-item{% if request.resolved_match.namespace == 'blackboard' %} active{% endif %}" href="{% url 'blackboard:blackboard' %}">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10.6 5.2 8.9 4.5 6.7 4.5H4V19h2.7c2.2 0 3.9.7 5.3 2"/><path d="M12 6.5c1.4-1.3 3.1-2 5.3-2H20V19h-2.7c-2.2 0-3.9.7-5.3 2"/><path d="M12 6.5V21"/></svg>
+            <span>Learn</span>
+        </a>
+        <a class="bnav-logo" href="{% url 'home:home' %}" aria-label="{{ site_profile.church_name }}">
+            <img src="{% static 'images/home/Logo.png.png' %}" alt="" class="bnav-logo-img">
+        </a>
+        <a class="bnav-item{% if request.resolved_match.namespace == 'gallery' %} active{% endif %}" href="{% url 'gallery:gallery' %}">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="10" r="1.5"/><path d="m21 16-4.5-4.5L11 17l-2-2-6 6"/></svg>
+            <span>Gallery</span>
+        </a>
+        <a class="bnav-item{% if request.resolved_match.namespace == 'contact' %} active{% endif %}" href="{% url 'contact:contact' %}">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>
+            <span>Contact</span>
+        </a>
+        <div class="bnav-auth">
+            {% if request.user.is_authenticated %}
+            <form method="post" action="{% url 'members:logout' %}">{% csrf_token %}
+                <button type="submit" class="bnav-item">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.7"/><path d="M4.6 20a7.4 7.4 0 0 1 14.8 0"/></svg>
+                    <span>Logout</span>
+                </button>
+            </form>
+            {% else %}
+            <a class="bnav-item" href="{% url 'members:login' %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.7"/><path d="M4.6 20a7.4 7.4 0 0 1 14.8 0"/></svg>
+                <span>Login</span>
+            </a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="nav-sheet" id="navSheet" hidden>
+        <div class="nav-sheet-backdrop" data-sheet-close></div>
+        <div class="nav-sheet-panel" role="dialog" aria-modal="true" aria-label="About sections">
+            <div class="nav-sheet-handle"></div>
+            <p class="nav-sheet-title">About</p>
+            <ul class="nav-sheet-list">
+                <li><a href="{% url 'about:about' %}">Overview</a></li>
+                {% for chapter in about_chapters %}
+                <li><a href="{% url 'about:about' %}#{{ chapter.id }}">{{ chapter.title }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
     {% endblock %}
 
     <main>
@@ -119,7 +175,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"/></svg>
     </button>
 
-    <script src="{% static 'js/script.js' %}?v=2"></script>
+    <script src="{% static 'js/script.js' %}?v=4"></script>
     <script src="{% static 'js/ajax-forms.js' %}"></script>
 </body>
 </html>
