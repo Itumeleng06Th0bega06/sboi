@@ -76,41 +76,35 @@ class ChurchProfileAdmin(ImageThumbMixin, admin.ModelAdmin):
 
 @admin.register(VisionPillar)
 class VisionPillarAdmin(admin.ModelAdmin):
-    list_display = ['title', 'subtitle', 'order']
-    list_editable = ['order']
-    fields = ['title', 'subtitle', 'body', 'order']
+    list_display = ['title']
+    fields = ['title', 'subtitle', 'body']
 
 
 @admin.register(MissionComponent)
 class MissionComponentAdmin(admin.ModelAdmin):
-    list_display = ['title', 'subtitle', 'order']
-    list_editable = ['order']
-    fields = ['title', 'subtitle', 'body', 'order']
+    list_display = ['title']
+    fields = ['title', 'subtitle', 'body']
 
 
 @admin.register(PathwayStep)
 class PathwayStepAdmin(admin.ModelAdmin):
-    list_display = ['step', 'title', 'order']
-    list_editable = ['order']
+    list_display = ['step', 'title']
     list_display_links = ['step', 'title']
 
 
 @admin.register(MissionAction)
 class MissionActionAdmin(admin.ModelAdmin):
-    list_display = ['title', 'order']
-    list_editable = ['order']
+    list_display = ['title']
 
 
 @admin.register(CoreValue)
 class CoreValueAdmin(admin.ModelAdmin):
-    list_display = ['title', 'scripture', 'order']
-    list_editable = ['order']
-    fields = ['title', 'scripture', 'what_we_believe', 'what_this_means', 'our_commitment', 'order']
+    list_display = ['title', 'scripture']
+    fields = ['title', 'scripture', 'what_we_believe', 'what_this_means', 'our_commitment']
 
 
 @admin.register(Leader)
 class LeaderAdmin(ImageThumbMixin, admin.ModelAdmin):
     thumb_field = 'photo'
-    list_display = ['thumb', 'name', 'role', 'order']
+    list_display = ['thumb', 'name', 'role']
     list_display_links = ['name']
-    list_editable = ['order']

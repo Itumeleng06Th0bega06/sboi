@@ -11,16 +11,14 @@ admin.site.index_title = 'Church Website Administration'
 
 @admin.register(HomeStat)
 class HomeStatAdmin(admin.ModelAdmin):
-    list_display = ['value', 'label', 'order']
-    list_editable = ['order']
+    list_display = ['value', 'label']
 
 
 @admin.register(FeaturedSection)
 class FeaturedSectionAdmin(ImageThumbMixin, admin.ModelAdmin):
     thumb_field = 'image'
-    list_display = ['thumb', 'title', 'subtitle', 'order']
+    list_display = ['thumb', 'title']
     list_display_links = ['title']
-    list_editable = ['order']
 
 
 @admin.register(Testimony)

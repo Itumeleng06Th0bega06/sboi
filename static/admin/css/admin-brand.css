@@ -563,6 +563,30 @@ a.dropdown-item {
   }
 }
 
+/* Ensure admin navbar items don't overlap on small screens */
+@media (max-width: 575.98px) {
+  #jazzy-navbar > .container-fluid {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  #jazzy-navbar .navbar-nav:not(.ms-auto),
+  #jazzy-navbar .navbar-nav.ms-auto {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+  #jazzy-navbar > .container-fluid > form.d-flex {
+    width: 100%;
+    margin: 0 !important;
+    order: 3;
+  }
+  #jazzy-navbar .navbar-nav {
+    gap: 0.35rem;
+  }
+  #jazzy-navbar .nav-link {
+    padding: 0.4rem 0.6rem;
+  }
+}
+
 .login-box .btn-primary.btn-block,
 .register-card .btn-primary.btn-block {
   background: linear-gradient(90deg, var(--sboi-gold), var(--sboi-gold-2));
@@ -1149,12 +1173,21 @@ body.app-members.model-churchmembership #content-main form input[type='date'] {
 
 /* Keep every navbar item on the same vertical centre line. The matching is
    scoped to >=sm so the items that are hidden on phones stay hidden. */
-@media (min-width: 576px) {
-  #jazzy-navbar .navbar-nav > .nav-item {
-    display: flex !important;
-    align-items: center !important;
+  /* Ensure admin navbar items don't overlap on small screens */
+  #jazzy-navbar > .container-fluid {
+    flex-wrap: wrap;
+    gap: 0.4rem;
   }
-}
+  #jazzy-navbar .navbar-nav:not(.ms-auto),
+  #jazzy-navbar .navbar-nav.ms-auto {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+  #jazzy-navbar > .container-fluid > form.d-flex {
+    width: 100%;
+    margin: 0 !important;
+    order: 3;
+  }
 
 /* The two side groups grow equally, so the search form lands dead
    centre between them instead of hugging the left group. */
@@ -1397,8 +1430,28 @@ button:focus-visible {
 
   #result_list th,
   #result_list td {
-    padding: 0.4rem 0.5rem;
+    padding: 0.35rem 0.45rem;
     vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  #result_list td {
+    white-space: normal;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #result_list .field-thumb,
+  #result_list .field-image,
+  #result_list .field-photo {
+    white-space: nowrap;
+    max-width: 64px;
+  }
+
+  #result_list img.admin-thumb {
+    width: 48px;
+    height: 34px;
   }
 
   #result_list th.sboi-row-actions-head,
@@ -1420,9 +1473,9 @@ button:focus-visible {
 
   .sboi-row-actions a {
     display: block;
-    margin: 0.2rem 0;
-    padding: 0.4rem 0.6rem;
-    min-height: 34px;
+    margin: 0.15rem 0;
+    padding: 0.35rem 0.5rem;
+    min-height: 32px;
   }
 
   /* Shrink the changelist thumbnail so more columns fit at once, but
@@ -1436,6 +1489,7 @@ button:focus-visible {
   .admin-thumb-path {
     max-width: 110px;
     font-size: 0.68rem;
+    white-space: nowrap;
   }
 
   /* A long text area keeps the width implied by its cols attribute and

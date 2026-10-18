@@ -962,15 +962,16 @@ body.page-home .list-item { background: var(--nav-surface); }
   .brand { width: 62px; height: 62px; margin-block: 0; }
   .brand-logo { height: 44px; }
   .bottom-nav { display: flex; }
-  body { padding-bottom: 92px; }
-  :root { --header-h: 96px; }
-  .hero-slider { height: 72vh; }
-  .list-item { flex-wrap: wrap; }
-  .list-media { width: 100%; }
+  /* Ensure bottom nav doesn't cover content; to-top doesn't sit on it */
+  body { padding-bottom: 104px; }
+  .to-top { bottom: 104px; right: 16px; width: 44px; height: 44px; }
+  .to-top svg { width: 24px; height: 24px; }
 }
 
 @media (max-width: 640px) {
-  :root { --header-h: 88px; }
+  .to-top { bottom: 104px; right: 16px; width: 44px; height: 44px; }
+  .to-top svg { width: 24px; height: 24px; }
+}
   .brand { width: 54px; height: 54px; }
   .brand-logo { height: 38px; }
   .brand-name { max-width: 52vw; font-size: 0.78rem; }
@@ -1000,6 +1001,8 @@ body.page-home .list-item { background: var(--nav-surface); }
   .vm-card, .form-card, .info-card { padding: 1.6rem; }
   .mosaic-item { aspect-ratio: 4 / 3; }
   .gallery-tabs { flex-wrap: wrap; }
+  .to-top { bottom: 104px; right: 16px; width: 44px; height: 44px; }
+  .to-top svg { width: 24px; height: 24px; }
 }
 
 .ajax-popup {
