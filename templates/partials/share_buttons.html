@@ -1,6 +1,10 @@
-<div class="share-row" data-share-title="{{ share_title }}" data-share-url="{{ share_url }}">
+<div class="share-row{% if hide_social %} is-collapsed{% endif %}" data-share-title="{{ share_title }}" data-share-url="{{ share_url }}">
+    {% if hide_social %}
+    <a href="#" class="share-label share-toggle" data-share-toggle aria-expanded="false" role="button">Share</a>
+    {% else %}
     <span class="share-label">Share</span>
-    {% if not hide_social %}<button class="share-btn" data-share="whatsapp" aria-label="Share on WhatsApp">
+    {% endif %}
+    <button class="share-btn" data-share="whatsapp" aria-label="Share on WhatsApp">
         {% include 'partials/_icon.html' with icon='whatsapp' %}
     </button>
     <button class="share-btn" data-share="facebook" aria-label="Share on Facebook">
@@ -8,7 +12,8 @@
     </button>
     <button class="share-btn" data-share="x" aria-label="Share on X">
         {% include 'partials/_icon.html' with icon='x' %}
-    </button>{% endif %}<button class="share-btn" data-share="copy" aria-label="Copy link">
+    </button>
+    <button class="share-btn" data-share="copy" aria-label="Copy link">
         {% include 'partials/_icon.html' with icon='link' %}
     </button>
 </div>

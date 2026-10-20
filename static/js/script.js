@@ -190,6 +190,21 @@
     }
   });
 
+  /* ---------- Share row expander (devotion cards) ----------
+     The platform buttons stay in the DOM but are hidden until the Share
+     trigger is pressed. Toggling is class-based so the delegated share
+     handler above keeps working unchanged once the buttons are visible. */
+  document.addEventListener('click', function (e) {
+    var trigger = e.target.closest('[data-share-toggle]');
+    if (!trigger) return;
+    /* It is an <a href="#">, so stop the jump-to-top. */
+    e.preventDefault();
+    var row = trigger.closest('.share-row');
+    if (!row) return;
+    var open = row.classList.toggle('is-open');
+    trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+
   /* ---------- Share buttons ---------- */
   document.addEventListener('click', function (e) {
     var btn = e.target.closest('[data-share]');

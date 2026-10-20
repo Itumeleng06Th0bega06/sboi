@@ -62,7 +62,7 @@
                         <div class="btn-row">
                             <button class="btn btn-gold btn-sm" data-rsvp="{{ event.pk }}" data-rsvp-title="{{ event.title }}">RSVP</button>
                         </div>
-                        {% include 'partials/share_buttons.html' with share_title=event.title share_url=share_url %}
+                        {% include 'partials/share_buttons.html' with share_title=event.title share_url=share_url hide_social=1 %}
                     </div>
                 </article>
                 {% endfor %}

@@ -521,6 +521,34 @@ img[src$=".png" i] { object-fit: contain !important; }
 /* Share row */
 .share-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-top: 0.4rem; }
 .share-label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+/* Devotion cards: platform buttons stay in the DOM but are hidden until the
+   Share trigger is pressed, so the card reads as one quiet action first. */
+.share-toggle {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: transparent;
+  cursor: pointer;
+  transition: color 0.2s, text-decoration-color 0.2s;
+}
+.share-toggle::after { content: ""; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid currentColor; transition: transform 0.2s; }
+.share-toggle:hover, .share-toggle[aria-expanded="true"] { color: var(--gold); text-decoration-color: var(--gold); }
+.share-toggle[aria-expanded="true"]::after { transform: rotate(180deg); }
+.share-row.is-collapsed .share-btn[data-share="whatsapp"],
+.share-row.is-collapsed .share-btn[data-share="facebook"],
+.share-row.is-collapsed .share-btn[data-share="x"] { display: none; }
+.share-row.is-collapsed.is-open .share-btn[data-share="whatsapp"],
+.share-row.is-collapsed.is-open .share-btn[data-share="facebook"],
+.share-row.is-collapsed.is-open .share-btn[data-share="x"] { display: inline-flex; animation: share-pop 0.22s ease both; }
+@keyframes share-pop { from { opacity: 0; transform: translateY(4px) scale(0.9); } to { opacity: 1; transform: none; } }
 .share-btn {
   display: inline-flex; align-items: center; justify-content: center;
   width: 38px; height: 38px; padding: 0;
