@@ -1487,115 +1487,122 @@ body::before {
 }
 
 /* ============================================================
-   NAV — GLASSMORPHIC
-   The same bar, logo and tabs, recoloured as smoked glass: a
-   translucent pane behind a gold rim light, and the active tab
-   as a lit gold pill. Only the colour treatment changes.
+   NAV — GLASSMORPHIC GOLD (matches the reference)
+   Same bar, logo and tabs as before, recoloured as a bright
+   glossy gold/amber pane with a highlight band on top, a gold
+   rim light and a lit gold pill for the active tab.
    ============================================================ */
 .nav-pill {
   background:
-    linear-gradient(180deg, rgba(255, 226, 168, 0.14), rgba(0, 0, 0, 0.34)),
-    linear-gradient(180deg, rgba(56, 43, 34, 0.55), rgba(20, 15, 13, 0.74)),
-    linear-gradient(180deg, rgba(255, 216, 142, 0.82) 0%, rgba(198, 152, 78, 0.30) 42%, rgba(248, 208, 132, 0.66) 100%);
+    /* glossy top highlight */
+    linear-gradient(180deg, rgba(255, 238, 200, 0.55) 0%, rgba(255, 238, 200, 0.10) 30%),
+    /* warm gold/amber body */
+    linear-gradient(160deg, #e8c26b, #c49142 45%, #9a6b28),
+    /* faint lift so backdrop content shows through */
+    rgba(12, 9, 27, 0.04);
   background-origin: border-box;
   background-clip: padding-box, padding-box, border-box;
-  -webkit-backdrop-filter: blur(18px) saturate(1.25);
-  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(16px) saturate(1.05);
+  backdrop-filter: blur(16px) saturate(1.05);
   border: 1px solid transparent;
+  border-radius: 999px;
   box-shadow:
     0 18px 40px rgba(0, 0, 0, 0.55),
-    0 0 34px rgba(210, 162, 78, 0.26),
-    inset 0 1px 0 rgba(255, 232, 180, 0.34),
-    inset 0 -12px 24px rgba(0, 0, 0, 0.34);
+    0 0 30px rgba(210, 162, 78, 0.42),
+    inset 0 1px 0 rgba(255, 240, 192, 0.6),
+    inset 0 -10px 20px rgba(56, 38, 10, 0.35);
 }
 
 .site-header.scrolled .nav-pill {
   box-shadow:
     0 22px 48px rgba(0, 0, 0, 0.60),
-    0 0 40px rgba(210, 162, 78, 0.32),
-    inset 0 1px 0 rgba(255, 232, 180, 0.36),
-    inset 0 -12px 24px rgba(0, 0, 0, 0.34);
+    0 0 36px rgba(210, 162, 78, 0.50),
+    inset 0 1px 0 rgba(255, 240, 192, 0.62),
+    inset 0 -10px 20px rgba(56, 38, 10, 0.35);
 }
 
-/* Tabs: warm cream on the glass, a lit gold pill when active */
+/* Tabs: warm dark-on-gold, lit brighter-gold pill when active */
 .nav-tab {
-  color: #ddd4c4;
+  color: #1a1410;
   border: 1px solid transparent;
 }
 .nav-tab:hover {
-  color: #f6e8cb;
-  background: rgba(210, 162, 78, 0.14);
+  color: #0c091b;
+  background: rgba(255, 224, 160, 0.5);
 }
 .nav-tab.active {
-  color: #f9e6bd;
-  background: linear-gradient(160deg, rgba(232, 192, 114, 0.34), rgba(122, 90, 40, 0.22));
-  border-color: rgba(242, 206, 136, 0.62);
+  color: #0c091b;
+  background: linear-gradient(160deg, rgba(255, 220, 140, 0.9), rgba(210, 162, 78, 0.5));
+  border-color: rgba(255, 212, 124, 0.85);
   box-shadow:
-    0 0 20px rgba(210, 162, 78, 0.42),
-    inset 0 1px 0 rgba(255, 244, 214, 0.34);
-  font-weight: 600;
+    0 0 20px rgba(210, 162, 78, 0.5),
+    inset 0 1px 0 rgba(255, 244, 214, 0.55);
+  font-weight: 700;
 }
 
-.nav-subtab { color: #cfc5b3; }
-.nav-subtab:hover, .nav-subtab.active { color: #e8c98d; border-color: rgba(210, 162, 78, 0.55); }
-.nav-user { color: #e4dac8; }
+.nav-subtab { color: #7c5b24; }
+.nav-subtab:hover, .nav-subtab.active { color: #c8963f; border-color: rgba(210, 162, 78, 0.6); }
+.nav-user { color: #8a6d38; }
 
-/* The About fly-out reads as the same glass */
+/* The About fly-out reads as the same gold glass */
 .nav-dropdown-menu {
-  background: linear-gradient(160deg, rgba(40, 31, 56, 0.84), rgba(16, 13, 28, 0.90));
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
-  backdrop-filter: blur(18px) saturate(1.2);
-  border-color: rgba(226, 186, 108, 0.32);
+  background: linear-gradient(160deg, rgba(242, 200, 130, 0.9), rgba(198, 152, 78, 0.75));
+  -webkit-backdrop-filter: blur(16px) saturate(1.05);
+  backdrop-filter: blur(16px) saturate(1.05);
+  border-color: rgba(210, 162, 78, 0.5);
   box-shadow:
     0 18px 40px rgba(0, 0, 0, 0.55),
-    0 0 22px rgba(210, 162, 78, 0.16);
+    0 0 22px rgba(210, 162, 78, 0.25);
 }
-.nav-dropdown-menu a { color: #e8dfcd; }
+.nav-dropdown-menu a { color: #14111e; }
 .nav-dropdown-menu a:hover {
-  background: linear-gradient(160deg, rgba(230, 188, 110, 0.28), rgba(120, 88, 38, 0.18));
-  color: #f9e6bd;
+  background: rgba(255, 228, 178, 0.55);
+  color: #0c091b;
 }
 
-/* Logo disc: the same glass, with a warm rim light */
+/* Logo disc: gold glass with bright rim light */
 .brand,
 .bnav-logo {
   background:
-    radial-gradient(circle at 34% 26%, rgba(255, 242, 212, 0.26), rgba(255, 228, 178, 0.06) 44%, rgba(0, 0, 0, 0.40) 100%),
-    linear-gradient(160deg, #453a52, #1d1830 74%);
+    radial-gradient(circle at 30% 22%, rgba(255, 248, 220, 0.45), rgba(255, 228, 178, 0.05) 40%, rgba(56, 38, 10, 0.45) 100%),
+    linear-gradient(160deg, #c49142, #7c5b24 68%);
   box-shadow:
     0 12px 26px rgba(0, 0, 0, 0.50),
     0 3px 0 rgba(0, 0, 0, 0.35),
-    inset 0 2px 2px rgba(255, 244, 214, 0.26),
+    inset 0 2px 2px rgba(255, 248, 220, 0.4),
     inset 0 -14px 22px rgba(0, 0, 0, 0.45),
-    0 0 0 2px rgba(228, 190, 116, 0.42),
-    0 0 24px rgba(210, 162, 78, 0.24);
+    0 0 0 2px rgba(238, 200, 130, 0.65),
+    0 0 26px rgba(210, 162, 78, 0.32);
 }
 .brand:hover,
 .bnav-logo:hover {
   box-shadow:
     0 16px 30px rgba(0, 0, 0, 0.55), 0 3px 0 rgba(0, 0, 0, 0.35),
-    inset 0 2px 2px rgba(255, 244, 214, 0.28), inset 0 -14px 22px rgba(0, 0, 0, 0.45),
-    0 0 0 2px rgba(236, 202, 134, 0.58),
-    0 0 30px rgba(210, 162, 78, 0.32);
+    inset 0 2px 2px rgba(255, 248, 220, 0.42), inset 0 -14px 22px rgba(0, 0, 0, 0.45),
+    0 0 0 2px rgba(248, 212, 144, 0.75),
+    0 0 32px rgba(210, 162, 78, 0.4);
 }
 
-/* The mobile dock is the nav on small screens — same glass */
+/* The mobile dock is the nav on small screens — same gold glass */
 .bottom-nav {
   background:
-    linear-gradient(180deg, rgba(255, 226, 168, 0.12), rgba(0, 0, 0, 0.32)),
-    linear-gradient(180deg, rgba(56, 43, 34, 0.55), rgba(20, 15, 13, 0.76)),
-    linear-gradient(180deg, rgba(255, 216, 142, 0.78) 0%, rgba(198, 152, 78, 0.28) 42%, rgba(248, 208, 132, 0.62) 100%);
+    /* glossy top highlight */
+    linear-gradient(180deg, rgba(255, 238, 200, 0.5) 0%, rgba(255, 238, 200, 0.05) 30%),
+    /* warm gold/amber body */
+    linear-gradient(160deg, #e8c26b, #c49142 45%, #9a6b28),
+    rgba(12, 9, 27, 0.04);
   background-origin: border-box;
   background-clip: padding-box, padding-box, border-box;
-  -webkit-backdrop-filter: blur(18px) saturate(1.25);
-  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(16px) saturate(1.05);
+  backdrop-filter: blur(16px) saturate(1.05);
   border: 1px solid transparent;
+  border-radius: 999px;
   box-shadow:
     0 16px 36px rgba(0, 0, 0, 0.55),
-    0 0 28px rgba(210, 162, 78, 0.24),
-    inset 0 1px 0 rgba(255, 232, 180, 0.30),
-    inset 0 -10px 20px rgba(0, 0, 0, 0.34);
+    0 0 28px rgba(210, 162, 78, 0.4),
+    inset 0 1px 0 rgba(255, 240, 192, 0.55),
+    inset 0 -10px 20px rgba(56, 38, 10, 0.35);
 }
-.bnav-item { color: #cfc5b3; }
-.bnav-item:hover, .bnav-item:active, .bnav-item.active { color: #f0cd88; }
+.bnav-item { color: #4a3614; }
+.bnav-item:hover, .bnav-item:active, .bnav-item.active { color: #0c091b; }
 
