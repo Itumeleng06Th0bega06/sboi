@@ -1,6 +1,6 @@
 <div class="share-row{% if hide_social %} is-collapsed{% endif %}" data-share-title="{{ share_title }}" data-share-url="{{ share_url }}">
     {% if hide_social %}
-    <a href="#" class="share-label share-toggle" data-share-toggle aria-expanded="false" role="button">Share</a>
+    <button type="button" class="share-label share-toggle" data-share-toggle aria-expanded="false">Share</button>
     {% else %}
     <span class="share-label">Share</span>
     {% endif %}

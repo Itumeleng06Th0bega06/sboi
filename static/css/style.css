@@ -524,13 +524,17 @@ img[src$=".png" i] { object-fit: contain !important; }
 /* Devotion cards: platform buttons stay in the DOM but are hidden until the
    Share trigger is pressed, so the card reads as one quiet action first. */
 .share-toggle {
+  appearance: none;
+  -webkit-appearance: none;
   display: inline-flex; align-items: center; gap: 0.35rem;
   padding: 0;
+  margin: 0;
   background: transparent;
   border: 0;
   color: var(--muted);
   font-family: inherit;
   font-size: 0.78rem;
+  line-height: inherit;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   text-decoration: underline;

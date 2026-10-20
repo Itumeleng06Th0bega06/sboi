@@ -197,8 +197,6 @@
   document.addEventListener('click', function (e) {
     var trigger = e.target.closest('[data-share-toggle]');
     if (!trigger) return;
-    /* It is an <a href="#">, so stop the jump-to-top. */
-    e.preventDefault();
     var row = trigger.closest('.share-row');
     if (!row) return;
     var open = row.classList.toggle('is-open');
