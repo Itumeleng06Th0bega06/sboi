@@ -1,9 +1,9 @@
-:root {
-  --green: #002f2b;                 /* rgb(0 47 43) — primary */
+ï»¿:root {
+  --green: #002f2b;                 /* rgb(0 47 43) â€” primary */
   --green-2: #008c83;
   --green-3: #00513d;
   --green-bg: rgb(0 47 43 / 96%);
-  --gold: #d2a24e;                  /* antique gold — accent */
+  --gold: #d2a24e;                  /* antique gold â€” accent */
   --gold-2: #b07f3a;
   --cream: #f7f5ee;
   --cream-2: #efece0;
@@ -118,7 +118,7 @@ button:focus, a:focus, .btn:focus { outline: none; }
 }
 .nav-pill .nav-tabs-left { justify-self: start; }
 .nav-pill .nav-right { justify-self: end; }
-/* Circular logo card — pops out of the bar for a 3D effect */
+/* Circular logo card â€” pops out of the bar for a 3D effect */
 .brand,
 .bnav-logo {
   position: relative;
@@ -260,12 +260,12 @@ button:focus, a:focus, .btn:focus { outline: none; }
 .bnav-auth form { flex: 1; display: flex; margin: 0; }
 .bnav-auth .bnav-item { width: 100%; }
 
-/* Side groups flanking the centred logo — items share the space evenly */
+/* Side groups flanking the centred logo â€” items share the space evenly */
 .bnav-side { display: flex; align-items: center; gap: 0; min-width: 0; }
 .bnav-side .bnav-item { flex: 1 1 0; }
 .bnav-side .bnav-auth { flex: 1 1 0; }
 
-/* Centred home logo — a raised 3D disc that pops out of the dock */
+/* Centred home logo â€” a raised 3D disc that pops out of the dock */
 .bnav-home {
   position: relative;
   flex: 0 0 auto;
@@ -893,7 +893,7 @@ html { scroll-behavior: smooth; }
    DARK + GOLD THEME
    Flips the light/cream site to a near-black plum canvas with
    gold accents. Layout, class names and responsive rules are
-   untouched — only the palette and light surfaces change.
+   untouched â€” only the palette and light surfaces change.
    ============================================================ */
 :root {
   --green: #14111e;                 /* dark plum (on-gold text + dark base) */
@@ -1460,7 +1460,7 @@ body::before {
   inset: 0;
   z-index: -1;
   /* The artwork is a very dark velvet (median luminance ~7/255), so it is
-     lifted here rather than veiled — the folds read on screen while the
+     lifted here rather than veiled â€” the folds read on screen while the
      brightest highlight still stays under 90/255, keeping text contrast. */
   background-color: #060410;
   background-image: url("../images/site-bg.jpg");
@@ -1485,4 +1485,117 @@ body::before {
 .page-hero {
   background: linear-gradient(160deg, rgba(12, 9, 27, 0.78), rgba(12, 9, 27, 0.38));
 }
+
+/* ============================================================
+   NAV â€” GLASSMORPHIC
+   The same bar, logo and tabs, recoloured as smoked glass: a
+   translucent pane behind a gold rim light, and the active tab
+   as a lit gold pill. Only the colour treatment changes.
+   ============================================================ */
+.nav-pill {
+  background:
+    linear-gradient(180deg, rgba(255, 226, 168, 0.14), rgba(0, 0, 0, 0.34)),
+    linear-gradient(180deg, rgba(56, 43, 34, 0.55), rgba(20, 15, 13, 0.74)),
+    linear-gradient(180deg, rgba(255, 216, 142, 0.82) 0%, rgba(198, 152, 78, 0.30) 42%, rgba(248, 208, 132, 0.66) 100%);
+  background-origin: border-box;
+  background-clip: padding-box, padding-box, border-box;
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  backdrop-filter: blur(18px) saturate(1.25);
+  border: 1px solid transparent;
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.55),
+    0 0 34px rgba(210, 162, 78, 0.26),
+    inset 0 1px 0 rgba(255, 232, 180, 0.34),
+    inset 0 -12px 24px rgba(0, 0, 0, 0.34);
+}
+
+.site-header.scrolled .nav-pill {
+  box-shadow:
+    0 22px 48px rgba(0, 0, 0, 0.60),
+    0 0 40px rgba(210, 162, 78, 0.32),
+    inset 0 1px 0 rgba(255, 232, 180, 0.36),
+    inset 0 -12px 24px rgba(0, 0, 0, 0.34);
+}
+
+/* Tabs: warm cream on the glass, a lit gold pill when active */
+.nav-tab {
+  color: #ddd4c4;
+  border: 1px solid transparent;
+}
+.nav-tab:hover {
+  color: #f6e8cb;
+  background: rgba(210, 162, 78, 0.14);
+}
+.nav-tab.active {
+  color: #f9e6bd;
+  background: linear-gradient(160deg, rgba(232, 192, 114, 0.34), rgba(122, 90, 40, 0.22));
+  border-color: rgba(242, 206, 136, 0.62);
+  box-shadow:
+    0 0 20px rgba(210, 162, 78, 0.42),
+    inset 0 1px 0 rgba(255, 244, 214, 0.34);
+  font-weight: 600;
+}
+
+.nav-subtab { color: #cfc5b3; }
+.nav-subtab:hover, .nav-subtab.active { color: #e8c98d; border-color: rgba(210, 162, 78, 0.55); }
+.nav-user { color: #e4dac8; }
+
+/* The About fly-out reads as the same glass */
+.nav-dropdown-menu {
+  background: linear-gradient(160deg, rgba(40, 31, 56, 0.84), rgba(16, 13, 28, 0.90));
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  backdrop-filter: blur(18px) saturate(1.2);
+  border-color: rgba(226, 186, 108, 0.32);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.55),
+    0 0 22px rgba(210, 162, 78, 0.16);
+}
+.nav-dropdown-menu a { color: #e8dfcd; }
+.nav-dropdown-menu a:hover {
+  background: linear-gradient(160deg, rgba(230, 188, 110, 0.28), rgba(120, 88, 38, 0.18));
+  color: #f9e6bd;
+}
+
+/* Logo disc: the same glass, with a warm rim light */
+.brand,
+.bnav-logo {
+  background:
+    radial-gradient(circle at 34% 26%, rgba(255, 242, 212, 0.26), rgba(255, 228, 178, 0.06) 44%, rgba(0, 0, 0, 0.40) 100%),
+    linear-gradient(160deg, #453a52, #1d1830 74%);
+  box-shadow:
+    0 12px 26px rgba(0, 0, 0, 0.50),
+    0 3px 0 rgba(0, 0, 0, 0.35),
+    inset 0 2px 2px rgba(255, 244, 214, 0.26),
+    inset 0 -14px 22px rgba(0, 0, 0, 0.45),
+    0 0 0 2px rgba(228, 190, 116, 0.42),
+    0 0 24px rgba(210, 162, 78, 0.24);
+}
+.brand:hover,
+.bnav-logo:hover {
+  box-shadow:
+    0 16px 30px rgba(0, 0, 0, 0.55), 0 3px 0 rgba(0, 0, 0, 0.35),
+    inset 0 2px 2px rgba(255, 244, 214, 0.28), inset 0 -14px 22px rgba(0, 0, 0, 0.45),
+    0 0 0 2px rgba(236, 202, 134, 0.58),
+    0 0 30px rgba(210, 162, 78, 0.32);
+}
+
+/* The mobile dock is the nav on small screens â€” same glass */
+.bottom-nav {
+  background:
+    linear-gradient(180deg, rgba(255, 226, 168, 0.12), rgba(0, 0, 0, 0.32)),
+    linear-gradient(180deg, rgba(56, 43, 34, 0.55), rgba(20, 15, 13, 0.76)),
+    linear-gradient(180deg, rgba(255, 216, 142, 0.78) 0%, rgba(198, 152, 78, 0.28) 42%, rgba(248, 208, 132, 0.62) 100%);
+  background-origin: border-box;
+  background-clip: padding-box, padding-box, border-box;
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  backdrop-filter: blur(18px) saturate(1.25);
+  border: 1px solid transparent;
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.55),
+    0 0 28px rgba(210, 162, 78, 0.24),
+    inset 0 1px 0 rgba(255, 232, 180, 0.30),
+    inset 0 -10px 20px rgba(0, 0, 0, 0.34);
+}
+.bnav-item { color: #cfc5b3; }
+.bnav-item:hover, .bnav-item:active, .bnav-item.active { color: #f0cd88; }
 
