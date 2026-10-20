@@ -936,80 +936,15 @@ ul.messagelist li.error::before {
   min-width: 0;
 }
 
-#changelist-filter {
-  flex: 0 0 258px;
-  order: 2;
-  position: sticky;
-  top: 88px;
-  max-height: calc(100vh - 108px);
-  overflow-y: auto;
-  margin: 0;
-  padding: 0.9rem 1rem 1rem;
-  background: var(--sboi-surface);
-  border: 1px solid var(--sboi-line);
-  border-radius: var(--sboi-radius);
-  box-sizing: border-box;
-}
-
-#changelist-filter h2 {
-  margin: 0 0 0.55rem;
-  padding: 0 0 0.55rem;
-  border: 0;
-  border-bottom: 1px solid var(--sboi-line);
-  background: transparent;
-  color: var(--sboi-gold);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-#changelist-filter h3 {
-  margin: 0.95rem 0 0.35rem;
-  color: var(--sboi-ink);
-  font-size: 0.76rem;
-  font-weight: 600;
-}
-
-#changelist-filter ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-#changelist-filter li {
-  padding: 0.16rem 0;
-  font-size: 0.8rem;
-}
-
-#changelist-filter li.selected {
-  border-left: 2px solid var(--sboi-gold);
-  padding-left: 0.5rem;
-  margin-left: -0.6rem;
-  font-weight: 600;
-}
-
-#changelist-filter a {
-  color: var(--sboi-muted);
-  text-decoration: none;
-}
-
-#changelist-filter a:hover {
-  color: var(--sboi-gold-soft);
-}
-
-#changelist-filter li.selected a {
-  color: var(--sboi-gold-soft);
-}
-
-#changelist-filter-extra-actions h3 {
-  margin-top: 0.4rem;
-  font-weight: 500;
-}
-
-#changelist-filter-extra-actions a {
-  color: var(--sboi-gold-2);
-  font-size: 0.75rem;
+/* --------------------------------------------------------------------------
+   Admin filters removed.
+   The changelist filter sidebar (#changelist-filter) is Django's default
+   filtering UI. It is hidden on every page; the container's flex layout lets
+   the results table expand into the freed space automatically.
+   -------------------------------------------------------------------------- */
+#changelist-filter,
+#changelist-filter-extra-actions {
+  display: none !important;
 }
 
 /* ---------- Search bar ---------- */
@@ -1806,11 +1741,40 @@ ul.errorlist.nonfield {
 }
 
 /* ---------- Django's admin widgets ---------- */
+/* The date/time popup (.calendarbox / .clockbox) is absolutely positioned by
+   Django's DateTimeShortcuts JS via inline top/left styles aimed at the input.
+   Force it to the centre of the viewport instead: fixed positioning plus a
+   translate keeps it centred regardless of where the field sits, and !important
+   overrides the JS-set inline coordinates. An oversized spread shadow behind
+   the box dims the page so the popup reads like a modal. */
 .calendarbox,
 .clockbox {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: translate(-50%, -50%);
+  z-index: 4000;
+  margin: 0;
   background: var(--sboi-surface-2);
   border: 1px solid var(--sboi-line);
-  box-shadow: var(--sboi-shadow);
+  border-radius: var(--sboi-radius);
+  /* The oversized first shadow acts as a dim backdrop: it spills across the
+     whole viewport behind the popup, so it reads like a modal without needing
+     an extra element (a ::before backdrop can't work here, because the
+     translate on this box makes it the containing block for fixed children). */
+  box-shadow: 0 0 0 100vmax rgba(6, 4, 14, 0.62), var(--sboi-shadow);
+}
+
+/* Centered popups: cancel the stock "close" link's odd float so it sits neatly
+   under the calendar rather than overlapping the grid. */
+.calendarbox .calendar-cancel,
+.clockbox .calendar-cancel {
+  display: block;
+  clear: both;
+  margin-top: 0.6rem;
+  text-align: center;
 }
 
 .calendar caption,
@@ -1820,9 +1784,25 @@ ul.errorlist.nonfield {
   color: var(--sboi-gold);
 }
 
+.calendar thead th {
+  border-bottom: 1px solid var(--sboi-line);
+}
+
+.calendar td a,
+.calendarbox .calendar caption a,
+.timelist a {
+  color: var(--sboi-gold-soft);
+}
+
 .calendar td a:hover,
 .timelist a:hover {
   background: rgba(210, 162, 78, 0.16);
+}
+
+.calendar td a:focus-visible,
+.timelist a:focus-visible {
+  outline: 2px solid var(--sboi-gold);
+  outline-offset: 1px;
 }
 
 /* ---------- Filtered multi-select (groups, permissions) ---------- */
@@ -1951,6 +1931,167 @@ ul.errorlist.nonfield {
   width: 16px;
   height: 16px;
   filter: invert(82%) sepia(35%) saturate(700%) hue-rotate(345deg) brightness(95%);
+}
+
+/* ==========================================================================
+   PAGE ACCESS EDITOR (Users → Page access)
+   ==========================================================================
+   A grouped, card-based replacement for Django's raw permission picker. Each
+   page is a checkbox card with a title and a one-line description, bucketed
+   under a small uppercase group heading.
+   ========================================================================== */
+.sboi-page-access {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.sboi-page-access__group-title {
+  margin: 0 0 0.5rem;
+  color: var(--sboi-muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sboi-page-access__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 0.6rem;
+}
+
+.sboi-page-access__card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0.7rem 0.8rem;
+  background: var(--sboi-surface-2);
+  border: 1px solid var(--sboi-line);
+  border-radius: var(--sboi-radius-sm);
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.sboi-page-access__card:hover {
+  border-color: var(--sboi-line-strong);
+  background: var(--sboi-surface-3);
+}
+
+/* The real checkbox is visually hidden but still focusable/accessible; the
+   gold tick mark on the right stands in for it. */
+.sboi-page-access__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.sboi-page-access__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sboi-page-access__label {
+  color: var(--sboi-ink);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.sboi-page-access__desc {
+  color: var(--sboi-muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+/* Gold tick that lights up when the card is checked. */
+.sboi-page-access__mark {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border: 1px solid var(--sboi-line-strong);
+  border-radius: 5px;
+  background: var(--sboi-surface);
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+
+.sboi-page-access__mark::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 12px 12px;
+  opacity: 0;
+  /* Simple check glyph, gold on the dark card. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314111e' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+  transition: opacity 0.16s ease;
+}
+
+.sboi-page-access__card.is-on {
+  border-color: var(--sboi-gold-2);
+  background: rgba(210, 162, 78, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(210, 162, 78, 0.12);
+}
+
+.sboi-page-access__card.is-on .sboi-page-access__mark {
+  border-color: var(--sboi-gold);
+  background: var(--sboi-gold-soft);
+}
+
+.sboi-page-access__card.is-on .sboi-page-access__mark::after {
+  opacity: 1;
+}
+
+.sboi-page-access__card.is-on .sboi-page-access__label {
+  color: var(--sboi-gold-soft);
+}
+
+/* Keyboard focus ring for the hidden checkbox, drawn on the card itself. */
+.sboi-page-access__input:focus-visible + .sboi-page-access__body {
+  outline: none;
+}
+
+.sboi-page-access__card:has(.sboi-page-access__input:focus-visible) {
+  border-color: var(--sboi-gold);
+  box-shadow: 0 0 0 2px rgba(210, 162, 78, 0.35);
+}
+
+/* Superuser note / general hint under the grid. */
+.sboi-page-access__note {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px dashed var(--sboi-line);
+  border-radius: var(--sboi-radius-sm);
+  background: rgba(210, 162, 78, 0.05);
+  color: var(--sboi-muted);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+/* Superuser: the whole editor is disabled — mute it so it reads as read-only
+   rather than looking broken. */
+.sboi-page-access__card:has(.sboi-page-access__input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+@media (max-width: 600px) {
+  .sboi-page-access__grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Date/time shortcut chips. */
@@ -2491,14 +2632,6 @@ body.sboi-auth {
     flex-direction: column;
   }
 
-  #changelist-filter {
-    order: 0;
-    position: static;
-    width: 100%;
-    max-height: none;
-    flex-basis: auto;
-  }
-
   .form-row {
     flex-direction: column;
     align-items: stretch;
@@ -2580,10 +2713,6 @@ body.sboi-auth {
 
   #result_list {
     font-size: 0.8rem;
-  }
-
-  #changelist-filter {
-    padding: 0.8rem;
   }
 
   .sboi-search-form {

@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 from sboi.admin_utils import ImageThumbMixin, OptionalDateAdminMixin
+from sboi.page_access_forms import PageAccessUserChangeForm
+from sboi.page_permissions import apply_page_access
 
 from .models import (
     Announcement,
@@ -32,14 +34,42 @@ class MemberProfileInline(admin.StackedInline):
 
 
 class MemberUserAdmin(UserAdmin):
+    form = PageAccessUserChangeForm
     inlines = [MemberProfileInline]
     list_display = ['username', 'email', 'first_name', 'last_name', 'is_staff', 'is_active', 'member_status']
     list_filter = ['is_active', 'is_staff', 'member_profile__status']
+
+    # The raw "user_permissions" picker is replaced by the grouped Page access
+    # editor; groups stay so batch assignment still works.
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        ('Personal info', {'fields': ('first_name', 'last_name', 'email')}),
+        ('Permissions', {
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups'),
+            'classes': ('collapse',),
+        }),
+        ('Page access', {
+            'fields': ('page_access',),
+            'description': (
+                'Grant a person access to specific pages. The default superuser '
+                'already has access to everything; tick pages to open them up '
+                'for other staff accounts.'
+            ),
+        }),
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+    )
 
     @admin.display(description='Member status')
     def member_status(self, obj):
         profile = getattr(obj, 'member_profile', None)
         return profile.status if profile else '—'
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        # Apply the grouped Page access editor onto user_permissions. Only the
+        # permissions owned by a page are touched; anything else is preserved.
+        if 'page_access' in form.cleaned_data:
+            apply_page_access(form.instance, form.cleaned_data['page_access'])
 
 
 admin.site.unregister(User)

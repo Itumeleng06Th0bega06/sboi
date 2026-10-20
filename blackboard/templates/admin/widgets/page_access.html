@@ -1,0 +1,45 @@
+{% comment %}
+  Page access editor — grouped cards with one checkbox per site page.
+
+  Built by hand rather than Django's stock checkbox list so each option reads
+  as a card: a styled checkbox, the page name, and a one-line description of
+  what unlocking it actually grants. Pages are bucketed by the group their
+  registry entry declares.
+
+  Lives under an installed app (not the project templates/ dir) because
+  Django's form renderer only scans installed apps when rendering widgets.
+{% endcomment %}
+<div class="sboi-page-access">
+  {% for group in widget.groups_render %}
+    <section class="sboi-page-access__group">
+      <h3 class="sboi-page-access__group-title">{{ group.label }}</h3>
+      <div class="sboi-page-access__grid">
+        {% for page in group.pages %}
+          <label class="sboi-page-access__card{% if page.checked %} is-on{% endif %}">
+            <input
+              type="checkbox"
+              name="{{ widget.name }}"
+              value="{{ page.key }}"
+              {% if page.checked %}checked{% endif %}
+              {% if page.disabled %}disabled{% endif %}
+              class="sboi-page-access__input"
+            >
+            <span class="sboi-page-access__body">
+              <span class="sboi-page-access__label">{{ page.label }}</span>
+              <span class="sboi-page-access__desc">{{ page.description }}</span>
+            </span>
+            <span class="sboi-page-access__mark" aria-hidden="true"></span>
+          </label>
+        {% endfor %}
+      </div>
+    </section>
+  {% endfor %}
+  <p class="sboi-page-access__note">
+    {% if widget.is_superuser %}
+      This account is a superuser — it already has full access to every page.
+    {% else %}
+      Changes apply the moment you save. Unchecked pages are removed from this
+      account immediately.
+    {% endif %}
+  </p>
+</div>
