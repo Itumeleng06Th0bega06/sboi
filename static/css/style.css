@@ -1,9 +1,9 @@
-ï»¿:root {
-  --green: #002f2b;                 /* rgb(0 47 43) â€” primary */
+:root {
+  --green: #002f2b;                 /* rgb(0 47 43) — primary */
   --green-2: #008c83;
   --green-3: #00513d;
   --green-bg: rgb(0 47 43 / 96%);
-  --gold: #d2a24e;                  /* antique gold â€” accent */
+  --gold: #d2a24e;                  /* antique gold — accent */
   --gold-2: #b07f3a;
   --cream: #f7f5ee;
   --cream-2: #efece0;
@@ -118,7 +118,7 @@ button:focus, a:focus, .btn:focus { outline: none; }
 }
 .nav-pill .nav-tabs-left { justify-self: start; }
 .nav-pill .nav-right { justify-self: end; }
-/* Circular logo card â€” pops out of the bar for a 3D effect */
+/* Circular logo card — pops out of the bar for a 3D effect */
 .brand,
 .bnav-logo {
   position: relative;
@@ -260,12 +260,12 @@ button:focus, a:focus, .btn:focus { outline: none; }
 .bnav-auth form { flex: 1; display: flex; margin: 0; }
 .bnav-auth .bnav-item { width: 100%; }
 
-/* Side groups flanking the centred logo â€” items share the space evenly */
+/* Side groups flanking the centred logo — items share the space evenly */
 .bnav-side { display: flex; align-items: center; gap: 0; min-width: 0; }
 .bnav-side .bnav-item { flex: 1 1 0; }
 .bnav-side .bnav-auth { flex: 1 1 0; }
 
-/* Centred home logo â€” a raised 3D disc that pops out of the dock */
+/* Centred home logo — a raised 3D disc that pops out of the dock */
 .bnav-home {
   position: relative;
   flex: 0 0 auto;
@@ -410,14 +410,14 @@ body.sheet-open { overflow: hidden; }
 .strip-text { font-weight: 500; text-align: center; margin: 0 auto; max-width: 720px; }
 
 /* Stats */
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.4rem; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 1.4rem; }
 .stat-card { text-align: center; background: var(--white); border-radius: var(--radius); padding: 2rem 1rem; box-shadow: var(--shadow); border-bottom: 3px solid var(--gold); }
 .stat-value { font-family: var(--serif); font-size: 3rem; font-weight: 700; color: var(--gold); }
 .stat-label { color: var(--muted); font-weight: 500; }
 
 /* Cards */
-.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.6rem; }
-.card-grid-centered { grid-template-columns: repeat(auto-fit, minmax(280px, 360px)); justify-content: center; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); gap: 1.6rem; }
+.card-grid-centered { grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 360px)); justify-content: center; }
 .card { background: var(--white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; transition: transform 0.3s ease, box-shadow 0.3s ease; }
 .card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
 .card-media { position: relative; background: #dde3ee; overflow: hidden; }
@@ -457,13 +457,13 @@ img[src$=".png" i] { object-fit: contain !important; }
 .split-body p { color: var(--muted); margin-bottom: 1rem; }
 
 /* Testimonies */
-.testimony-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 360px)); justify-content: center; gap: 1.5rem; }
+.testimony-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 360px)); justify-content: center; gap: 1.5rem; }
 .testimony-card { background: var(--white); border-radius: var(--radius); padding: 1.8rem; box-shadow: var(--shadow); border-left: 4px solid var(--gold); }
 .testimony-card p { color: var(--muted); font-style: italic; margin-bottom: 0.8rem; }
 .testimony-card cite { color: var(--green); font-weight: 600; font-style: normal; }
 
 /* Gallery strip */
-.gallery-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.9rem; }
+.gallery-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr)); gap: 0.9rem; }
 .thumb { background: #dde3ee; border-radius: 10px; overflow: hidden; aspect-ratio: 1 / 1; cursor: zoom-in; }
 .thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
 .thumb:hover img { transform: scale(1.06); }
@@ -525,7 +525,7 @@ img[src$=".png" i] { object-fit: contain !important; }
 .vm-card { background: var(--white); border-radius: var(--radius); padding: 2.2rem; box-shadow: var(--shadow); border-top: 4px solid var(--gold); }
 .vm-text { color: var(--muted); margin: 0.8rem 0; }
 .vm-scripture { font-style: italic; color: var(--gold); font-weight: 600; }
-.values-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+.values-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 1.5rem; }
 .value-card { background: var(--white); border-radius: var(--radius); padding: 1.8rem; box-shadow: var(--shadow); border-left: 4px solid var(--gold); transition: transform 0.3s; }
 .value-card:hover { transform: translateY(-4px); }
 .value-title { font-family: var(--serif); color: var(--green); font-size: 1.2rem; margin-bottom: 0.3rem; }
@@ -541,7 +541,7 @@ img[src$=".png" i] { object-fit: contain !important; }
 .value-scripture { font-style: italic; color: var(--gold); font-size: 0.9rem; }
 .value-text { color: var(--muted); font-size: 0.95rem; margin-top: 0.4rem; }
 .value-label { font-weight: 700; color: var(--green); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.9rem; }
-.leader-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 400px)); gap: 1.8rem; justify-content: center; }
+.leader-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 400px)); gap: 1.8rem; justify-content: center; }
 .leader-card { background: var(--white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform 0.3s; }
 .leader-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
 .leader-media { background: #dde3ee; }
@@ -552,7 +552,7 @@ img[src$=".png" i] { object-fit: contain !important; }
 .leader-bio { color: var(--muted); font-size: 0.95rem; }
 
 /* Contact */
-.contact-methods { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.4rem; margin-bottom: 3rem; }
+.contact-methods { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 1.4rem; margin-bottom: 3rem; }
 .method-card { background: var(--white); border-radius: var(--radius); padding: 1.8rem; box-shadow: var(--shadow); text-align: center; display: flex; flex-direction: column; gap: 0.3rem; align-items: center; border-bottom: 3px solid var(--gold); transition: transform 0.3s; }
 .method-card:hover { transform: translateY(-4px); }
 .method-icon { font-size: 2rem; display: inline-flex; }
@@ -634,7 +634,7 @@ textarea.input { resize: vertical; }
 .gallery-tab { padding: 0.6rem 1.6rem; border: 1.5px solid var(--gold); color: var(--gold); border-radius: 999px; font-weight: 600; transition: all 0.2s; }
 .gallery-tab.active, .gallery-tab:hover { background: var(--gold); color: var(--green); box-shadow: var(--glow); }
 .gallery-view.hidden { display: none; }
-.grid-mosaic { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+.grid-mosaic { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr)); gap: 1rem; }
 .mosaic-item { position: relative; background: #dde3ee; border-radius: 12px; overflow: hidden; aspect-ratio: 1 / 1; cursor: zoom-in; }
 .mosaic-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
 .mosaic-item:hover img { transform: scale(1.05); }
@@ -801,7 +801,7 @@ textarea.input { resize: vertical; }
 .sub-section { margin-top: 2.8rem; }
 .sub-title { font-family: var(--serif); color: var(--green); font-size: 1.4rem; margin-bottom: 1.2rem; }
 .sub-title.center { text-align: center; }
-.story-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; align-items: stretch; }
+.story-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 1.5rem; align-items: stretch; }
 .story-card { background: var(--white); border-radius: var(--radius); padding: 1.7rem 1.8rem; box-shadow: var(--shadow); border-top: 4px solid var(--gold); transition: transform 0.3s; }
 .story-card:hover { transform: translateY(-4px); }
 .story-title { font-family: var(--serif); color: var(--green); font-size: 1.2rem; margin-bottom: 0.6rem; }
@@ -820,14 +820,14 @@ textarea.input { resize: vertical; }
 .culture-box .sub-title { margin-bottom: 0.6rem; }
 .culture-box p { color: var(--green); line-height: 1.8; }
 .culture-intro { font-style: italic; color: var(--green); margin: 0 auto 1.6rem; max-width: 640px; }
-.culture-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.8rem; align-items: start; }
+.culture-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 1.8rem; align-items: start; }
 .culture-item { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.4rem; }
 .culture-item .value-icon { margin: 0 auto 0.2rem; }
 .culture-title { font-family: var(--serif); color: var(--green); font-size: 1.05rem; }
 .culture-item p { color: var(--green); font-size: 0.93rem; line-height: 1.6; }
 
 /* About: vision practice */
-.practice-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 1rem; max-width: 980px; margin: 0 auto; }
+.practice-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr)); gap: 1rem; max-width: 980px; margin: 0 auto; }
 .practice-chip { display: flex; align-items: center; gap: 0.7rem; background: var(--white); border-radius: 14px; padding: 0.75rem 1.1rem; box-shadow: var(--shadow); border-left: 4px solid var(--gold); transition: transform 0.3s; }
 .practice-chip:hover { transform: translateY(-3px); }
 .practice-icon { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, var(--gold), var(--gold-2)); color: var(--green); display: flex; align-items: center; justify-content: center; box-shadow: var(--glow); }
@@ -893,7 +893,7 @@ html { scroll-behavior: smooth; }
    DARK + GOLD THEME
    Flips the light/cream site to a near-black plum canvas with
    gold accents. Layout, class names and responsive rules are
-   untouched â€” only the palette and light surfaces change.
+   untouched — only the palette and light surfaces change.
    ============================================================ */
 :root {
   --green: #14111e;                 /* dark plum (on-gold text + dark base) */
@@ -1062,7 +1062,7 @@ body.page-home .testimony-card { background: var(--nav-surface); }
   .section-title { font-size: clamp(1.4rem, 6vw, 1.8rem); }
   .stat-value { font-size: 2.1rem; }
   .card-grid, .testimony-grid, .values-grid { grid-template-columns: 1fr; }
-  .stats-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .stats-grid { grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr)); }
   .list-item { padding: 1rem; gap: 0.9rem; }
   .list-date { padding: 0.45rem 0.6rem; }
   .date-day { font-size: 1.2rem; }
@@ -1200,7 +1200,7 @@ body.page-home .testimony-card { background: var(--nav-surface); }
 }
 .choice-group ul input { accent-color: var(--gold); width: 15px; height: 15px; flex-shrink: 0; margin: 0; }
 .check-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(210px, 100%), 1fr));
   gap: 0.5rem 1rem;
 }
 .check-grid label,
@@ -1439,4 +1439,50 @@ select.input[multiple] option:checked {
   border-radius: 13px;
 }
 .church-form .form-actions .btn-gold { flex: 1 1 240px; }
+
+/* ============================================================
+   Site backdrop
+   A fixed velvet backdrop shared by every page. It lives on a
+   fixed pseudo-element rather than background-attachment so it
+   behaves on iOS Safari, with a light veil for text contrast.
+   ============================================================ */
+html {
+  background-color: var(--base);
+}
+
+body {
+  background-color: transparent;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  /* The artwork is a very dark velvet (median luminance ~7/255), so it is
+     lifted here rather than veiled — the folds read on screen while the
+     brightest highlight still stays under 90/255, keeping text contrast. */
+  background-color: #060410;
+  background-image: url("../images/site-bg.jpg");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: brightness(1.55) saturate(1.2);
+  opacity: 0.52;
+  pointer-events: none;
+}
+
+/* Let the backdrop continue behind the alternating sections and the
+   page heroes rather than stopping at a hard edge. */
+.section-tint {
+  background: rgba(12, 9, 27, 0.72);
+}
+
+.section-green {
+  background: linear-gradient(160deg, rgba(12, 9, 27, 0.86), rgba(12, 9, 27, 0.6));
+}
+
+.page-hero {
+  background: linear-gradient(160deg, rgba(12, 9, 27, 0.78), rgba(12, 9, 27, 0.38));
+}
 
