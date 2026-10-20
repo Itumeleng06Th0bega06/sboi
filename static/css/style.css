@@ -370,7 +370,9 @@ body.sheet-open { overflow: hidden; }
 .flash-item.info { background: #e8effd; color: #23457a; border: 1px solid #c3d6f7; }
 
 /* ---------- Hero slider ---------- */
-.hero-slider { position: relative; height: min(88vh, 900px); min-height: 520px; background: var(--green-bg); overflow: hidden; }
+/* Transparent so the fixed page backdrop (body::before) shows through the
+   letterbox bars around the object-fit: contain slide images. */
+.hero-slider { position: relative; height: min(88vh, 900px); min-height: 520px; background: transparent; overflow: hidden; }
 .hero-track { position: relative; height: 100%; }
 .hero-slide {
   position: absolute; inset: 0;
@@ -685,7 +687,16 @@ textarea.input { resize: vertical; }
 .lightbox-close { position: absolute; top: 18px; right: 24px; background: none; border: none; color: var(--cream); font-size: 2.6rem; cursor: pointer; line-height: 1; }
 
 /* Footer */
-.site-footer { background: var(--base); color: #c6cede; margin-top: 4rem; }
+/* Translucent veil instead of an opaque fill so the fixed page backdrop
+   (body::before) shows through and blends into the footer. The scrim is
+   strongest at the top edge so it meets the content above with no visible
+   seam, and eases off downward so the artwork reads behind the columns. */
+.site-footer {
+  color: #c6cede;
+  margin-top: 4rem;
+  background: linear-gradient(180deg, rgba(6, 4, 16, 0.94) 0%, rgba(6, 4, 16, 0.82) 45%, rgba(6, 4, 16, 0.9) 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
 .footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.4rem; padding: 4rem 0 2.5rem; }
 .footer-logo { height: 256px; width: auto; object-fit: contain; margin-bottom: 1rem; }
 .footer-tagline { font-family: var(--serif); color: #ff9500; font-style: italic; }

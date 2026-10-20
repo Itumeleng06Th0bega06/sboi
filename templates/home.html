@@ -139,7 +139,7 @@
                     <h3 class="card-title">{{ dev.title }}</h3>
                     {% if dev.scripture %}<p class="card-scripture">{{ dev.scripture }}</p>{% endif %}
                     {% if dev.message %}<p class="card-text clamp">{{ dev.message|truncatewords:40 }}</p>{% endif %}
-                    {% include 'partials/share_buttons.html' with share_title=dev.title share_url=share_url %}
+                    {% include 'partials/share_buttons.html' with share_title=dev.title share_url=share_url hide_social=1 %}
                 </div>
             </article>
             {% endfor %}
