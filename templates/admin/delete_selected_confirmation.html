@@ -9,19 +9,42 @@
 <title>{% translate 'Confirm deletion' %}</title>
 <style>
 * { box-sizing: border-box; }
-body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: transparent; font-family: Inter, system-ui, sans-serif; }
-.sboi-popup { width: min(460px, 92vw); background: #fff; border-radius: 14px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4); padding: 1.6rem 1.8rem; text-align: center; }
-.sboi-icon { width: 46px; height: 46px; border-radius: 50%; background: #fdecec; color: #a03030; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.9rem; font-size: 1.4rem; font-weight: 700; }
-.sboi-popup h1 { font-size: 1.15rem; color: #1e2b26; margin: 0 0 0.4rem; }
-.sboi-popup p.msg { color: #444; font-size: 0.92rem; line-height: 1.55; margin: 0 0 0.8rem; }
-ul.deleted { text-align: left; background: #f7f8fb; border-radius: 10px; padding: 0.6rem 1.4rem; max-height: 150px; overflow: auto; font-size: 0.85rem; color: #333; margin: 0 0 1.1rem; }
+body {
+    margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: #0c091b; color: #ece6d9; font-family: Inter, "Segoe UI", system-ui, sans-serif;
+}
+.sboi-popup {
+    width: min(480px, 92vw); background: #221e33; border: 1px solid rgba(210, 162, 78, 0.22);
+    border-radius: 16px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55); padding: 1.6rem 1.8rem;
+    text-align: center;
+}
+.sboi-icon {
+    width: 46px; height: 46px; border-radius: 50%; background: rgba(200, 60, 60, 0.18);
+    color: #ff9a9a; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 0.9rem; font-size: 1.4rem; font-weight: 700;
+}
+.sboi-popup h1 { font-size: 1.15rem; color: #ffffff; margin: 0 0 0.4rem; }
+.sboi-popup p.msg { color: #b0a695; font-size: 0.92rem; line-height: 1.55; margin: 0 0 0.8rem; }
+ul.deleted {
+    text-align: left; background: #2a2540; border: 1px solid rgba(210, 162, 78, 0.16);
+    border-radius: 10px; padding: 0.6rem 1.4rem; max-height: 150px; overflow: auto;
+    font-size: 0.85rem; color: #ece6d9; margin: 0 0 1.1rem;
+}
 ul.deleted li { margin: 0.15rem 0; }
-.actions { display: flex; gap: 0.6rem; justify-content: center; }
-.btn { padding: 0.55rem 1.2rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-decoration: none; cursor: pointer; border: none; }
-.btn-danger { background: #a03030; color: #fff; }
-.btn-danger:hover { background: #8a2828; }
-.btn-cancel { background: #eef0f5; color: #1e2b26; }
-.btn-cancel:hover { background: #e2e5ee; }
+ul.deleted a { color: #e7c47c; text-decoration: none; }
+ul.deleted a:hover, ul.deleted a:focus { color: #f0d79b; text-decoration: underline; }
+.actions { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; }
+.btn {
+    padding: 0.6rem 1.2rem; border-radius: 9px; font-weight: 600; font-size: 0.9rem;
+    text-decoration: none; cursor: pointer; border: 1px solid transparent;
+}
+.btn-danger {
+    background: linear-gradient(160deg, #e7c47c, #d2a24e); color: #14111e; border: 0;
+    box-shadow: 0 8px 20px rgba(210, 162, 78, 0.24);
+}
+.btn-danger:hover { background: linear-gradient(160deg, #f0d79b, #c8963f); }
+.btn-cancel { background: rgba(255, 255, 255, 0.06); border-color: rgba(236, 230, 217, 0.22); color: #ece6d9; }
+.btn-cancel:hover { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
 </style>
 </head>
 <body>

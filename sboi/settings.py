@@ -38,7 +38,6 @@ ADMIN_URL = 'admin/'
 # Application definition
 
 INSTALLED_APPS = [
-    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -167,105 +166,6 @@ LOGOUT_REDIRECT_URL = 'home:home'
 # directly instead of digging through the console.
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-
-# Jazzmin — premium admin theme
-JAZZMIN_SETTINGS = {
-    'site_title': 'Shekinah Blaze Admin',
-    'site_header': 'Shekinah Blaze Outreach International',
-    'site_brand': 'Shekinah Blaze',
-    'site_logo': 'images/home/Logo.png.png',
-    'site_logo_classes': 'img-fluid',
-    'login_logo': 'images/home/Logo.png.png',
-    'welcome_sign': 'Governed by Heaven, Established on Earth',
-    'copyright': 'Shekinah Blaze Outreach International',
-    'search_model': ['blackboard.Devotion'],
-    'topmenu_links': [
-        {'name': 'View Website', 'url': '/', 'new_window': False, 'icon': 'fas fa-globe'},
-    ],
-    'show_sidebar': False,
-    'navigation_expanded': True,
-    'hide_apps': [],
-    # The Church Membership section is reached through its dashboard tile
-    # (which links on to the record list); the raw changelist entry is
-    # therefore not listed as a separate section tile.
-    'hide_models': ['members.churchmembership'],
-    'order_with_respect_to': ['home', 'about', 'blackboard', 'gallery', 'contact', 'members', 'auth'],
-    # admin-brand.css is linked from templates/admin/base_site.html (admin
-    # pages) and templates/registration/base.html (login / password reset)
-    # so the URL can carry a cache-busting ?v= query.
-    'custom_css': None,
-    'custom_js': None,
-    'show_ui_builder': False,
-    'language_chooser': False,
-    'icons': {
-        # Top-level menu sections (keyed by app_label).
-        'home': 'fas fa-house',
-        'about': 'fas fa-circle-info',
-        'blackboard': 'fas fa-chalkboard-user',
-        'gallery': 'fas fa-images',
-        'contact': 'fas fa-address-book',
-        'members': 'fas fa-people-roof',
-        'auth': 'fas fa-user-shield',
-        # Individual models.
-        'auth.Group': 'fas fa-users',
-        'auth.User': 'fas fa-user',
-        'home.HomeStat': 'fas fa-chart-line',
-        'home.FeaturedSection': 'fas fa-star',
-        'home.Testimony': 'fas fa-comment-dots',
-        'home.Subscriber': 'fas fa-envelope-open-text',
-        'about.ChurchProfile': 'fas fa-church',
-        'about.CoreValue': 'fas fa-gem',
-        'about.Leader': 'fas fa-user-tie',
-        'about.MissionAction': 'fas fa-hands-helping',
-        'about.MissionComponent': 'fas fa-bullseye',
-        'about.PathwayStep': 'fas fa-route',
-        'about.VisionPillar': 'fas fa-eye',
-        'blackboard.Announcement': 'fas fa-bullhorn',
-        'blackboard.Devotion': 'fas fa-book-open',
-        'blackboard.Event': 'fas fa-calendar-days',
-        'blackboard.EventRsvp': 'fas fa-clipboard-check',
-        'blackboard.MemberProfile': 'fas fa-id-card',
-        'blackboard.PdfMaterial': 'fas fa-file-pdf',
-        'blackboard.Sermon': 'fas fa-video',
-        'contact.ContactInfo': 'fas fa-address-book',
-        'contact.ContactMessage': 'fas fa-envelope',
-        'gallery.SliderImage': 'fas fa-images',
-        'members.ChurchMembership': 'fas fa-users',
-    },
-    # A custom link rendered inside the existing "Church Membership" app
-    # section (Jazzmin appends custom_links to the matching app_label).
-    'custom_links': {
-        'members': [
-            {
-                'name': 'Membership dashboard',
-                'url': 'admin:members_churchmembership_dashboard',
-                'icon': 'fas fa-chart-line',
-                'permissions': ['members.view_churchmembership'],
-            },
-        ],
-    },
-    'default_icon_parents': 'fas fa-chevron-circle-right',
-    'default_icon_children': 'fas fa-circle',
-    'related_modal_active': True,
-}
-
-JAZZMIN_UI_TWEAKS = {
-    'theme': 'flatly',
-    'default_theme_mode': 'dark',
-    'light_theme': 'flatly',
-    'dark_theme': 'slate',
-    'navbar': 'navbar-dark navbar-primary',
-    'sidebar': 'sidebar-dark-primary',
-    'no_navbar_border': True,
-    'navbar_small_text': False,
-    'sidebar_small_text': True,
-    'body_small_text': False,
-    'brand_colour': 'navbar-primary',
-    'accent': 'accent-primary',
-    'footer_fixed': False,
-    'navbar_fixed': True,
-    'sidebar_fixed': True,
-}
 
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',

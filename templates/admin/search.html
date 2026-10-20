@@ -1,44 +1,47 @@
 {% extends "admin/base_site.html" %}
 {% load i18n static %}
 
-{% block title %}{% translate 'Search' %} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+{% block title %}{% translate 'Search' %} | {{ site_title|default:_('Shekinah Blaze Admin') }}{% endblock %}
 
 {% block breadcrumbs %}
-<div class="breadcrumbs">
-  <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
-  &rsaquo; {% translate 'Search' %}
-</div>
+<ol class="breadcrumbs">
+    <li><a href="{% url 'admin:index' %}">{% translate 'Home' %}</a></li>
+    <li aria-current="page">{% translate 'Search' %}</li>
+</ol>
 {% endblock %}
 
 {% block content %}
-<div class="sboi-global-search">
-  <form method="get" action="{% url 'admin_search' %}" class="sboi-search-form">
-    <input type="search" name="q" value="{{ q }}" placeholder="{% translate 'Search everything in the admin' %}" class="form-control" autofocus aria-label="{% translate 'Search everything' %}">
-    <button type="submit" class="btn btn-primary">
-      <i class="fas fa-search"></i> {% translate 'Search' %}
-    </button>
-  </form>
+<div id="content-main" class="sboi-global-search">
+    <form method="get" action="{% url 'admin_search' %}" class="sboi-search-form" role="search">
+        <label class="sboi-search-form__field">
+            <span class="visually-hidden">{% translate 'Search everything in the admin' %}</span>
+            <svg class="sboi-ico" aria-hidden="true" focusable="false"><use href="#sboi-i-search"></use></svg>
+            <input type="search" name="q" value="{{ q }}" placeholder="{% translate 'Search everything in the admin' %}" autofocus
+                   aria-label="{% translate 'Search everything' %}">
+        </label>
+        <button type="submit" class="sboi-btn sboi-btn--primary">{% translate 'Search' %}</button>
+    </form>
 
-  {% if q %}
-    {% if total %}
-    <p class="sboi-search-summary">{{ total }} {% translate 'result(s) for' %} &ldquo;{{ q }}&rdquo;</p>
-    <div class="sboi-search-groups">
-      {% for group in results %}
-      <section class="sboi-search-group">
-        <h2>{{ group.label }} <span class="sboi-search-count">{{ group.items|length }}</span></h2>
-        <ul>
-          {% for item in group.items %}
-          <li><a href="{{ item.url }}">{{ item.name }}</a></li>
-          {% endfor %}
-        </ul>
-      </section>
-      {% endfor %}
-    </div>
+    {% if q %}
+        {% if total %}
+            <p class="sboi-search-summary">{{ total }} {% translate 'result(s) for' %} &ldquo;{{ q }}&rdquo;</p>
+            <div class="sboi-search-groups">
+                {% for group in results %}
+                    <section class="sboi-search-group">
+                        <h2>{{ group.label }} <span class="sboi-search-count">{{ group.items|length }}</span></h2>
+                        <ul>
+                            {% for item in group.items %}
+                                <li><a href="{{ item.url }}">{{ item.name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </section>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="sboi-search-none">{% translate 'No results for' %} &ldquo;{{ q }}&rdquo;</p>
+        {% endif %}
     {% else %}
-    <p class="sboi-search-none">{% translate 'No results for' %} &ldquo;{{ q }}&rdquo;</p>
+        <p class="sboi-search-none">{% translate 'Type a keyword above to search across the whole admin.' %}</p>
     {% endif %}
-  {% else %}
-  <p class="sboi-search-none">{% translate 'Type a keyword above to search across the whole admin.' %}</p>
-  {% endif %}
 </div>
 {% endblock %}

@@ -69,11 +69,14 @@ def admin_search(request):
             if items:
                 results.append({'label': label, 'items': items})
                 total += len(items)
-    return render(request, 'admin/search.html', {
+    context = admin.site.each_context(request)
+    context.update({
+        'title': 'Search',
         'q': q,
         'results': results,
         'total': total,
     })
+    return render(request, 'admin/search.html', context)
 
 
 def admin_section(request, app_label):
@@ -87,6 +90,7 @@ def admin_section(request, app_label):
     context = admin.site.each_context(request)
     context.update({
         'title': section['name'],
+        'section': section,
         'section_label': app_label,
         'section_name': section['name'],
         'dashboard_url': reverse('admin:index'),

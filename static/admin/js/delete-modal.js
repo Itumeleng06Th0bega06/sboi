@@ -52,6 +52,11 @@
         return path + qs;
     }
 
+    function icon(name) {
+        return '<svg class="sboi-ico" aria-hidden="true" focusable="false">' +
+            '<use href="#sboi-i-' + name + '"></use></svg>';
+    }
+
     function showError(body, message) {
         var msg = document.createElement('p');
         msg.className = 'sboi-delete-error';
@@ -273,11 +278,11 @@
             var preserved = window.location.search
                 ? '?_changelist_filters=' + encodeURIComponent(window.location.search.slice(1))
                 : '';
-            // Idempotent. This runs once on a full page load and again after
-            // every in-place (SPA) navigation, so drop anything a previous run
-            // injected before rebuilding the column. Without this the
-            // "Actions" header and its Edit/Delete cells would be appended a
-            // second time and appear duplicated.
+            // Idempotent: `sboi:admin-loaded` can fire more than once (for
+            // example if another script re-initialises the page), so drop
+            // anything a previous run injected before rebuilding the column.
+            // Without this the "Actions" header and its Edit/Delete cells
+            // would be appended a second time and appear duplicated.
             table.querySelectorAll('th.sboi-row-actions-head').forEach(function (old) {
                 old.remove();
             });
@@ -301,13 +306,13 @@
                 edit.className = 'sboi-row-edit';
                 edit.title = 'Edit';
                 edit.setAttribute('aria-label', 'Edit');
-                edit.innerHTML = '<i class="fa fa-pencil" aria-hidden="true"></i>';
+                edit.innerHTML = icon('pencil');
                 var del = document.createElement('a');
                 del.href = base + cb.value + '/delete/' + preserved;
                 del.className = 'sboi-row-delete';
                 del.title = 'Delete';
                 del.setAttribute('aria-label', 'Delete');
-                del.innerHTML = '<i class="fa fa-trash" aria-hidden="true"></i>';
+                del.innerHTML = icon('trash');
                 td.appendChild(edit);
                 td.appendChild(del);
                 tr.appendChild(td);

@@ -10,6 +10,14 @@ from .admin_forms import EmailOrUsernameAdminAuthenticationForm
 # Staff sign in to the admin with a username *or* an email address.
 admin.site.login_form = EmailOrUsernameAdminAuthenticationForm
 
+# Branding for the custom admin shell (no third-party admin theme).
+admin.site.site_header = 'Shekinah Blaze Outreach International'
+admin.site.site_title = 'Shekinah Blaze Admin'
+admin.site.index_title = 'Dashboard'
+# No admin sidebar: the dashboard is the only navigation hub; each section
+# (and its grouped permissions/models) lives on its own page.
+admin.site.enable_nav_sidebar = False
+
 handler400 = views.handler400
 handler403 = views.handler403
 handler404 = views.handler404

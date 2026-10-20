@@ -1,201 +1,182 @@
-/* ================================================================
-   Admin nav notification bell
-   ================================================================ */
-.sboi-bell-toggle {
+/* ==========================================================================
+   Admin notification bell (header dropdown)
+   ========================================================================== */
+.sboi-bell .sboi-action {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sboi-bell-toggle i {
-  font-size: 1.05rem;
 }
 
 .sboi-bell-badge {
   position: absolute;
-  top: -3px;
+  top: -5px;
   right: -5px;
-  min-width: 17px;
-  height: 17px;
-  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
   border-radius: 999px;
-  background: linear-gradient(135deg, var(--sboi-gold, #d2a24e), var(--sboi-gold-2, #b07f3a));
-  color: var(--sboi-green, #002f2b);
-  font-size: 0.66rem;
+  border: 2px solid var(--sboi-bg);
+  background: linear-gradient(145deg, var(--sboi-gold-soft), var(--sboi-gold));
+  color: #14111e;
+  font-size: 0.6rem;
   font-weight: 700;
-  line-height: 17px;
-  text-align: center;
-  box-shadow: 0 2px 6px rgba(210, 162, 78, 0.45);
+  line-height: 1;
+  box-shadow: 0 3px 8px rgba(210, 162, 78, 0.4);
+}
+
+.sboi-bell-badge[hidden] {
+  display: none !important;
 }
 
 /* ---------- Dropdown card ---------- */
 .sboi-bell-menu {
-  width: min(360px, calc(100vw - 2rem));
-  max-height: 430px;
-  overflow-y: auto;
+  width: min(360px, calc(100vw - 1.8rem));
+  max-height: 440px;
   padding: 0;
-  margin-top: 0.65rem !important;
-  border: 1px solid rgba(0, 100, 75, 0.12);
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 18px 40px rgba(0, 47, 43, 0.18);
+  overflow-y: auto;
 }
 
 .sboi-bell-head {
   position: sticky;
   top: 0;
   z-index: 1;
-  padding: 0.7rem 1rem;
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--sboi-line);
+  background: #1b1729;
+  color: #ffffff;
   font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-size: 0.98rem;
   font-weight: 600;
-  color: var(--sboi-green, #002f2b);
-  background: #fff;
-  border-bottom: 2px solid rgba(210, 162, 78, 0.35);
 }
 
 /* ---------- Items ---------- */
+.sboi-bell-list {
+  padding: 0.35rem;
+}
+
 .sboi-bell-item {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.6rem 1rem;
+  gap: 0.6rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 9px;
+  color: var(--sboi-ink);
   text-decoration: none;
-  color: var(--sboi-ink, #1e2b26);
 }
 
 .sboi-bell-item:hover,
 .sboi-bell-item:focus {
-  background: var(--sboi-cream, #f7f5ee);
-  color: var(--sboi-green, #002f2b);
+  background: rgba(210, 162, 78, 0.12);
+  color: #ffffff;
+  text-decoration: none;
 }
 
 .sboi-bell-icon {
-  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  background: rgba(0, 47, 43, 0.08);
-  color: var(--sboi-green, #002f2b);
+  background: rgba(210, 162, 78, 0.12);
+  color: var(--sboi-gold);
+}
+
+.sboi-bell-icon .sboi-ico {
+  width: 1rem;
+  height: 1rem;
 }
 
 .tone-attention .sboi-bell-icon {
   background: rgba(210, 162, 78, 0.18);
-  color: var(--sboi-gold-2, #b07f3a);
+  color: var(--sboi-gold-soft);
 }
 
 .tone-warning .sboi-bell-icon {
-  background: rgba(220, 38, 38, 0.12);
-  color: #dc2626;
+  background: rgba(214, 88, 88, 0.14);
+  color: var(--sboi-danger);
 }
 
 .sboi-bell-label {
-  flex: 1;
-  font-size: 0.88rem;
-  line-height: 1.3;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
 }
 
 .sboi-bell-count {
   flex: 0 0 auto;
-  padding: 0.05rem 0.55rem;
+  min-width: 24px;
+  padding: 0.1rem 0.5rem;
   border-radius: 999px;
-  background: var(--sboi-green, #002f2b);
-  color: #fff;
-  font-size: 0.76rem;
+  background: var(--sboi-surface-4);
+  color: var(--sboi-ink);
+  font-size: 0.7rem;
   font-weight: 700;
+  text-align: center;
 }
 
 .tone-attention .sboi-bell-count {
-  background: linear-gradient(135deg, var(--sboi-gold), var(--sboi-gold-2));
-  color: var(--sboi-green, #002f2b);
+  background: linear-gradient(145deg, var(--sboi-gold-soft), var(--sboi-gold));
+  color: #14111e;
 }
 
 .tone-warning .sboi-bell-count {
-  background: #dc2626;
+  background: var(--sboi-danger-2);
+  color: #ffffff;
 }
 
 .sboi-bell-count.zero {
   background: transparent;
-  border: 1px solid rgba(92, 107, 100, 0.35);
-  color: var(--sboi-muted, #5c6b64);
+  border: 1px solid var(--sboi-line);
+  color: var(--sboi-muted);
   font-weight: 600;
 }
 
 /* ---------- Empty state / footer ---------- */
 .sboi-bell-empty {
-  padding: 1.4rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 1.5rem 1rem;
+  color: var(--sboi-muted);
+  font-size: 0.84rem;
   text-align: center;
-  color: var(--sboi-muted, #5c6b64);
-  font-size: 0.9rem;
 }
 
-.sboi-bell-empty i {
-  font-size: 1.3rem;
-  margin-bottom: 0.4rem;
-  color: var(--sboi-gold-2, #b07f3a);
+.sboi-bell-empty .sboi-ico {
+  width: 1.35rem;
+  height: 1.35rem;
+  color: var(--sboi-gold-2);
 }
 
 .sboi-bell-foot {
   position: sticky;
   bottom: 0;
-  display: block;
-  padding: 0.6rem 1rem;
-  text-align: center;
-  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.65rem 1rem;
+  border-top: 1px solid var(--sboi-line);
+  background: #1b1729;
+  color: var(--sboi-gold-soft);
+  font-size: 0.8rem;
   font-weight: 600;
-  font-size: 0.86rem;
-  color: var(--sboi-green, #002f2b) !important;
-  background: var(--sboi-cream, #f7f5ee);
-  border-top: 1px solid rgba(0, 100, 75, 0.08);
+  text-decoration: none;
 }
 
 .sboi-bell-foot:hover {
-  color: var(--sboi-green-2, #008c83) !important;
-  background: var(--sboi-cream-2, #efece0);
+  background: #221c34;
+  color: #ffffff;
+  text-decoration: none;
 }
 
-.sboi-bell-foot i {
-  margin-right: 0.3rem;
-  color: var(--sboi-gold-2, #b07f3a);
-}
-
-/* ================================================================
-   DARK + GOLD overrides
-   ================================================================ */
-.sboi-bell-menu {
-  background: #221e33;
-  border-color: rgba(210, 162, 78, 0.18);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
-}
-
-.sboi-bell-head {
-  background: #262138;
-  border-bottom: 2px solid rgba(210, 162, 78, 0.35);
-}
-
-.sboi-bell-item {
-  color: var(--sboi-ink, #ece6d9);
-}
-
-.sboi-bell-item:hover,
-.sboi-bell-item:focus {
-  background: var(--sboi-cream-2, #2a2540);
-  color: var(--sboi-gold, #d2a24e);
-}
-
-.sboi-bell-icon {
-  background: rgba(210, 162, 78, 0.14);
-}
-
-.sboi-bell-count {
-  background: var(--sboi-gold, #d2a24e);
-  color: #1b1729;
-}
-
-.sboi-bell-foot {
-  background: #262138;
-  border-top: 1px solid rgba(210, 162, 78, 0.16);
+.sboi-bell-foot .sboi-ico {
+  width: 0.95rem;
+  height: 0.95rem;
 }

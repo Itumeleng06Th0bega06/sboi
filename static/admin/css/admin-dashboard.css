@@ -1,198 +1,208 @@
 /* ==========================================================================
-   Menu-driven admin dashboard + section pages
+   Admin dashboard + section pages
    --------------------------------------------------------------------------
-   Two levels, both generated from the same permission-filtered source as the
-   sidebar (Jazzmin's ``get_side_menu``):
+   Two levels, both generated from Django's permission-filtered ``app_list``:
 
-     1. ``admin/index.html``       -> one card per top-level section
-     2. ``admin/section_index.html`` -> that section's sub-menus as cards
+     1. ``admin/index.html``          -> one card per top-level section
+     2. ``admin/section_index.html``  -> that section's models as cards
 
-   Each sub-menu card opens the real admin page for that model/link, and a
-   "back" tab returns up a level. This file only paints; no new colours are
-   introduced (deep plum + gold brand variables).
+   The shell, header and sidebar are painted by admin-brand.css; this file
+   only styles the dashboard surfaces. Colours come from the brand tokens.
    ========================================================================== */
 
 .sboi-dash {
-  max-width: 1200px;
-  margin-inline: auto;
-  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1.4rem;
-}
-
-/* Our pages provide their own header; hide AdminLTE's empty one. */
-.sboi-dashboard .app-content-header {
-  display: none;
-}
-
-/* The dashboard sits on the admin's dark canvas; the hero and the
-   cards keep their own, slightly lighter brand panels. */
-body.sboi-dashboard .app-main,
-body.sboi-dashboard .app-content {
-  background-color: #0c091b;
-}
-
-/* ---------- Back tab (top of model pages + section pages) ---------- */
-.sboi-backbar {
-  display: flex;
-  margin: 0.65rem 0 0;
-}
-
-.sboi-backtab {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.4rem 0.85rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: background-color 0.12s ease, color 0.12s ease;
-}
-
-.sboi-backtab:hover,
-.sboi-backtab:focus-visible {
-  outline: none;
+  gap: 1.35rem;
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
 }
 
 /* ---------- Hero ---------- */
 .sboi-dash__hero {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
   flex-wrap: wrap;
-  padding: 1.25rem 1.5rem;
-  margin-top: 1.25rem;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #262138 0%, #1b1729 100%);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
-  color: var(--sboi-ink, #ece6d9);
+  gap: 1.25rem;
+  padding: clamp(1.2rem, 2.4vw, 1.8rem);
+  border: 1px solid var(--sboi-line);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(210, 162, 78, 0.16), transparent 46%),
+    linear-gradient(140deg, #262138 0%, #1b1729 62%, #171327 100%);
+  box-shadow: var(--sboi-shadow-sm);
+  overflow: hidden;
+}
+
+.sboi-dash__hero::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--sboi-gold-soft), var(--sboi-gold-2));
+}
+
+.sboi-dash__hero-text {
+  min-width: 0;
+}
+
+.sboi-dash__eyebrow {
+  margin: 0 0 0.4rem;
+  color: var(--sboi-gold);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
 }
 
 .sboi-dash__hero h1 {
-  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
-  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
   margin: 0;
-  color: #fff;
+  color: #ffffff;
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.45rem, 2.3vw, 1.9rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
-.sboi-dash__hero h1 i {
-  color: var(--sboi-gold, #d2a24e);
-  margin-right: 0.4rem;
+.sboi-dash__hero-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(210, 162, 78, 0.14);
+  border: 1px solid var(--sboi-line);
+  color: var(--sboi-gold);
 }
 
-.sboi-dash__hero p {
-  margin: 0.25rem 0 0;
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 0.95rem;
+.sboi-dash__hero-icon .sboi-ico {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Realistic 3D icons (static/images/3d/) sitting inside the icon plates. */
+.sboi-ico3d {
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.45));
+}
+
+.sboi-dash__hero-icon .sboi-ico3d,
+.sboi-app__icon .sboi-ico3d {
+  width: 32px;
+  height: 32px;
+}
+
+.sboi-tile__icon .sboi-ico3d {
+  width: 27px;
+  height: 27px;
+}
+
+.sboi-dash__lead {
+  margin: 0.4rem 0 0;
+  color: var(--sboi-muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
 }
 
 .sboi-dash__hero-side {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
   flex-wrap: wrap;
+  gap: 0.7rem;
 }
 
-.sboi-dash__date {
-  font-weight: 600;
-  color: var(--sboi-gold, #d2a24e);
-  background: rgba(255, 255, 255, 0.08);
-  padding: 0.45rem 0.9rem;
-  border-radius: 8px;
-  font-size: 0.92rem;
-  white-space: nowrap;
-}
-
-/* ---------- Signed-in user panel (moved off the removed sidebar) ---------- */
 .sboi-user {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.4rem 0.95rem 0.4rem 0.5rem;
+  gap: 0.6rem;
+  padding: 0.35rem 0.85rem 0.35rem 0.35rem;
+  border: 1px solid var(--sboi-line);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.sboi-user__avatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 50%;
-  overflow: hidden;
-  background: rgba(210, 162, 78, 0.18);
-  color: var(--sboi-gold, #d2a24e);
-  font-size: 1.5rem;
-}
-
-.sboi-user__avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .sboi-user__info {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  line-height: 1.25;
+  line-height: 1.2;
 }
 
 .sboi-user__label {
-  font-size: 0.68rem;
+  color: var(--sboi-muted);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.6);
 }
 
 .sboi-user__name {
-  color: #fff;
+  color: #ffffff;
+  font-size: 0.8rem;
   font-weight: 600;
   text-decoration: none;
 }
 
-a.sboi-user__name:hover,
-a.sboi-user__name:focus-visible {
-  outline: none;
+.sboi-user__name:hover {
+  color: var(--sboi-gold-soft);
+}
+
+.sboi-dash__date {
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--sboi-line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--sboi-gold-soft);
+  font-size: 0.76rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .sboi-dash__empty {
-  color: var(--sboi-muted, #b0a695);
+  color: var(--sboi-muted);
   padding: 1.5rem 0;
+  font-size: 0.9rem;
 }
 
-/* ---------- Card grids ---------- */
+/* ---------- Card grid ---------- */
 .sboi-apps {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
-  gap: 1rem;
-  align-items: start;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 0.9rem;
+  align-items: stretch;
 }
 
-/* ---------- Section card (dashboard index) ---------- */
+/* ---------- Section card (dashboard) ---------- */
 .sboi-app {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1.1rem 1.15rem;
-  background: var(--sboi-cream-2, #2a2540);
-  border-radius: 14px;
+  gap: 0.9rem;
+  padding: 1.05rem 1.1rem;
+  border: 1px solid var(--sboi-line);
+  border-radius: var(--sboi-radius);
+  background: linear-gradient(150deg, var(--sboi-surface-3), var(--sboi-surface-2));
+  color: var(--sboi-ink);
   text-decoration: none;
-  color: var(--sboi-ink, #ece6d9);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
-  transition: background-color 0.12s ease, color 0.12s ease;
+  box-shadow: var(--sboi-shadow-sm);
+  transition: border-color 0.15s, background-color 0.15s, transform 0.15s;
 }
 
 .sboi-app:hover,
 .sboi-app:focus-visible {
+  border-color: var(--sboi-line-strong);
+  color: var(--sboi-ink);
+  text-decoration: none;
+  transform: translateY(-2px);
   outline: none;
 }
 
@@ -204,11 +214,21 @@ a.sboi-user__name:focus-visible {
 }
 
 .sboi-app__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
-  width: 1.6rem;
-  text-align: center;
-  font-size: 1.15rem;
-  color: var(--sboi-gold, #d2a24e);
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(210, 162, 78, 0.12);
+  border: 1px solid var(--sboi-line);
+  color: var(--sboi-gold);
+}
+
+.sboi-app__icon .sboi-ico {
+  width: 1.2rem;
+  height: 1.2rem;
 }
 
 .sboi-app__text {
@@ -217,57 +237,82 @@ a.sboi-user__name:focus-visible {
 
 .sboi-app__title {
   display: block;
+  color: #ffffff;
   font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   font-weight: 600;
   line-height: 1.25;
-  color: #fff;
 }
 
 .sboi-app__count {
   display: block;
-  margin-top: 0.1rem;
-  font-size: 0.78rem;
-  color: var(--sboi-muted, #b0a695);
+  margin-top: 0.15rem;
+  color: var(--sboi-muted);
+  font-size: 0.74rem;
 }
 
 .sboi-app__go {
   flex: 0 0 auto;
-  color: var(--sboi-muted, #b0a695);
-  font-size: 0.9rem;
-  transition: transform 0.12s ease, color 0.12s ease;
+  display: inline-flex;
+  color: var(--sboi-muted);
+  transition: transform 0.15s, color 0.15s;
 }
 
 .sboi-app:hover .sboi-app__go,
 .sboi-app:focus-visible .sboi-app__go {
-  transform: translateX(2px);
+  color: var(--sboi-gold);
+  transform: translateX(3px);
 }
 
-/* ---------- Sub-menu tile (section page) ---------- */
+/* ---------- Model tile (section page) ---------- */
+.sboi-backbar {
+  display: flex;
+  margin: 0;
+}
+
+.sboi-backbar .sboi-backtab {
+  margin-bottom: 0;
+}
+
 .sboi-tile {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
-  padding: 1rem 1.1rem;
-  background: var(--sboi-cream-2, #2a2540);
-  border-radius: 14px;
+  gap: 0.85rem;
+  padding: 0.95rem 1.05rem;
+  border: 1px solid var(--sboi-line);
+  border-radius: var(--sboi-radius);
+  background: linear-gradient(150deg, var(--sboi-surface-3), var(--sboi-surface-2));
+  color: var(--sboi-ink);
   text-decoration: none;
-  color: var(--sboi-ink, #ece6d9);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
-  transition: background-color 0.12s ease, color 0.12s ease;
+  box-shadow: var(--sboi-shadow-sm);
+  transition: border-color 0.15s, transform 0.15s;
 }
 
 .sboi-tile:hover,
 .sboi-tile:focus-visible {
+  border-color: var(--sboi-line-strong);
+  color: var(--sboi-ink);
+  text-decoration: none;
+  transform: translateY(-2px);
   outline: none;
 }
 
 .sboi-tile__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
-  width: 1.4rem;
-  text-align: center;
-  font-size: 1.1rem;
-  color: var(--sboi-gold, #d2a24e);
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: rgba(210, 162, 78, 0.1);
+  border: 1px solid var(--sboi-line);
+  color: var(--sboi-gold);
+}
+
+.sboi-tile__icon .sboi-ico {
+  width: 1.05rem;
+  height: 1.05rem;
 }
 
 .sboi-tile__body {
@@ -277,30 +322,31 @@ a.sboi-user__name:focus-visible {
 
 .sboi-tile__name {
   display: block;
-  font-size: 0.98rem;
+  color: #ffffff;
+  font-size: 0.92rem;
   font-weight: 600;
   line-height: 1.3;
-  color: #fff;
 }
 
 .sboi-tile__desc {
   display: block;
   margin-top: 0.15rem;
-  font-size: 0.8rem;
-  line-height: 1.35;
-  color: var(--sboi-muted, #b0a695);
+  color: var(--sboi-muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
 }
 
 .sboi-tile__go {
   flex: 0 0 auto;
-  color: var(--sboi-muted, #b0a695);
-  font-size: 0.85rem;
-  transition: transform 0.12s ease, color 0.12s ease;
+  display: inline-flex;
+  color: var(--sboi-muted);
+  transition: transform 0.15s, color 0.15s;
 }
 
 .sboi-tile:hover .sboi-tile__go,
 .sboi-tile:focus-visible .sboi-tile__go {
-  transform: translateX(2px);
+  color: var(--sboi-gold);
+  transform: translateX(3px);
 }
 
 .sboi-tile[aria-disabled='true'] {
@@ -308,15 +354,24 @@ a.sboi-user__name:focus-visible {
   cursor: default;
 }
 
+.sboi-tile[aria-disabled='true']:hover {
+  transform: none;
+  border-color: var(--sboi-line);
+}
+
 /* ---------- Responsive ---------- */
-@media (max-width: 520px) {
+@media (max-width: 560px) {
   .sboi-dash__hero {
-    padding: 1rem 1.1rem;
+    padding: 1rem;
   }
 
   .sboi-dash__hero-side {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .sboi-apps {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -324,8 +379,7 @@ a.sboi-user__name:focus-visible {
   .sboi-app,
   .sboi-app__go,
   .sboi-tile,
-  .sboi-tile__go,
-  .sboi-backtab {
+  .sboi-tile__go {
     transition: none;
   }
 }

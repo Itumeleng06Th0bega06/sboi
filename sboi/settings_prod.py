@@ -113,9 +113,9 @@ STORAGES = {
     'default': {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
     },
-    # See sboi/storage.py: non-strict manifest storage — Jazzmin's base
-    # template requests a bare directory path that can never exist in the
-    # manifest, and strict mode 500s EVERY admin page because of it.
+    # See sboi/storage.py: non-strict manifest storage tolerates templates
+    # that request bare directory paths which can never exist in the manifest;
+    # strict mode would 500 the page that references them.
     'staticfiles': {
         'BACKEND': 'sboi.storage.NonStrictManifestStaticFilesStorage',
     },

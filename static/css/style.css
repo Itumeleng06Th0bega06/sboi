@@ -177,6 +177,13 @@ button:focus, a:focus, .btn:focus { outline: none; }
 .nav-item { margin: 0; }
 .nav-dropdown { position: relative; }
 .nav-tab { display: inline-flex; align-items: center; gap: 0.35rem; }
+.nav-tab-ico {
+  width: 21px;
+  height: 21px;
+  flex-shrink: 0;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
 .nav-chevron { width: 15px; height: 15px; fill: currentColor; transition: transform 0.2s; }
 .nav-dropdown.open .nav-chevron { transform: rotate(180deg); }
 .nav-dropdown-menu {
@@ -196,6 +203,9 @@ button:focus, a:focus, .btn:focus { outline: none; }
 }
 .nav-dropdown-menu a:hover { background: linear-gradient(135deg, var(--gold), var(--gold-2)); color: var(--green); }
 .nav-subtab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   padding: 0.35rem 0.9rem;
   font-size: 0.82rem;
   color: #aab6cc;
@@ -252,7 +262,13 @@ button:focus, a:focus, .btn:focus { outline: none; }
   cursor: pointer;
   transition: color 0.2s ease, background 0.2s ease;
 }
-.bnav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+.bnav-item svg,
+.bnav-ico { width: 20px; height: 20px; flex-shrink: 0; }
+.bnav-ico {
+  object-fit: contain;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.4));
+}
+.bnav-item.active .bnav-ico { transform: translateY(-1px); }
 .bnav-item span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bnav-item:hover, .bnav-item:active { color: var(--gold); }
 .bnav-item.active { color: var(--gold); }
@@ -444,7 +460,6 @@ img[src$=".png" i] { object-fit: contain !important; }
 .thumb:has(img[src$=".png" i]) { background: transparent; }
 
 /* Announcements home strip */
-.announce-strip { height: 4px; background: linear-gradient(90deg, transparent, var(--gold), transparent); opacity: 0.7; }
 
 /* Split layout */
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: stretch; }
@@ -639,6 +654,18 @@ textarea.input { resize: vertical; }
 .mosaic-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
 .mosaic-item:hover img { transform: scale(1.05); }
 .mosaic-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 0.8rem; background: linear-gradient(transparent, rgba(12, 9, 27, 0.9)); color: var(--cream); font-size: 0.85rem; }
+
+/* Devotions archive — small storage thumbnails, full image on click */
+.grid-devotion { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); gap: 1rem; margin-top: 1.6rem; }
+.dev-item { position: relative; margin: 0; background: #272235; border-radius: 10px; overflow: hidden; aspect-ratio: 1 / 1; cursor: zoom-in; }
+.dev-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.35s ease; }
+.dev-item:hover img { transform: scale(1.06); }
+.dev-caption { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 0.15rem; padding: 1.4rem 0.6rem 0.55rem; background: linear-gradient(transparent, rgba(12, 9, 27, 0.92)); pointer-events: none; }
+.dev-date { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold); }
+.dev-title { font-size: 0.82rem; line-height: 1.3; color: var(--cream); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
+@media (max-width: 640px) {
+  .grid-devotion { grid-template-columns: repeat(auto-fill, minmax(min(120px, 100%), 1fr)); gap: 0.7rem; }
+}
 
 /* Modal */
 .modal { position: fixed; inset: 0; z-index: 200; background: rgba(32,0,48,0.7); display: none; align-items: center; justify-content: center; padding: 1rem; }
@@ -1014,6 +1041,8 @@ body.page-home .testimony-card { background: var(--nav-surface); }
   .list-item { flex-wrap: wrap; }
   .list-media { width: 100%; }
   main > .section:first-child { padding-top: 4.5rem; }
+  /* Devotions: on small screens show a single card, not the full set */
+  #devotions .card-grid .card:nth-child(n + 2) { display: none; }
 }
 
 /* Blackboard: the pill tabs become a sticky top nav on small screens only */
@@ -1049,7 +1078,8 @@ body.page-home .testimony-card { background: var(--nav-surface); }
 
 @media (max-width: 640px) {
   .bnav-item { font-size: 0.55rem; }
-  .bnav-item svg { width: 19px; height: 19px; }
+  .bnav-item svg,
+  .bnav-ico { width: 19px; height: 19px; }
   .hero-slider { height: 58vh; min-height: 280px; }
   .slider-arrow { width: 38px; height: 38px; font-size: 1rem; }
   .slider-arrow.prev { left: 8px; }
@@ -1459,16 +1489,16 @@ body::before {
   position: fixed;
   inset: 0;
   z-index: -1;
-  /* The artwork is a very dark velvet (median luminance ~7/255), so it is
-     lifted here rather than veiled — the folds read on screen while the
-     brightest highlight still stays under 90/255, keeping text contrast. */
+  /* New backdrop artwork is mid-toned (median luminance ~37/255), so unlike the
+     old velvet it needs to be veiled rather than lifted — a dark base shows
+     through and keeps text contrast while the scene reads on screen. */
   background-color: #060410;
-  background-image: url("../images/site-bg.jpg");
+  background-image: url("../images/site-bg2.jpg");
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
-  filter: brightness(1.55) saturate(1.2);
-  opacity: 0.52;
+  filter: brightness(1.02) saturate(1.05);
+  opacity: 0.42;
   pointer-events: none;
 }
 
@@ -1485,124 +1515,4 @@ body::before {
 .page-hero {
   background: linear-gradient(160deg, rgba(12, 9, 27, 0.78), rgba(12, 9, 27, 0.38));
 }
-
-/* ============================================================
-   NAV — GLASSMORPHIC GOLD (matches the reference)
-   Same bar, logo and tabs as before, recoloured as a bright
-   glossy gold/amber pane with a highlight band on top, a gold
-   rim light and a lit gold pill for the active tab.
-   ============================================================ */
-.nav-pill {
-  background:
-    /* glossy top highlight */
-    linear-gradient(180deg, rgba(255, 238, 200, 0.55) 0%, rgba(255, 238, 200, 0.10) 30%),
-    /* warm gold/amber body */
-    linear-gradient(160deg, #e8c26b, #c49142 45%, #9a6b28),
-    /* faint lift so backdrop content shows through */
-    rgba(12, 9, 27, 0.04);
-  background-origin: border-box;
-  background-clip: padding-box, padding-box, border-box;
-  -webkit-backdrop-filter: blur(16px) saturate(1.05);
-  backdrop-filter: blur(16px) saturate(1.05);
-  border: 1px solid transparent;
-  border-radius: 999px;
-  box-shadow:
-    0 18px 40px rgba(0, 0, 0, 0.55),
-    0 0 30px rgba(210, 162, 78, 0.42),
-    inset 0 1px 0 rgba(255, 240, 192, 0.6),
-    inset 0 -10px 20px rgba(56, 38, 10, 0.35);
-}
-
-.site-header.scrolled .nav-pill {
-  box-shadow:
-    0 22px 48px rgba(0, 0, 0, 0.60),
-    0 0 36px rgba(210, 162, 78, 0.50),
-    inset 0 1px 0 rgba(255, 240, 192, 0.62),
-    inset 0 -10px 20px rgba(56, 38, 10, 0.35);
-}
-
-/* Tabs: warm dark-on-gold, lit brighter-gold pill when active */
-.nav-tab {
-  color: #1a1410;
-  border: 1px solid transparent;
-}
-.nav-tab:hover {
-  color: #0c091b;
-  background: rgba(255, 224, 160, 0.5);
-}
-.nav-tab.active {
-  color: #0c091b;
-  background: linear-gradient(160deg, rgba(255, 220, 140, 0.9), rgba(210, 162, 78, 0.5));
-  border-color: rgba(255, 212, 124, 0.85);
-  box-shadow:
-    0 0 20px rgba(210, 162, 78, 0.5),
-    inset 0 1px 0 rgba(255, 244, 214, 0.55);
-  font-weight: 700;
-}
-
-.nav-subtab { color: #7c5b24; }
-.nav-subtab:hover, .nav-subtab.active { color: #c8963f; border-color: rgba(210, 162, 78, 0.6); }
-.nav-user { color: #8a6d38; }
-
-/* The About fly-out reads as the same gold glass */
-.nav-dropdown-menu {
-  background: linear-gradient(160deg, rgba(242, 200, 130, 0.9), rgba(198, 152, 78, 0.75));
-  -webkit-backdrop-filter: blur(16px) saturate(1.05);
-  backdrop-filter: blur(16px) saturate(1.05);
-  border-color: rgba(210, 162, 78, 0.5);
-  box-shadow:
-    0 18px 40px rgba(0, 0, 0, 0.55),
-    0 0 22px rgba(210, 162, 78, 0.25);
-}
-.nav-dropdown-menu a { color: #14111e; }
-.nav-dropdown-menu a:hover {
-  background: rgba(255, 228, 178, 0.55);
-  color: #0c091b;
-}
-
-/* Logo disc: gold glass with bright rim light */
-.brand,
-.bnav-logo {
-  background:
-    radial-gradient(circle at 30% 22%, rgba(255, 248, 220, 0.45), rgba(255, 228, 178, 0.05) 40%, rgba(56, 38, 10, 0.45) 100%),
-    linear-gradient(160deg, #c49142, #7c5b24 68%);
-  box-shadow:
-    0 12px 26px rgba(0, 0, 0, 0.50),
-    0 3px 0 rgba(0, 0, 0, 0.35),
-    inset 0 2px 2px rgba(255, 248, 220, 0.4),
-    inset 0 -14px 22px rgba(0, 0, 0, 0.45),
-    0 0 0 2px rgba(238, 200, 130, 0.65),
-    0 0 26px rgba(210, 162, 78, 0.32);
-}
-.brand:hover,
-.bnav-logo:hover {
-  box-shadow:
-    0 16px 30px rgba(0, 0, 0, 0.55), 0 3px 0 rgba(0, 0, 0, 0.35),
-    inset 0 2px 2px rgba(255, 248, 220, 0.42), inset 0 -14px 22px rgba(0, 0, 0, 0.45),
-    0 0 0 2px rgba(248, 212, 144, 0.75),
-    0 0 32px rgba(210, 162, 78, 0.4);
-}
-
-/* The mobile dock is the nav on small screens — same gold glass */
-.bottom-nav {
-  background:
-    /* glossy top highlight */
-    linear-gradient(180deg, rgba(255, 238, 200, 0.5) 0%, rgba(255, 238, 200, 0.05) 30%),
-    /* warm gold/amber body */
-    linear-gradient(160deg, #e8c26b, #c49142 45%, #9a6b28),
-    rgba(12, 9, 27, 0.04);
-  background-origin: border-box;
-  background-clip: padding-box, padding-box, border-box;
-  -webkit-backdrop-filter: blur(16px) saturate(1.05);
-  backdrop-filter: blur(16px) saturate(1.05);
-  border: 1px solid transparent;
-  border-radius: 999px;
-  box-shadow:
-    0 16px 36px rgba(0, 0, 0, 0.55),
-    0 0 28px rgba(210, 162, 78, 0.4),
-    inset 0 1px 0 rgba(255, 240, 192, 0.55),
-    inset 0 -10px 20px rgba(56, 38, 10, 0.35);
-}
-.bnav-item { color: #4a3614; }
-.bnav-item:hover, .bnav-item:active, .bnav-item.active { color: #0c091b; }
 

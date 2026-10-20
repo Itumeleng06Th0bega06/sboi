@@ -45,17 +45,17 @@
 .cm-page-heading p { margin:0; color:var(--cm-muted); font-size:.9rem; }
 .cm-card { min-width:0; background:var(--cm-surface); border:1px solid var(--cm-border); border-radius:var(--cm-radius); box-shadow:var(--cm-shadow); }
 .cm-primary-button, .cm-secondary-button { min-height:38px; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:9px 13px; border:1px solid transparent; border-radius:10px; text-decoration:none!important; font-size:.86rem; line-height:1.2; font-weight:600; cursor:pointer; transition:background-color .15s ease, border-color .15s ease, box-shadow .15s ease; }
-/* Primary buttons mirror the white->violet admin action buttons. */
+/* Primary buttons use the same gold gradient as the rest of the admin. */
 .cm-page .cm-primary-button {
-  background:linear-gradient(135deg, #ffffff, #280047);
-  color:#fff !important;
+  background:linear-gradient(160deg, var(--sboi-gold-soft, #e7c47c), var(--sboi-gold, #d2a24e));
+  color:#14111e !important;
   border-color:transparent;
-  text-shadow:0 1px 4px rgba(40, 0, 71, 0.55);
-  box-shadow:0 8px 22px rgb(119 0 246);
+  text-shadow:none;
+  box-shadow:0 8px 22px rgba(210, 162, 78, 0.22);
 }
 .cm-page .cm-primary-button:hover {
-  background:linear-gradient(135deg, #f1e6ff, #3a0066);
-  box-shadow:0 12px 28px rgb(119 0 246);
+  background:linear-gradient(160deg, var(--sboi-gold-pale, #f0d79b), var(--sboi-gold-soft, #e7c47c));
+  box-shadow:0 12px 28px rgba(210, 162, 78, 0.28);
 }
 .cm-page .cm-primary-button svg, .cm-search-field svg, .cm-stat-icon svg { width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 .cm-page .cm-secondary-button {

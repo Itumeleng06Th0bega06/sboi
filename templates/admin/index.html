@@ -1,66 +1,49 @@
 {% extends "admin/base_site.html" %}
-{% load i18n static jazzmin %}
+{% load i18n static admin_menu %}
 
 {% block bodyclass %}{{ block.super }} sboi-dashboard{% endblock %}
 
-{% block extrastyle %}
-    {{ block.super }}
-    <link rel="stylesheet" href="{% static 'admin/css/admin-dashboard.css' %}?v=10">
-{% endblock %}
-
 {% block content_title %}{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
 
 {% block content %}
 <div id="content-main" class="sboi-dash">
-  <header class="sboi-dash__hero">
-    <div class="sboi-dash__hero-text">
-      <h1>{% translate 'Dashboard' %}</h1>
-      <p>{{ site_header }}{% if welcome_sign %} &mdash; {{ welcome_sign }}{% endif %}</p>
-    </div>
-    <div class="sboi-dash__hero-side">
-      {# The signed-in user panel used to live in the sidebar; the sidebar has #}
-      {# been removed, so it now sits on the dashboard instead. #}
-      <div class="sboi-user">
-        <span class="sboi-user__avatar">
-          {% if jazzmin_settings|has_jazzmin_setting:"user_avatar" %}
-            <img src="{% get_user_avatar request.user %}" alt="{{ request.user }}">
-          {% else %}
-            <i class="fas fa-user-circle" aria-hidden="true"></i>
-          {% endif %}
-        </span>
-        <span class="sboi-user__info">
-          <span class="sboi-user__label">{% translate 'Signed in as' %}</span>
-          {% if perms|can_view_self %}
-            <a class="sboi-user__name" href="{% jazzy_admin_url request.user request.current_app|default:'admin' %}">{{ request.user }}</a>
-          {% else %}
-            <span class="sboi-user__name">{{ request.user }}</span>
-          {% endif %}
-        </span>
-      </div>
-      <time class="sboi-dash__date" datetime="{% now 'Y-m-d' %}">{% now 'l, j F Y' %}</time>
-    </div>
-  </header>
+    <header class="sboi-dash__hero">
+        <div class="sboi-dash__hero-text">
+            <p class="sboi-dash__eyebrow">{% translate 'Admin console' %}</p>
+            <h1>{% translate 'Dashboard' %}</h1>
+            <p class="sboi-dash__lead">
+                {% blocktranslate with name=user.get_short_name|default:user.get_username %}Welcome back, {{ name }}.{% endblocktranslate %}
+                {{ site_header }}
+            </p>
+        </div>
+        <div class="sboi-dash__hero-side">
+            <div class="sboi-user">
+                <span class="sboi-avatar sboi-avatar--lg" aria-hidden="true">{{ user.get_short_name|default:user.get_username|first|upper }}</span>
+                <span class="sboi-user__info">
+                    <span class="sboi-user__label">{% translate 'Signed in as' %}</span>
+                    <a class="sboi-user__name" href="{% url 'admin:password_change' %}">{{ user.get_short_name|default:user.get_username }}</a>
+                </span>
+            </div>
+            <time class="sboi-dash__date" datetime="{% now 'Y-m-d' %}">{% now 'l, j F Y' %}</time>
+        </div>
+    </header>
 
-  {# Generated from Django's permission-filtered ``available_apps`` via #}
-  {# Jazzmin's ``get_side_menu``. Each card opens that section's own page, #}
-  {# so new apps appear here automatically and permissions are respected.  #}
-  {% get_side_menu as side_menu_list %}
-
-  <div class="sboi-apps">
-    {% for app in side_menu_list %}
-    <a class="sboi-app" href="{% url 'admin_section' app.app_label %}">
-      <span class="sboi-app__body">
-        <i class="{{ app.icon|default:'fas fa-folder' }} sboi-app__icon" aria-hidden="true"></i>
-        <span class="sboi-app__text">
-          <span class="sboi-app__title">{{ app.name }}</span>
-          <span class="sboi-app__count">{{ app.models|length }} {% translate 'items' %}</span>
-        </span>
-      </span>
-      <i class="fas fa-arrow-right sboi-app__go" aria-hidden="true"></i>
-    </a>
-    {% empty %}
-    <p class="sboi-dash__empty">{% translate 'No admin modules are available for your account.' %}</p>
-    {% endfor %}
-  </div>
+    <div class="sboi-apps">
+        {% for app in app_list %}
+            <a class="sboi-app" href="{% url 'admin_section' app.app_label %}">
+                <span class="sboi-app__body">
+                    <span class="sboi-app__icon">{% app_icon app.app_label %}</span>
+                    <span class="sboi-app__text">
+                        <span class="sboi-app__title">{{ app.name }}</span>
+                        <span class="sboi-app__count">{% blocktranslate count counter=app.models|length %}{{ counter }} item{% plural %}{{ counter }} items{% endblocktranslate %}</span>
+                    </span>
+                </span>
+                <span class="sboi-app__go">{% admin_icon 'arrow-right' %}</span>
+            </a>
+        {% empty %}
+            <p class="sboi-dash__empty">{% translate 'No admin modules are available for your account.' %}</p>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}

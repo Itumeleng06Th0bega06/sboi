@@ -1,80 +1,33 @@
-{% load i18n static jazzmin admin_urls %}
+{% load i18n static %}
 {% get_current_language as LANGUAGE_CODE %}
-{% get_current_language_bidi as LANGUAGE_BIDI %}
-{% get_jazzmin_settings request as jazzmin_settings %}
-{% get_jazzmin_ui_tweaks as jazzmin_ui %}
-
 <!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE|default:"en-us" }}" {% if LANGUAGE_BIDI %}dir="rtl"{% endif %}>
+<html lang="{{ LANGUAGE_CODE|default:'en' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <script>
-        (function() {
-            var mode = localStorage.getItem('jazzmin-theme-mode') || '{{ jazzmin_ui.default_theme_mode|default:"dark" }}';
-            if (mode === 'auto') {
-                mode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            }
-            document.documentElement.setAttribute('data-bs-theme', mode);
-        })();
-    </script>
+    <meta name="robots" content="NONE,NOARCHIVE">
+    <title>{% block title %}{{ title }} | Shekinah Blaze Admin{% endblock %}</title>
 
-    <title>{% block title %}{{ title }} | {{ jazzmin_settings.site_title }}{% endblock %}</title>
-
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="{% static "vendor/fontawesome-free/css/all.min.css" %}">
-
-    <!-- Bootstrap and adminLTE -->
-    <link rel="stylesheet" href="{% static "vendor/adminlte/css/adminlte.min.css" %}">
-
-    <!-- Bootswatch theme -->
-    {% if jazzmin_ui.theme.name != 'default' %}
-        <link rel="stylesheet" href="{{ jazzmin_ui.theme.src }}" id="jazzmin-theme" />
-    {% endif %}
-
-    <!-- Custom fixes for django -->
-    <link rel="stylesheet" href="{% static "jazzmin/css/main.css" %}">
-
-    <!-- Brand theme (versioned so browsers always pick up changes) -->
-    <link rel="stylesheet" href="{% static 'admin/css/admin-brand.css' %}?v=28">
-
-    <!-- favicons -->
-    <link rel="shortcut icon" href="{% static jazzmin_settings.site_icon %}" type="image/png">
-    <link rel="icon" href="{% static jazzmin_settings.site_icon %}" sizes="32x32" type="image/png">
-
-    {% if jazzmin_settings.use_google_fonts_cdn %}
-    <!-- Google Font: Source Sans Pro -->
-    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
-    {% endif %}
-
-    {% block extrastyle %} {% endblock %}
-    {% block extrahead %} {% endblock %}
+    <link rel="shortcut icon" href="{% static 'icons/favicon.ico' %}" type="image/x-icon">
+    <link rel="stylesheet" href="{% static 'admin/css/admin-brand.css' %}?v=34">
+    {% block extrastyle %}{% endblock %}
+    {% block extrahead %}{% endblock %}
 </head>
-<body class="login-page bg-body-secondary">
-
-<div class="login-box">
-    <div class="card">
-        <div class="card-body login-card-body">
-            {% if jazzmin_settings.login_logo %}
-                <div class="login-logo">
-                    <a href="/"><img src="{% static jazzmin_settings.login_logo %}" alt="{{ jazzmin_settings.site_title }}"></a>
-                </div>
-            {% else %}
-                <h1 class="auth-title">{{ jazzmin_settings.site_header }}</h1>
-            {% endif %}
+<body class="sboi-auth">
+    {# Single centered card: logo on top of the form, nothing else. #}
+    <main class="sboi-auth__shell">
+        <div class="sboi-auth__card">
+            <a class="sboi-auth__brand" href="/">
+                <img src="{% static 'images/home/Logo.png.png' %}" alt="Shekinah Blaze Outreach International" class="sboi-auth__logo">
+            </a>
             {% block content %}{% endblock %}
         </div>
-    </div>
-</div>
+        <p class="sboi-auth__foot">
+            &copy; {% now 'Y' %} Shekinah Blaze Outreach International &middot;
+            <a href="/">{% translate 'Back to the website' %}</a>
+        </p>
+    </main>
 
-<script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
-<script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-<script src="{% static 'vendor/adminlte/js/adminlte.min.js' %}"></script>
-
-{% if jazzmin_settings.custom_js %}
-    <script src="{% static jazzmin_settings.custom_js %}"></script>
-{% endif %}
-
+    {% include 'admin/includes/icons.html' %}
 </body>
 </html>

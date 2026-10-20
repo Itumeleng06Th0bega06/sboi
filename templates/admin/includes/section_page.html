@@ -1,0 +1,63 @@
+{% load i18n admin_menu %}
+{% comment %}
+  Shared body for a single admin section.
+
+  Rendered by both the custom dashboard drill-down (section_index.html) and
+  Django's app index (app_index.html), so the two navigation paths always look
+  and behave the same. Expects `section` (an app entry from app_list) and
+  `section_label` (its app label).
+{% endcomment %}
+<div id="content-main" class="sboi-dash">
+    <nav class="sboi-backbar" aria-label="{% translate 'Breadcrumb' %}">
+        <a class="sboi-backtab" href="{% url 'admin:index' %}">
+            {% admin_icon 'arrow-left' %}
+            <span>{% translate 'Dashboard' %}</span>
+        </a>
+    </nav>
+
+    <header class="sboi-dash__hero">
+        <div class="sboi-dash__hero-text">
+            <p class="sboi-dash__eyebrow">{% translate 'Admin section' %}</p>
+            <h1><span class="sboi-dash__hero-icon">{% app_icon section_label %}</span>{{ section.name }}</h1>
+            <p class="sboi-dash__lead">
+                {% blocktranslate count counter=section.models|length %}{{ counter }} item in this section{% plural %}{{ counter }} items in this section{% endblocktranslate %}
+            </p>
+        </div>
+    </header>
+
+    <div class="sboi-apps">
+        {% for model in section.models %}
+            {% if model.admin_url or model.add_url %}
+                <a class="sboi-tile" href="{% firstof model.admin_url model.add_url %}">
+            {% else %}
+                <span class="sboi-tile" aria-disabled="true">
+            {% endif %}
+                    <span class="sboi-tile__icon">{% model_icon section_label model.object_name %}</span>
+                    <span class="sboi-tile__body">
+                        <span class="sboi-tile__name">{{ model.name }}</span>
+                        {% with desc=model|module_description:section_label %}
+                            {% if desc %}<span class="sboi-tile__desc">{{ desc }}</span>{% endif %}
+                        {% endwith %}
+                    </span>
+                    {% if model.admin_url or model.add_url %}
+                        <span class="sboi-tile__go">{% admin_icon 'arrow-right' %}</span>
+                    {% endif %}
+            {% if model.admin_url or model.add_url %}
+                </a>
+            {% else %}
+                </span>
+            {% endif %}
+        {% endfor %}
+
+        {% if section_label == 'members' and perms.members.view_churchmembership %}
+            <a class="sboi-tile" href="{% url 'admin:members_churchmembership_dashboard' %}">
+                <span class="sboi-tile__icon">{% model_icon 'members' 'dashboard' %}</span>
+                <span class="sboi-tile__body">
+                    <span class="sboi-tile__name">{% translate 'Membership dashboard' %}</span>
+                    <span class="sboi-tile__desc">{% translate 'Overview of church membership statistics' %}</span>
+                </span>
+                <span class="sboi-tile__go">{% admin_icon 'arrow-right' %}</span>
+            </a>
+        {% endif %}
+    </div>
+</div>

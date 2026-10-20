@@ -45,42 +45,42 @@ def build_admin_notifications():
             'Unread contact messages',
             ContactMessage.objects.filter(is_read=False),
             'admin:contact_contactmessage_changelist',
-            'fa-solid fa-envelope',
+            'mail',
             'attention',
         ),
         item(
             'Pending testimonies',
             Testimony.objects.filter(is_approved=False),
             'admin:home_testimony_changelist',
-            'fa-solid fa-comment-dots',
+            'message',
             'attention',
         ),
         item(
             'Blocked / suspended members',
             MemberProfile.objects.exclude(status='active'),
             'admin:blackboard_memberprofile_changelist',
-            'fa-solid fa-user-slash',
+            'user-slash',
             'warning',
         ),
         item(
             'New newsletter subscribers (7 days)',
             Subscriber.objects.filter(subscribed_at__gte=week),
             'admin:home_subscriber_changelist',
-            'fa-solid fa-envelope-open-text',
+            'mail-open',
             'info',
         ),
         item(
             'New event RSVPs (7 days)',
             EventRsvp.objects.filter(created_at__gte=week),
             'admin:blackboard_eventrsvp_changelist',
-            'fa-solid fa-clipboard-check',
+            'clipboard',
             'info',
         ),
         item(
             'New members (7 days)',
             MemberProfile.objects.filter(created_at__gte=week),
             'admin:blackboard_memberprofile_changelist',
-            'fa-solid fa-id-card',
+            'id-card',
             'info',
         ),
     ]
@@ -96,7 +96,7 @@ def site_info(request):
 
 
 def admin_notifications(request):
-    """Quick "add" shortcuts for the admin navbar's quick-actions menu.
+    """Quick "add" shortcuts for the admin navbar's quick-add menu.
 
     The admin dashboard is now generated from the (permission-filtered)
     sidebar menu, so no dashboard widgets are built here. The notification
@@ -112,14 +112,20 @@ def admin_notifications(request):
     def quick_action(label, icon, add_view_name):
         return {'label': label, 'icon': icon, 'url': reverse(add_view_name)}
 
+    notifications = build_admin_notifications()
     return {
         'admin_dashboard': {
             'quick_actions': [
-                quick_action('Add devotion', 'fa-solid fa-book-bible', 'admin:blackboard_devotion_add'),
-                quick_action('Add event', 'fa-solid fa-calendar-plus', 'admin:blackboard_event_add'),
-                quick_action('Add sermon', 'fa-solid fa-microphone-lines', 'admin:blackboard_sermon_add'),
-                quick_action('Add announcement', 'fa-solid fa-bullhorn', 'admin:blackboard_announcement_add'),
-                quick_action('Add slider image', 'fa-solid fa-photo-film', 'admin:gallery_sliderimage_add'),
+                quick_action('Add devotion', 'book', 'admin:blackboard_devotion_add'),
+                quick_action('Add event', 'calendar', 'admin:blackboard_event_add'),
+                quick_action('Add sermon', 'video', 'admin:blackboard_sermon_add'),
+                quick_action('Add announcement', 'bullhorn', 'admin:blackboard_announcement_add'),
+                quick_action('Add slider image', 'image', 'admin:gallery_sliderimage_add'),
             ],
+            'notifications': notifications,
+            'notification_badge': sum(
+                item['count'] for item in notifications
+                if item['tone'] in ('attention', 'warning')
+            ),
         },
     }

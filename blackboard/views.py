@@ -5,7 +5,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 
 from .forms import EventRsvpForm
-from .models import Announcement, Event, PdfMaterial, Sermon
+from .models import Announcement, Devotion, Event, PdfMaterial, Sermon
 
 
 @login_required
@@ -28,6 +28,8 @@ def blackboard(request):
         'events': Event.objects.filter(is_published=True),
         'sermons': Sermon.objects.filter(is_published=True),
         'materials': PdfMaterial.objects.filter(is_published=True),
+        # Storage archive: newest month first (Devotion.Meta already orders by -date)
+        'devotions': Devotion.objects.filter(is_published=True),
         'rsvp_form': EventRsvpForm(),
         'share_url': reverse('blackboard:blackboard'),
     }

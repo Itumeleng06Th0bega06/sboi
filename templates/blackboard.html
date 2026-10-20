@@ -2,7 +2,7 @@
 {% load static %}
 {% load media_tags %}
 
-{% block title %}Blackboard Â· {{ site_profile.church_name }}{% endblock %}
+{% block title %}Blackboard · {{ site_profile.church_name }}{% endblock %}
 
 {% block body_class %}page-blackboard{% endblock %}
 
@@ -21,6 +21,7 @@
             <button class="pill-btn" data-pill="events" role="tab" aria-selected="false" aria-label="Events" title="Events">{% include 'partials/_icon.html' with icon='calendar' %}<span class="sr-only">Events</span></button>
             <button class="pill-btn" data-pill="sermons" role="tab" aria-selected="false" aria-label="Sermons" title="Sermons">{% include 'partials/_icon.html' with icon='play' %}<span class="sr-only">Sermons</span></button>
             <button class="pill-btn" data-pill="materials" role="tab" aria-selected="false" aria-label="PDF Material" title="PDF Material">{% include 'partials/_icon.html' with icon='doc' %}<span class="sr-only">PDF Material</span></button>
+            <button class="pill-btn" data-pill="devotions" role="tab" aria-selected="false" aria-label="Devotions" title="Devotions">{% include 'partials/_icon.html' with icon='book' %}<span class="sr-only">Devotions</span></button>
         </div>
 
         <div class="tabpanel" id="panel-announcements" data-tabpanel="announcements">
@@ -118,6 +119,27 @@
             </div>
             {% else %}
             <p class="empty-state">PDF material will be available here soon.</p>
+            {% endif %}
+        </div>
+
+        <div class="tabpanel hidden" id="panel-devotions" data-tabpanel="devotions">
+            {% if devotions %}
+            <p class="section-sub center">A storage of devotion pictures &mdash; tap any picture to view it full size.</p>
+            <div class="grid-devotion">
+                {% for d in devotions %}
+                {% if d.image %}
+                <figure class="dev-item reveal">
+                    <img src="{% opt_img d.image width=320 %}" data-full="{% opt_img d.image %}" alt="{% if d.title %}{{ d.title }}{% else %}Devotion {{ d.date|date:'d M Y' }}{% endif %}" class="fit-img" data-lightbox loading="lazy">
+                    <figcaption class="dev-caption">
+                        <span class="dev-date">{{ d.date|date:'d M Y' }}</span>
+                        {% if d.title %}<span class="dev-title">{{ d.title }}</span>{% endif %}
+                    </figcaption>
+                </figure>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-state">Devotion pictures will be archived here soon.</p>
             {% endif %}
         </div>
     </div>
