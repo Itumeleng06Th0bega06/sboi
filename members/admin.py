@@ -181,12 +181,13 @@ class ChurchMembershipAdmin(admin.ModelAdmin):
         'membership_category', 'status', 'baptism_status', 'created_at',
     ]
     list_filter = [
-        'membership_category', 'status', 'baptism_status',
+        'membership_category', 'marital_status', 'status', 'baptism_status',
         MinistryFilter, 'created_at',
     ]
     search_fields = [
         'membership_id', 'user__username', 'user__first_name',
         'user__last_name', 'user__email', 'phone', 'alt_phone',
+        'spouse_name', 'children_names',
     ]
     date_hierarchy = 'created_at'
     list_per_page = 25
@@ -198,9 +199,10 @@ class ChurchMembershipAdmin(admin.ModelAdmin):
         ('Account', {'fields': ['username', 'password1', 'password2']}),
         ('Personal details', {'fields': [
             'first_name', 'last_name', 'email', 'phone', 'alt_phone',
-            'date_of_birth', 'address', 'city', 'province',
+            'date_of_birth', 'marital_status', 'address', 'city', 'province',
             'emergency_contact_name', 'emergency_contact_phone',
         ]}),
+        ('Family', {'fields': ['spouse_name', 'children_names']}),
         ('Church membership', {'fields': [
             'membership_category', 'status', 'date_joined_church',
             'baptism_status', 'baptism_date', 'previous_church',
@@ -306,12 +308,19 @@ class ChurchMembershipAdmin(admin.ModelAdmin):
         writer = csv.writer(response)
         writer.writerow([
             'Membership ID', 'First name', 'Last name', 'Email', 'Phone',
-            'Category', 'Status', 'Baptism status', 'Joined church', 'Registered',
+            'Marital status', 'Spouse', 'Children', 'Category', 'Status',
+            'Baptism status', 'Joined church', 'Registered',
         ])
         for m in self.get_queryset(request).filter(pk__in=queryset.values('pk')):
             writer.writerow([
                 obj_value(obj.membership_id), obj.user.first_name,
                 obj.user.last_name, obj.user.email, obj.phone,
+                obj.get_marital_status_display(),
+                obj.spouse_name,
+                '; '.join(
+                    line.strip() for line in obj.children_names.splitlines()
+                    if line.strip()
+                ),
                 obj.get_membership_category_display(),
                 obj.get_status_display(),
                 obj.get_baptism_status_display(),

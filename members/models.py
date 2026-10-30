@@ -26,6 +26,15 @@ GENDER_CHOICES = [
     ('female', 'Female'),
 ]
 
+MARITAL_STATUS_CHOICES = [
+    ('', 'Prefer not to say'),
+    ('single', 'Single'),
+    ('married', 'Married'),
+    ('widowed', 'Widowed'),
+    ('divorced', 'Divorced'),
+    ('separated', 'Separated'),
+]
+
 MEMBERSHIP_CATEGORY_CHOICES = [
     ('', 'Not specified'),
     ('regular', 'Regular Member'),
@@ -117,6 +126,20 @@ class ChurchMembership(models.Model):
     province = models.CharField('Province', max_length=120, blank=True)
     emergency_contact_name = models.CharField(max_length=120, blank=True)
     emergency_contact_phone = models.CharField(max_length=30, blank=True)
+
+    # --- Family -----------------------------------------------------------
+    marital_status = models.CharField(
+        'Marital status', max_length=12, choices=MARITAL_STATUS_CHOICES,
+        blank=True,
+    )
+    spouse_name = models.CharField('Spouse full name', max_length=200, blank=True)
+    children_names = models.TextField(
+        'Children', blank=True,
+        help_text=(
+            'One child per line. Children aged 16 and over can create their '
+            'own membership form.'
+        ),
+    )
 
     # --- Section B: church membership information -------------------------
     membership_category = models.CharField(

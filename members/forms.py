@@ -9,6 +9,7 @@ from .models import (
     BAPTISM_STATUS_CHOICES,
     GENDER_CHOICES,
     INTEREST_CHOICES,
+    MARITAL_STATUS_CHOICES,
     MEMBERSHIP_CATEGORY_CHOICES,
     MINISTRY_CHOICES,
     ChurchMembership,
@@ -112,6 +113,10 @@ class ChurchMembershipFieldsMixin(forms.Form):
         label='Gender', required=False, choices=GENDER_CHOICES,
         widget=forms.RadioSelect(attrs={'class': 'choice-list'}),
     )
+    marital_status = forms.ChoiceField(
+        label='Marital status', required=False, choices=MARITAL_STATUS_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'choice-list'}),
+    )
     address = forms.CharField(
         label='Residential address', max_length=255, required=False,
         widget=forms.TextInput(attrs={'class': 'input', 'placeholder': 'Residential address'}),
@@ -132,6 +137,27 @@ class ChurchMembershipFieldsMixin(forms.Form):
         label='Emergency contact phone number', max_length=30, required=False,
         validators=[_phone_validator],
         widget=forms.TextInput(attrs={'class': 'input', 'placeholder': 'Emergency contact phone number'}),
+    )
+
+    # --- Family -----------------------------------------------------------
+    spouse_name = forms.CharField(
+        label='Spouse full name', max_length=200, required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'input', 'placeholder': 'Spouse full name',
+            'data-family': 'spouse',
+        }),
+    )
+    children_names = forms.CharField(
+        label='Children', required=False,
+        help_text=(
+            'One child per line. Children aged 16 and over can create their '
+            'own membership form.'
+        ),
+        widget=forms.Textarea(attrs={
+            'class': 'input', 'rows': 3,
+            'placeholder': 'One child per line, e.g. Thabo Mokoena',
+            'data-family': 'children',
+        }),
     )
 
     # Section B
@@ -272,9 +298,11 @@ class ChurchMembershipFieldsMixin(forms.Form):
     )
 
     PERSONAL_FIELDS = [
-        'phone', 'alt_phone', 'date_of_birth', 'gender', 'address', 'city',
-        'province', 'emergency_contact_name', 'emergency_contact_phone',
+        'phone', 'alt_phone', 'date_of_birth', 'gender', 'marital_status',
+        'address', 'city', 'province', 'emergency_contact_name',
+        'emergency_contact_phone',
     ]
+    FAMILY_FIELDS = ['spouse_name', 'children_names']
     CHURCH_FIELDS = [
         'membership_category', 'date_joined_church', 'baptism_status',
         'baptism_date', 'previous_church', 'transferring_from_church',
@@ -291,6 +319,12 @@ class ChurchMembershipFieldsMixin(forms.Form):
     def sections(self):
         """Group bound fields into named sections for the template."""
         return [
+            {'id': 'church-family', 'title': 'Family details',
+             'blurb': (
+                 'Add your spouse and children so the church can care for your '
+                 'whole family.'
+             ),
+             'fields': self._bound(self.FAMILY_FIELDS)},
             {'id': 'church-b', 'title': 'Church membership information',
              'fields': self._bound(self.CHURCH_FIELDS)},
             {'id': 'church-c', 'title': 'Interests and spiritual growth',
@@ -323,7 +357,8 @@ class ChurchMembershipFieldsMixin(forms.Form):
     # -- persistence helpers ------------------------------------------------
 
     MODEL_FIELD_NAMES = [
-        'phone', 'alt_phone', 'date_of_birth', 'gender', 'address', 'city',
+        'phone', 'alt_phone', 'date_of_birth', 'gender', 'marital_status',
+        'spouse_name', 'children_names', 'address', 'city',
         'province', 'emergency_contact_name', 'emergency_contact_phone',
         'membership_category', 'date_joined_church', 'baptism_status',
         'baptism_date', 'previous_church', 'transferring_from_church',
@@ -339,6 +374,13 @@ class ChurchMembershipFieldsMixin(forms.Form):
         for name in self.MODEL_FIELD_NAMES:
             if name in self.cleaned_data:
                 setattr(membership, name, self.cleaned_data[name])
+
+        # A spouse only belongs to a married member: switching the status
+        # clears any previously captured spouse name.
+        membership.spouse_name = (membership.spouse_name or '').strip()
+        if membership.marital_status != 'married':
+            membership.spouse_name = ''
+        membership.children_names = (membership.children_names or '').strip()
         membership.save()
 
         # Rebuild multi-select rows (idempotent, so re-submits never duplicate).
@@ -427,6 +469,17 @@ class ChurchMembershipJoinForm(ChurchMembershipFieldsMixin, forms.ModelForm):
     class Meta:
         model = ChurchMembership
         fields = []
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # ``Meta.fields`` is empty because the visible fields are declared on
+        # the mixin, so populate their initial values from the instance by
+        # hand. Without this the "update my details" form always starts blank.
+        instance = self.instance
+        if instance is not None and instance.pk:
+            for name in self.MODEL_FIELD_NAMES:
+                if name in self.fields and name not in self.initial:
+                    self.initial[name] = getattr(instance, name)
 
     @transaction.atomic
     def save(self, user, commit=True):

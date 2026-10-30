@@ -34,7 +34,7 @@
 {% endcomment %}
 {% block responsive %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'admin/css/admin-brand.css' %}?v=35">
+    <link rel="stylesheet" href="{% static 'admin/css/admin-brand.css' %}?v=37">
     <link rel="stylesheet" href="{% static 'admin/css/admin-dashboard.css' %}?v=14">
     <link rel="stylesheet" href="{% static 'admin/css/delete-modal.css' %}?v=10">
     <link rel="stylesheet" href="{% static 'admin/css/notification-bell.css' %}?v=5">
@@ -57,12 +57,16 @@
         {% block usertools %}
             {% if has_permission %}
                 <div id="user-tools" class="sboi-tools">
-                    <form class="sboi-search" method="get" action="{% url 'admin_search' %}" role="search">
-                        <svg class="sboi-ico" aria-hidden="true" focusable="false"><use href="#sboi-i-search"></use></svg>
-                        <input type="search" name="q" value="{{ request.GET.q|default:'' }}"
-                               placeholder="{% translate 'Search the admin…' %}"
-                               aria-label="{% translate 'Search the admin' %}">
-                    </form>
+                    {# Global search lives on the dashboard only; every other
+                       page keeps its own contextual search (e.g. changelist). #}
+                    {% if request.resolver_match.view_name == 'admin:index' %}
+                        <form class="sboi-search" method="get" action="{% url 'admin_search' %}" role="search">
+                            <svg class="sboi-ico" aria-hidden="true" focusable="false"><use href="#sboi-i-search"></use></svg>
+                            <input type="search" name="q" value="{{ request.GET.q|default:'' }}"
+                                   placeholder="{% translate 'Search the admin…' %}"
+                                   aria-label="{% translate 'Search the admin' %}">
+                        </form>
+                    {% endif %}
 
                     {% if admin_dashboard.quick_actions %}
                         <details class="sboi-menu">

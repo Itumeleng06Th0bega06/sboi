@@ -299,6 +299,26 @@
     revealEls.forEach(function (el) { el.classList.add('visible'); });
   }
 
+  /* ---------- Church membership: family details ----------
+     A spouse only applies to married members. The field stays in the DOM so
+     a non-JS submission still works; the server clears a spouse name when the
+     marital status is not "married". */
+  var maritalInputs = document.querySelectorAll('input[name="marital_status"]');
+  var spouseInput = document.querySelector('.church-form input[name="spouse_name"]');
+  if (maritalInputs.length && spouseInput) {
+    var spouseField = spouseInput.closest('.form-field');
+    var syncSpouseField = function () {
+      var checked = document.querySelector('input[name="marital_status"]:checked');
+      var married = !!checked && checked.value === 'married';
+      if (spouseField) spouseField.hidden = !married;
+      if (!married) spouseInput.value = '';
+    };
+    maritalInputs.forEach(function (input) {
+      input.addEventListener('change', syncSpouseField);
+    });
+    syncSpouseField();
+  }
+
   /* ---------- Date inputs ----------
      Date fields render as text boxes so they can show a placeholder.
      They switch to a native date picker on focus, and back to text when

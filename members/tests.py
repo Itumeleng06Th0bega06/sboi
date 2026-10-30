@@ -213,6 +213,86 @@ class GenderFieldTests(TestCase):
         self.assertNotIn('checked', group)
 
 
+class FamilyDetailsTests(TestCase):
+    """Marital status, spouse and children on the membership forms."""
+
+    url = 'members:register_church'
+
+    def _post(self, username, **extra):
+        data = {
+            'email': f'{username}@example.com',
+            'username': username,
+            'password1': STRONG,
+            'password2': STRONG,
+        }
+        data.update(extra)
+        return self.client.post(reverse(self.url), data)
+
+    def test_marital_status_choices(self):
+        from .models import MARITAL_STATUS_CHOICES
+        self.assertEqual(
+            [value for value, _ in MARITAL_STATUS_CHOICES],
+            ['', 'single', 'married', 'widowed', 'divorced', 'separated'],
+        )
+
+    def test_registration_saves_married_family_details(self):
+        response = self._post(
+            'marriedmember',
+            marital_status='married',
+            spouse_name='Thabo Mokoena',
+            children_names='Lerato Mokoena\nKagiso Mokoena',
+        )
+        self.assertEqual(response.status_code, 302)
+        membership = ChurchMembership.objects.get(user__username='marriedmember')
+        self.assertEqual(membership.marital_status, 'married')
+        self.assertEqual(membership.spouse_name, 'Thabo Mokoena')
+        self.assertEqual(
+            membership.children_names, 'Lerato Mokoena\nKagiso Mokoena',
+        )
+
+    def test_single_parent_can_add_children_without_a_spouse(self):
+        response = self._post(
+            'singleparent',
+            marital_status='single',
+            spouse_name='Should be ignored',
+            children_names='Lerato Mokoena',
+        )
+        self.assertEqual(response.status_code, 302)
+        membership = ChurchMembership.objects.get(user__username='singleparent')
+        self.assertEqual(membership.marital_status, 'single')
+        self.assertEqual(membership.children_names, 'Lerato Mokoena')
+        self.assertEqual(membership.spouse_name, '')
+
+    def test_family_details_are_optional(self):
+        response = self._post('nofamily')
+        self.assertEqual(response.status_code, 302)
+        membership = ChurchMembership.objects.get(user__username='nofamily')
+        self.assertEqual(membership.marital_status, '')
+        self.assertEqual(membership.spouse_name, '')
+        self.assertEqual(membership.children_names, '')
+
+    def test_join_form_saves_and_prefills_family_details(self):
+        user = User.objects.create_user('familyjoin', 'familyjoin@example.com', STRONG)
+        self.client.force_login(user)
+        self.client.post(reverse('members:join_church'), {
+            'marital_status': 'married',
+            'spouse_name': 'Naledi Mokoena',
+            'children_names': 'Lerato Mokoena\nKagiso Mokoena',
+        })
+        membership = ChurchMembership.objects.get(user=user)
+        self.assertEqual(membership.marital_status, 'married')
+        self.assertEqual(membership.spouse_name, 'Naledi Mokoena')
+
+        response = self.client.get(reverse('members:join_church'))
+        form = response.context['form']
+        self.assertEqual(form.initial['marital_status'], 'married')
+        self.assertEqual(form.initial['spouse_name'], 'Naledi Mokoena')
+        self.assertEqual(
+            form.initial['children_names'],
+            'Lerato Mokoena\nKagiso Mokoena',
+        )
+
+
 class MembershipIdTests(TestCase):
     def test_ids_are_unique_and_sequential(self):
         ids = set()
@@ -343,6 +423,9 @@ class AdminMemberFormTests(TestCase):
         self.assertIn('email', form.fields)
         self.assertIn('username', form.fields)
         self.assertIn('password1', form.fields)
+        self.assertIn('marital_status', form.fields)
+        self.assertIn('spouse_name', form.fields)
+        self.assertIn('children_names', form.fields)
         self.assertNotIn('user', form.fields)
         self.assertNotIn('gender', form.fields)
 
@@ -359,6 +442,9 @@ class AdminMemberFormTests(TestCase):
                 'last_name': 'Mokoena',
                 'email': 'grace@example.com',
                 'gender': '',
+                'marital_status': 'married',
+                'spouse_name': 'Thabo Mokoena',
+                'children_names': 'Lerato Mokoena',
                 'membership_category': 'regular',
                 'status': 'active',
                 'interests-TOTAL_FORMS': '0',
@@ -380,6 +466,9 @@ class AdminMemberFormTests(TestCase):
         self.assertTrue(user.check_password(STRONG))
         membership = ChurchMembership.objects.get(user=user)
         self.assertTrue(membership.membership_id)
+        self.assertEqual(membership.marital_status, 'married')
+        self.assertEqual(membership.spouse_name, 'Thabo Mokoena')
+        self.assertEqual(membership.children_names, 'Lerato Mokoena')
 
     def test_add_member_generates_username_from_email(self):
         admin_user = User.objects.create_superuser('formadmin3', 'formadmin3@example.com', STRONG)
@@ -537,6 +626,19 @@ class MembershipDashboardTests(TestCase):
         self.assertContains(response, '1 Main Road')
         self.assertEqual(response.context['selected_member']['id'], member.pk)
         self.assertEqual(response.context['selected_member']['gender'], 'Female')
+
+    def test_profile_shows_family_details(self):
+        self._superuser()
+        member = self._member(
+            'familyprofile', marital_status='married',
+            spouse_name='Naledi Mokoena',
+            children_names='Lerato Mokoena\nKagiso Mokoena',
+        )
+        response = self.client.get(reverse(self.dashboard), {'member': member.pk})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Married')
+        self.assertContains(response, 'Naledi Mokoena')
+        self.assertContains(response, 'Lerato Mokoena, Kagiso Mokoena')
 
     def test_blank_profile_renders_without_errors(self):
         self._superuser()

@@ -138,6 +138,9 @@
             <h3 class="cm-subheading">{% trans 'Additional Information' %}</h3>
             <dl class="cm-detail-list">
               {% if selected_member.date_of_birth %}<div><dt>{% trans 'Date of birth' %}</dt><dd>{{ selected_member.date_of_birth|date:'d M Y' }}</dd></div>{% endif %}
+              {% if selected_member.marital_status %}<div><dt>{% trans 'Marital status' %}</dt><dd>{{ selected_member.marital_status }}</dd></div>{% endif %}
+              {% if selected_member.spouse_name %}<div><dt>{% trans 'Spouse' %}</dt><dd>{{ selected_member.spouse_name }}</dd></div>{% endif %}
+              {% if selected_member.children %}<div><dt>{% trans 'Children' %}</dt><dd>{{ selected_member.children|join:', ' }}</dd></div>{% endif %}
               {% if selected_member.address %}<div><dt>{% trans 'Address' %}</dt><dd>{{ selected_member.address }}</dd></div>{% endif %}
               {% if selected_member.baptism_date %}<div><dt>{% trans 'Baptism date' %}</dt><dd>{{ selected_member.baptism_date|date:'d M Y' }}</dd></div>{% endif %}
               {% if selected_member.baptism_status %}<div><dt>{% trans 'Baptism status' %}</dt><dd>{{ selected_member.baptism_status }}</dd></div>{% endif %}
@@ -149,8 +152,16 @@
               <div><dt>{% trans 'Email' %}</dt><dd>{{ selected_member.email|default:'—' }}</dd></div><div><dt>{% trans 'Phone' %}</dt><dd>{{ selected_member.phone|default:'—' }}</dd></div>
               {% if selected_member.date_of_birth %}<div><dt>{% trans 'Date of birth' %}</dt><dd>{{ selected_member.date_of_birth|date:'d M Y' }}</dd></div>{% endif %}
               {% if selected_member.gender %}<div><dt>{% trans 'Gender' %}</dt><dd>{{ selected_member.gender }}</dd></div>{% endif %}
+              {% if selected_member.marital_status %}<div><dt>{% trans 'Marital status' %}</dt><dd>{{ selected_member.marital_status }}</dd></div>{% endif %}
               {% if selected_member.address %}<div><dt>{% trans 'Address' %}</dt><dd>{{ selected_member.address }}</dd></div>{% endif %}
             </dl>
+            {% if selected_member.spouse_name or selected_member.children %}
+            <h3 class="cm-subheading">{% trans 'Family' %}</h3>
+            <dl class="cm-detail-list">
+              {% if selected_member.spouse_name %}<div><dt>{% trans 'Spouse' %}</dt><dd>{{ selected_member.spouse_name }}</dd></div>{% endif %}
+              {% if selected_member.children %}<div><dt>{% trans 'Children' %}</dt><dd>{{ selected_member.children|join:', ' }}</dd></div>{% endif %}
+            </dl>
+            {% endif %}
           </section>
           <section class="cm-tab-panel" role="tabpanel" data-cm-panel="membership" hidden>
             <h3>{% trans 'Membership Information' %}</h3><dl class="cm-detail-list">

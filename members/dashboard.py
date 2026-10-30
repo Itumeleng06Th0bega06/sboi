@@ -83,6 +83,15 @@ def member_detail(membership):
         'date_joined': membership.date_joined_church or membership.created_at,
         'date_of_birth': membership.date_of_birth,
         'gender': membership.get_gender_display() if membership.gender else '',
+        'marital_status': (
+            membership.get_marital_status_display()
+            if membership.marital_status else ''
+        ),
+        'spouse_name': membership.spouse_name,
+        'children': [
+            line.strip() for line in membership.children_names.splitlines()
+            if line.strip()
+        ],
         'address': full_address(membership),
         'baptism_status': (
             membership.get_baptism_status_display()

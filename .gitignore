@@ -40,4 +40,5 @@ Thumbs.db
 
 # Local dev / agent artifacts
 .playwright-mcp/
+screenshots/
 shot-*.png
