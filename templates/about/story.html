@@ -1,0 +1,31 @@
+{% extends 'about/base_about.html' %}
+{% load media_tags %}
+
+{% block title %}Our Story | {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
+
+{% block about_eyebrow %}<p class="eyebrow">Chapter Two</p>{% endblock %}
+{% block about_title %}Our Story{% endblock %}
+{% block about_sub %}{{ profile.story_subtitle|default:'The Story of Shekinah Blaze Outreach International' }}{% endblock %}
+
+{% block about_content %}
+{% if profile.story %}
+<section class="section section-tint" id="ch-story">
+    <div class="container">
+        <div class="story-grid">
+            {% for section in story_sections %}
+                {% if section.image %}
+                <figure class="story-img reveal">
+                    <img src="{% opt_img profile.story_image width=720 %}" alt="Shekinah Blaze family" class="fit-img" data-lightbox loading="lazy">
+                </figure>
+                {% else %}
+                <article class="story-card reveal">
+                    {% if section.title %}<h3 class="story-title">{{ section.title }}</h3>{% endif %}
+                    <div class="prose">{{ section.body|linebreaksbr }}</div>
+                </article>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

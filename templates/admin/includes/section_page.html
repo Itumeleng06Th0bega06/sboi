@@ -28,7 +28,7 @@
     <div class="sboi-apps">
         {% for model in section.models %}
             {% if model.admin_url or model.add_url %}
-                <a class="sboi-tile" href="{% firstof model.admin_url model.add_url %}">
+                <a class="sboi-tile{% if not model.has_permission %} sboi-tile--locked{% endif %}" href="{% firstof model.admin_url model.add_url %}"{% if not model.has_permission %} title="{% translate 'Locked — ask an administrator for access' %}"{% endif %}>
             {% else %}
                 <span class="sboi-tile" aria-disabled="true">
             {% endif %}
@@ -40,7 +40,7 @@
                         {% endwith %}
                     </span>
                     {% if model.admin_url or model.add_url %}
-                        <span class="sboi-tile__go">{% admin_icon 'arrow-right' %}</span>
+                        <span class="sboi-tile__go">{% if model.has_permission %}{% admin_icon 'arrow-right' %}{% else %}{% admin_icon 'lock' %}{% endif %}</span>
                     {% endif %}
             {% if model.admin_url or model.add_url %}
                 </a>
@@ -49,7 +49,7 @@
             {% endif %}
         {% endfor %}
 
-        {% if section_label == 'members' and perms.members.view_churchmembership %}
+        {% if section_label == 'members' and perms.members.manage_membership %}
             <a class="sboi-tile" href="{% url 'admin:members_churchmembership_dashboard' %}">
                 <span class="sboi-tile__icon">{% model_icon 'members' 'dashboard' %}</span>
                 <span class="sboi-tile__body">

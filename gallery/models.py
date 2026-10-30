@@ -19,6 +19,9 @@ class SliderImage(models.Model):
 
     class Meta:
         ordering = ['order']
+        permissions = [
+            ('manage_gallery', 'Gallery: manage images'),
+        ]
 
     def __str__(self):
         return self.title or f'Slide #{self.pk}'

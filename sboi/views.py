@@ -1,6 +1,7 @@
 from django.apps import apps
 from django.contrib import admin
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
@@ -54,6 +55,9 @@ def admin_search(request):
             model = apps.get_model(app_label, model_name)
             if model is None:
                 continue
+            model_admin = admin.site._registry.get(model)
+            if model_admin is None or not model_admin.has_view_permission(request):
+                continue
             query = Q()
             for field in fields:
                 query |= Q(**{f'{field}__icontains': q})
@@ -87,6 +91,8 @@ def admin_section(request, app_label):
     )
     if section is None:
         raise Http404('Unknown admin section')
+    if not section.get('has_permission'):
+        raise PermissionDenied
     context = admin.site.each_context(request)
     context.update({
         'title': section['name'],
@@ -100,9 +106,9 @@ def admin_section(request, app_label):
 
 def admin_notifications_api(request):
     """JSON feed for the admin nav notification bell."""
-    from home.context_processors import build_admin_notifications
+    from home.context_processors import notifications_for_user
 
-    items = build_admin_notifications()
+    items = notifications_for_user(request.user)
     return JsonResponse({
         'badge': sum(i['count'] for i in items if i['tone'] in ('attention', 'warning')),
         'total': sum(i['count'] for i in items),

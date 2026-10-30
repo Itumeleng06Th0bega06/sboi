@@ -264,6 +264,32 @@
   transform: translateX(3px);
 }
 
+/* Locked sections stay visible and clickable so the server can return a clean
+   403, but their reduced contrast and lock glyph make the state obvious. */
+.sboi-app--locked {
+  opacity: 0.58;
+}
+
+.sboi-app--locked:hover,
+.sboi-app--locked:focus-visible {
+  opacity: 0.78;
+  transform: none;
+}
+
+.sboi-app--locked .sboi-app__icon {
+  filter: grayscale(1);
+}
+
+.sboi-app--locked .sboi-app__title {
+  color: var(--sboi-muted);
+}
+
+.sboi-app--locked:hover .sboi-app__go,
+.sboi-app--locked:focus-visible .sboi-app__go {
+  color: var(--sboi-muted);
+  transform: none;
+}
+
 /* ---------- Model tile (section page) ---------- */
 .sboi-backbar {
   display: flex;
@@ -357,6 +383,95 @@
 .sboi-tile[aria-disabled='true']:hover {
   transform: none;
   border-color: var(--sboi-line);
+}
+
+.sboi-tile--locked {
+  opacity: 0.58;
+}
+
+.sboi-tile--locked:hover,
+.sboi-tile--locked:focus-visible {
+  opacity: 0.78;
+  transform: none;
+}
+
+.sboi-tile--locked .sboi-tile__icon {
+  filter: grayscale(1);
+}
+
+.sboi-tile--locked .sboi-tile__name {
+  color: var(--sboi-muted);
+}
+
+.sboi-tile--locked:hover .sboi-tile__go,
+.sboi-tile--locked:focus-visible .sboi-tile__go {
+  color: var(--sboi-muted);
+  transform: none;
+}
+
+/* ---------- Permission denied ---------- */
+.sboi-denied {
+  max-width: 680px;
+  margin: 1.5rem auto;
+  padding: clamp(1.4rem, 3vw, 2.4rem);
+  border: 1px solid var(--sboi-line);
+  border-radius: var(--sboi-radius);
+  background: linear-gradient(150deg, var(--sboi-surface-3), var(--sboi-surface-2));
+  box-shadow: var(--sboi-shadow-sm);
+  text-align: center;
+}
+
+.sboi-denied__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--sboi-line);
+  border-radius: 50%;
+  background: rgba(210, 162, 78, 0.1);
+  color: var(--sboi-gold);
+}
+
+.sboi-denied__icon .sboi-ico {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.sboi-denied h1 {
+  margin: 0.2rem 0 0.7rem;
+  color: #ffffff;
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.35rem, 3vw, 1.8rem);
+}
+
+.sboi-denied p {
+  max-width: 52ch;
+  margin: 0 auto;
+  color: var(--sboi-muted);
+  line-height: 1.6;
+}
+
+.sboi-denied__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 1.4rem;
+  padding: 0.62rem 1rem;
+  border: 1px solid var(--sboi-line);
+  border-radius: 999px;
+  color: var(--sboi-ink);
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.sboi-denied__back:hover,
+.sboi-denied__back:focus-visible {
+  border-color: var(--sboi-gold);
+  color: var(--sboi-gold);
+  text-decoration: none;
+  outline: none;
 }
 
 /* ---------- Responsive ---------- */

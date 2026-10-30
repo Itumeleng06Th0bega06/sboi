@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=65">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=66">
 </head>
 <body class="{% block body_class %}{% endblock %}">
     {% block nav %}
@@ -25,7 +25,7 @@
                     </a>
                     <ul class="nav-dropdown-menu">
                         {% for chapter in about_chapters %}
-                        <li><a href="{% url 'about:about' %}#{{ chapter.id }}">{{ chapter.title }}</a></li>
+                        <li><a href="{% url chapter.url_name %}">{{ chapter.title }}</a></li>
                         {% endfor %}
                     </ul>
                 </li>
@@ -110,7 +110,7 @@
             <ul class="nav-sheet-list">
                 <li><a href="{% url 'about:about' %}">Overview</a></li>
                 {% for chapter in about_chapters %}
-                <li><a href="{% url 'about:about' %}#{{ chapter.id }}">{{ chapter.title }}</a></li>
+                <li><a href="{% url chapter.url_name %}">{{ chapter.title }}</a></li>
                 {% endfor %}
             </ul>
         </div>
@@ -176,7 +176,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"/></svg>
     </button>
 
-    <script src="{% static 'js/script.js' %}?v=7"></script>
+    <script src="{% static 'js/script.js' %}?v=8"></script>
     <script src="{% static 'js/ajax-forms.js' %}"></script>
 </body>
 </html>

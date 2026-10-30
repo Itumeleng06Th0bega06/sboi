@@ -35,7 +35,7 @@
 {% block responsive %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'admin/css/admin-brand.css' %}?v=37">
-    <link rel="stylesheet" href="{% static 'admin/css/admin-dashboard.css' %}?v=14">
+    <link rel="stylesheet" href="{% static 'admin/css/admin-dashboard.css' %}?v=15">
     <link rel="stylesheet" href="{% static 'admin/css/delete-modal.css' %}?v=10">
     <link rel="stylesheet" href="{% static 'admin/css/notification-bell.css' %}?v=5">
 {% endblock %}
@@ -57,8 +57,8 @@
         {% block usertools %}
             {% if has_permission %}
                 <div id="user-tools" class="sboi-tools">
-                    {# Global search lives on the dashboard only; every other
-                       page keeps its own contextual search (e.g. changelist). #}
+                    {% comment %}Global search lives on the dashboard only; every other
+                       page keeps its own contextual search (e.g. changelist).{% endcomment %}
                     {% if request.resolver_match.view_name == 'admin:index' %}
                         <form class="sboi-search" method="get" action="{% url 'admin_search' %}" role="search">
                             <svg class="sboi-ico" aria-hidden="true" focusable="false"><use href="#sboi-i-search"></use></svg>

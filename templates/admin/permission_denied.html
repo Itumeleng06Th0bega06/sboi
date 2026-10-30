@@ -1,0 +1,29 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_menu %}
+
+{% comment %}
+  Branded 403 shown when a signed-in staff member opens an area they are not
+  assigned to. The lock and dashboard link keep the page useful rather than
+  leaving a dead end; the server has already refused the request.
+{% endcomment %}
+
+{% block bodyclass %}{{ block.super }} sboi-dashboard{% endblock %}
+{% block content_title %}{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div id="content-main" class="sboi-dash">
+    <section class="sboi-denied" role="alert">
+        <span class="sboi-denied__icon" aria-hidden="true">{% admin_icon 'lock' %}</span>
+        <p class="sboi-dash__eyebrow">{% translate 'Access restricted' %}</p>
+        <h1>{% translate "You don't have permission to open this section" %}</h1>
+        <p>
+            {% translate 'Your account is not assigned to this area. Ask a staff accounts manager to add you to the relevant role group.' %}
+        </p>
+        <a class="sboi-denied__back" href="{% url 'admin:index' %}">
+            {% admin_icon 'arrow-left' %}
+            <span>{% translate 'Back to dashboard' %}</span>
+        </a>
+    </section>
+</div>
+{% endblock %}

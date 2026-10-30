@@ -26,6 +26,9 @@ class FeaturedSection(models.Model):
 
     class Meta:
         ordering = ['order']
+        permissions = [
+            ('manage_home_content', 'Home page: manage content'),
+        ]
 
     def __str__(self):
         return self.title or '(Untitled section)'
@@ -39,6 +42,9 @@ class Testimony(models.Model):
 
     class Meta:
         ordering = ['-submitted_at']
+        permissions = [
+            ('manage_testimonies', 'Home page: manage testimonies'),
+        ]
 
     def __str__(self):
         return self.name
@@ -53,6 +59,9 @@ class Subscriber(models.Model):
         verbose_name = 'Newsletter Subscriber'
         verbose_name_plural = 'Newsletter Subscribers'
         ordering = ['-subscribed_at']
+        permissions = [
+            ('manage_subscribers', 'Home page: manage newsletter subscribers'),
+        ]
 
     def __str__(self):
         return self.email

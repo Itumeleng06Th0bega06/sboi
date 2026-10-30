@@ -196,7 +196,7 @@ class ChurchMembership(models.Model):
         verbose_name_plural = 'Church memberships'
         ordering = ['-created_at']
         permissions = [
-            ('export_churchmembership', 'Can export church members'),
+            ('manage_membership', 'Membership: manage members'),
         ]
 
     def __str__(self):
@@ -260,11 +260,11 @@ class MembershipMinistry(models.Model):
 
 
 class MembershipPastoralNote(models.Model):
-    """Sensitive notes: visible only to staff with the matching permission.
+    """Sensitive pastoral notes attached to a church membership.
 
-    Django creates ``view/change/delete_membershippastoralnote`` permissions
-    automatically, letting sensitive information be restricted separately
-    from the main membership record.
+    This model is deliberately not registered in the admin; pastoral notes are
+    edited through the membership form. The membership area's single
+    ``manage_membership`` permission covers the whole record.
     """
 
     membership = models.OneToOneField(
@@ -280,9 +280,6 @@ class MembershipPastoralNote(models.Model):
     class Meta:
         verbose_name = 'Pastoral note'
         verbose_name_plural = 'Pastoral notes'
-        permissions = [
-            ('view_sensitive_membership', 'Can view sensitive membership information'),
-        ]
 
     def __str__(self):
         return f'Pastoral note for {self.membership}'

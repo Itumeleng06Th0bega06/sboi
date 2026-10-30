@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from sboi.admin_permissions import AreaPermissionMixin
 from sboi.admin_utils import ImageThumbMixin
 
 from .models import FeaturedSection, HomeStat, Subscriber, Testimony
@@ -10,19 +11,24 @@ admin.site.index_title = 'Church Website Administration'
 
 
 @admin.register(HomeStat)
-class HomeStatAdmin(admin.ModelAdmin):
+class HomeStatAdmin(AreaPermissionMixin, admin.ModelAdmin):
+    area_permission = 'home.manage_home_content'
     list_display = ['value', 'label']
 
 
 @admin.register(FeaturedSection)
-class FeaturedSectionAdmin(ImageThumbMixin, admin.ModelAdmin):
+class FeaturedSectionAdmin(
+    AreaPermissionMixin, ImageThumbMixin, admin.ModelAdmin,
+):
+    area_permission = 'home.manage_home_content'
     thumb_field = 'image'
     list_display = ['thumb', 'title']
     list_display_links = ['title']
 
 
 @admin.register(Testimony)
-class TestimonyAdmin(admin.ModelAdmin):
+class TestimonyAdmin(AreaPermissionMixin, admin.ModelAdmin):
+    area_permission = 'home.manage_testimonies'
     list_display = ['name', 'is_approved', 'submitted_at']
     list_filter = ['is_approved']
     actions = ['approve_testimonies']
@@ -33,7 +39,8 @@ class TestimonyAdmin(admin.ModelAdmin):
 
 
 @admin.register(Subscriber)
-class SubscriberAdmin(admin.ModelAdmin):
+class SubscriberAdmin(AreaPermissionMixin, admin.ModelAdmin):
+    area_permission = 'home.manage_subscribers'
     list_display = ['email', 'is_active', 'subscribed_at']
     list_filter = ['is_active']
     search_fields = ['email']

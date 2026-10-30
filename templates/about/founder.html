@@ -1,0 +1,30 @@
+{% extends 'about/base_about.html' %}
+
+{% block title %}The Founder's Message | {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
+
+{% block about_eyebrow %}<p class="eyebrow">Chapter One</p>{% endblock %}
+{% block about_title %}The Founder's Message{% endblock %}
+{% block about_sub %}A message from the vision bearer{% endblock %}
+
+{% block about_content %}
+{% if profile.founder_message %}
+<section class="section" id="ch-founder">
+    <div class="container">
+        <div class="chapter-body">
+            <div class="founder-card reveal">
+                <h2 class="section-title">Founder's Message</h2>
+                {% if profile.founder_byline %}<p class="founder-byline">{{ profile.founder_byline|linebreaksbr }}</p>{% endif %}
+                {% if profile.founder_scripture %}<p class="vm-scripture">{{ profile.founder_scripture }}</p>{% endif %}
+                <div class="prose">{{ profile.founder_message|linebreaksbr }}</div>
+                {% if profile.founder_signature %}
+                <div class="founder-signature">
+                    <p>{{ profile.founder_signature|linebreaksbr }}</p>
+                </div>
+                {% endif %}
+                {% if profile.founder_tagline %}<p class="founder-tagline">{{ profile.founder_tagline }}</p>{% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

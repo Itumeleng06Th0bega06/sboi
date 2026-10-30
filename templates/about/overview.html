@@ -1,0 +1,31 @@
+{% extends 'about/base_about.html' %}
+
+{% block title %}About | {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
+
+{% block about_eyebrow %}<p class="eyebrow">Who we are</p>{% endblock %}
+{% block about_title %}About Shekinah Blaze{% endblock %}
+{% block about_sub %}{{ profile.tagline|default:'Governed by Heaven, Established on Earth' }}{% endblock %}
+
+{% block about_content %}
+<section class="section">
+    <div class="container center">
+        <p class="eyebrow">One house. One vision.</p>
+        <h2 class="section-title">A family shaped by God's presence</h2>
+        <p class="section-sub center">Explore the story, vision, mission and people of {{ profile.church_name|default:'Shekinah Blaze Outreach International' }}.</p>
+    </div>
+    <div class="container">
+        <div class="about-index">
+            {% for chapter in about_chapters %}
+            <a class="value-card about-index__card reveal" id="{{ chapter.id }}" href="{% url chapter.url_name %}">
+                <span class="about-index__kicker">0{{ forloop.counter }}</span>
+                <h3 class="value-title">{{ chapter.title }}</h3>
+                <p class="value-text">{{ chapter.blurb }}</p>
+                <span class="about-index__more">Explore this page &rarr;</span>
+            </a>
+            {% empty %}
+            <p class="section-sub center">More about our story is coming soon.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

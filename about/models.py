@@ -58,6 +58,9 @@ class ChurchProfile(models.Model):
     class Meta:
         verbose_name = 'Church Profile'
         verbose_name_plural = 'Church Profile'
+        permissions = [
+            ('manage_about', 'About page: manage content'),
+        ]
 
     def __str__(self):
         return self.church_name
@@ -124,6 +127,9 @@ class CoreValue(models.Model):
 
     class Meta:
         ordering = ['order']
+        permissions = [
+            ('manage_values', 'Values page: manage core values'),
+        ]
 
     def __str__(self):
         return self.title or '(Untitled value)'

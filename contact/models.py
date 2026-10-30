@@ -16,6 +16,9 @@ class ContactInfo(models.Model):
     class Meta:
         verbose_name = 'Contact Info'
         verbose_name_plural = 'Contact Info'
+        permissions = [
+            ('manage_contact_details', 'Contact page: manage details'),
+        ]
 
     def __str__(self):
         return self.church_name
@@ -32,6 +35,9 @@ class ContactMessage(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        permissions = [
+            ('manage_contact_messages', 'Contact page: manage messages'),
+        ]
 
     def __str__(self):
         return f'{self.name}: {self.subject}'

@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from sboi.admin_permissions import AreaPermissionMixin
 from sboi.admin_utils import ImageThumbMixin
 
 from .models import (
@@ -14,7 +15,8 @@ from .models import (
 
 
 @admin.register(ChurchProfile)
-class ChurchProfileAdmin(ImageThumbMixin, admin.ModelAdmin):
+class ChurchProfileAdmin(AreaPermissionMixin, ImageThumbMixin, admin.ModelAdmin):
+    area_permission = 'about.manage_about'
     thumb_field = 'story_image'
     list_display = ['thumb', 'church_name', 'tagline', 'location']
     list_display_links = ['church_name']
@@ -75,36 +77,42 @@ class ChurchProfileAdmin(ImageThumbMixin, admin.ModelAdmin):
 
 
 @admin.register(VisionPillar)
-class VisionPillarAdmin(admin.ModelAdmin):
+class VisionPillarAdmin(AreaPermissionMixin, admin.ModelAdmin):
+    area_permission = 'about.manage_about'
     list_display = ['title']
     fields = ['title', 'subtitle', 'body']
 
 
 @admin.register(MissionComponent)
-class MissionComponentAdmin(admin.ModelAdmin):
+class MissionComponentAdmin(AreaPermissionMixin, admin.ModelAdmin):
+    area_permission = 'about.manage_about'
     list_display = ['title']
     fields = ['title', 'subtitle', 'body']
 
 
 @admin.register(PathwayStep)
-class PathwayStepAdmin(admin.ModelAdmin):
+class PathwayStepAdmin(AreaPermissionMixin, admin.ModelAdmin):
+    area_permission = 'about.manage_about'
     list_display = ['step', 'title']
     list_display_links = ['step', 'title']
 
 
 @admin.register(MissionAction)
-class MissionActionAdmin(admin.ModelAdmin):
+class MissionActionAdmin(AreaPermissionMixin, admin.ModelAdmin):
+    area_permission = 'about.manage_about'
     list_display = ['title']
 
 
 @admin.register(CoreValue)
-class CoreValueAdmin(admin.ModelAdmin):
+class CoreValueAdmin(AreaPermissionMixin, admin.ModelAdmin):
+    area_permission = 'about.manage_values'
     list_display = ['title', 'scripture']
     fields = ['title', 'scripture', 'what_we_believe', 'what_this_means', 'our_commitment']
 
 
 @admin.register(Leader)
-class LeaderAdmin(ImageThumbMixin, admin.ModelAdmin):
+class LeaderAdmin(AreaPermissionMixin, ImageThumbMixin, admin.ModelAdmin):
+    area_permission = 'about.manage_about'
     thumb_field = 'photo'
     list_display = ['thumb', 'name', 'role']
     list_display_links = ['name']

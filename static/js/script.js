@@ -33,6 +33,17 @@
     });
   }
 
+  /* Keep the active About sub-page tab in view on small screens */
+  var aboutSubnav = document.querySelector('.about-subnav');
+  if (aboutSubnav) {
+    var activeAboutTab = aboutSubnav.querySelector('.tab-btn.active');
+    if (activeAboutTab && aboutSubnav.scrollWidth > aboutSubnav.clientWidth) {
+      var navRect = aboutSubnav.getBoundingClientRect();
+      var tabRect = activeAboutTab.getBoundingClientRect();
+      aboutSubnav.scrollLeft += tabRect.left - navRect.left - (navRect.width - tabRect.width) / 2;
+    }
+  }
+
   /* Header shadow on scroll */
   var header = document.getElementById('siteHeader');
   if (header) {

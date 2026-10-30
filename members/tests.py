@@ -374,8 +374,8 @@ class AdminAccessTests(TestCase):
         self.client.force_login(admin_user)
         response = self.client.get(reverse('admin:index'))
         self.assertEqual(response.status_code, 200)
-        # Cards are generated from the same permission-filtered source as
-        # the sidebar; the card opens the section, which then links onward.
+        # Cards are generated from the full section list; the card opens the
+        # section, which then links onward.
         self.assertContains(response, 'sboi-app__title')
         self.assertContains(response, reverse('admin_section', args=['members']))
         section = self.client.get(reverse('admin_section', args=['members']))
@@ -542,7 +542,7 @@ class MembershipDashboardTests(TestCase):
         response = self.client.get(reverse(self.dashboard))
         self.assertIn(response.status_code, (302, 403))
 
-    def test_requires_view_permission(self):
+    def test_requires_manage_permission(self):
         # Staff, but with no church-membership permission at all.
         staff = User.objects.create_user('staff2', 'staff2@example.com', STRONG, is_staff=True)
         self.client.force_login(staff)
@@ -648,24 +648,24 @@ class MembershipDashboardTests(TestCase):
         self.assertEqual(response.context['selected_member']['gender'], '')
         self.assertContains(response, 'blankdash')
 
-    def test_add_button_only_with_add_permission(self):
+    def test_add_button_with_manage_permission(self):
         self._superuser()
         self._member('someone')
         response = self.client.get(reverse(self.dashboard))
         self.assertContains(response, 'Add New Member')
 
-    def test_view_only_staff_has_no_add_or_edit_links(self):
+    def test_manage_permission_has_full_control(self):
         user = User.objects.create_user(
-            'viewer', 'viewer@example.com', STRONG, is_staff=True,
+            'manager', 'manager@example.com', STRONG, is_staff=True,
         )
         user.user_permissions.add(
-            Permission.objects.get(codename='view_churchmembership'),
+            Permission.objects.get(codename='manage_membership'),
         )
         self.client.force_login(user)
-        member = self._member('lookedat')
+        member = self._member('managed')
         response = self.client.get(reverse(self.dashboard), {'member': member.pk})
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(response.context['can_add'])
-        self.assertFalse(response.context['can_change'])
-        self.assertNotContains(response, 'Add New Member')
-        self.assertNotContains(response, '>Edit Member<')
+        self.assertTrue(response.context['can_add'])
+        self.assertTrue(response.context['can_change'])
+        self.assertContains(response, 'Add New Member')
+        self.assertContains(response, 'Edit member')

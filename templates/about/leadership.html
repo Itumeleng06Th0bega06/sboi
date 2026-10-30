@@ -1,0 +1,31 @@
+{% extends 'about/base_about.html' %}
+{% load media_tags %}
+
+{% block title %}Visionary Leadership | {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
+
+{% block about_eyebrow %}<p class="eyebrow">Our people</p>{% endblock %}
+{% block about_title %}Visionary Leadership{% endblock %}
+{% block about_sub %}Those entrusted with the vision{% endblock %}
+
+{% block about_content %}
+{% if leaders %}
+<section class="section section-green" id="ch-leadership">
+    <div class="container">
+        <div class="leader-grid">
+            {% for leader in leaders %}
+            <article class="leader-card reveal">
+                <div class="leader-media">
+                    {% if leader.photo %}<img src="{% opt_img leader.photo width=640 %}" alt="{{ leader.name }}" class="fit-img" data-lightbox loading="lazy">{% endif %}
+                </div>
+                <div class="leader-body">
+                    <h3 class="leader-name">{{ leader.name }}</h3>
+                    <p class="leader-role">{{ leader.role }}</p>
+                    {% if leader.bio %}<p class="leader-bio">{{ leader.bio|linebreaksbr }}</p>{% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

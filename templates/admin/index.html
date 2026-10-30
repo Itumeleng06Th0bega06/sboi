@@ -31,15 +31,25 @@
 
     <div class="sboi-apps">
         {% for app in app_list %}
-            <a class="sboi-app" href="{% url 'admin_section' app.app_label %}">
+            <a class="sboi-app{% if not app.has_permission %} sboi-app--locked{% endif %}" href="{% url 'admin_section' app.app_label %}"{% if not app.has_permission %} title="{% translate 'Locked — ask an administrator for access' %}"{% endif %}>
                 <span class="sboi-app__body">
                     <span class="sboi-app__icon">{% app_icon app.app_label %}</span>
                     <span class="sboi-app__text">
                         <span class="sboi-app__title">{{ app.name }}</span>
-                        <span class="sboi-app__count">{% blocktranslate count counter=app.models|length %}{{ counter }} item{% plural %}{{ counter }} items{% endblocktranslate %}</span>
+                        <span class="sboi-app__count">
+                            {% if app.has_permission %}
+                                {% blocktranslate count counter=app.models|length %}{{ counter }} item{% plural %}{{ counter }} items{% endblocktranslate %}
+                            {% else %}
+                                {% translate 'Locked — ask an administrator for access' %}
+                            {% endif %}
+                        </span>
                     </span>
                 </span>
-                <span class="sboi-app__go">{% admin_icon 'arrow-right' %}</span>
+                {% if app.has_permission %}
+                    <span class="sboi-app__go">{% admin_icon 'arrow-right' %}</span>
+                {% else %}
+                    <span class="sboi-app__go sboi-app__go--locked">{% admin_icon 'lock' %}</span>
+                {% endif %}
             </a>
         {% empty %}
             <p class="sboi-dash__empty">{% translate 'No admin modules are available for your account.' %}</p>

@@ -1,0 +1,81 @@
+{% extends 'about/base_about.html' %}
+
+{% block title %}Our Vision | {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
+
+{% block about_eyebrow %}<p class="eyebrow">Chapter Three</p>{% endblock %}
+{% block about_title %}Our Vision{% endblock %}
+{% block about_sub %}Raising God-Fearing Kingdom Leaders{% endblock %}
+
+{% block about_content %}
+{% if profile.vision %}
+<section class="section" id="ch-vision">
+    <div class="container">
+        <div class="chapter-body">
+            <h3 class="sub-title center">Our Vision Statement</h3>
+            <p class="vm-text lead">{{ profile.vision }}</p>
+            {% if profile.vision_scripture %}<p class="vm-scripture">{{ profile.vision_scripture }}</p>{% endif %}
+
+            {% if profile.vision_intro %}
+            <div class="sub-section">
+                <h3 class="sub-title center">Introduction</h3>
+                <div class="prose reveal">{{ profile.vision_intro|linebreaksbr }}</div>
+            </div>
+            {% endif %}
+
+            {% if pillars %}
+            <div class="sub-section">
+                <h3 class="sub-title center">Understanding Our Vision</h3>
+                {% if profile.vision_components_intro %}<p class="section-sub center">{{ profile.vision_components_intro }}</p>{% endif %}
+                <div class="values-grid">
+                    {% for p in pillars %}
+                    <div class="value-card reveal">
+                        <h4 class="value-title">{{ forloop.counter }}. {{ p.title }}</h4>
+                        {% if p.subtitle %}<p class="value-scripture">{{ p.subtitle }}</p>{% endif %}
+                        {% if p.body %}<p class="value-text">{{ p.body|linebreaksbr }}</p>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if profile.vision_practice %}
+            <div class="sub-section">
+                <h3 class="sub-title center">What Our Vision Looks Like in Practice</h3>
+                {% if practice_intro %}<p class="section-sub center">{{ practice_intro }}</p>{% endif %}
+                <div class="practice-grid">
+                    {% for item in practice_items %}
+                    <div class="practice-chip reveal">
+                        <span class="practice-icon">{% include 'partials/_icon.html' with icon=item.icon %}</span>
+                        <span>{{ item.text }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if practice_closing %}<p class="section-sub center">{{ practice_closing }}</p>{% endif %}
+            </div>
+            {% endif %}
+
+            {% if profile.vision_future %}
+            <div class="sub-section">
+                <h3 class="sub-title center">Our Commitment to Future Generations</h3>
+                <div class="prose center-text reveal">{{ profile.vision_future|linebreaksbr }}</div>
+            </div>
+            {% endif %}
+
+            {% if profile.vision_declaration %}
+            <div class="declaration reveal">
+                <h4>Our Vision Declaration</h4>
+                <p>{{ profile.vision_declaration }}</p>
+            </div>
+            {% endif %}
+
+            {% if profile.vision_key_scripture %}
+            <div class="sub-section">
+                <h3 class="sub-title center">Key Scripture</h3>
+                <p class="vm-scripture reveal">{{ profile.vision_key_scripture|linebreaksbr }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About | {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
+
+{% block content %}
+<section class="page-hero about-hero">
+    <div class="container">
+        {% block about_eyebrow %}<p class="eyebrow">Who we are</p>{% endblock %}
+        <h1 class="page-title">{% block about_title %}About Shekinah Blaze{% endblock %}</h1>
+        <p class="page-sub">{% block about_sub %}Governed by Heaven, Established on Earth{% endblock %}</p>
+    </div>
+</section>
+
+<section class="about-subnav-bar">
+    <div class="container">
+        <nav class="tabbar about-subnav" aria-label="About pages">
+            <a class="tab-btn{% if request.resolver_match.view_name == 'about:about' %} active{% endif %}" href="{% url 'about:about' %}"{% if request.resolver_match.view_name == 'about:about' %} aria-current="page"{% endif %}>Overview</a>
+            {% for chapter in about_chapters %}
+            <a class="tab-btn{% if request.resolver_match.view_name == chapter.url_name %} active{% endif %}" href="{% url chapter.url_name %}"{% if request.resolver_match.view_name == chapter.url_name %} aria-current="page"{% endif %}>{{ chapter.title }}</a>
+            {% endfor %}
+        </nav>
+    </div>
+</section>
+
+{% block about_content %}{% endblock %}
+
+{% include 'about/_cta.html' %}
+{% endblock %}

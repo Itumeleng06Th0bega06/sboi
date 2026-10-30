@@ -83,26 +83,62 @@ def split_practice(practice):
 
 
 def about(request):
-    actions = list(MissionAction.objects.all())
-    for action in actions:
-        action.icon = icon_for(action.title)
+    return render(request, 'about/overview.html', {
+        'profile': ChurchProfile.objects.first(),
+    })
+
+
+def leadership(request):
+    return render(request, 'about/leadership.html', {
+        'profile': ChurchProfile.objects.first(),
+        'leaders': Leader.objects.all(),
+    })
+
+
+def founder(request):
+    return render(request, 'about/founder.html', {
+        'profile': ChurchProfile.objects.first(),
+    })
+
+
+def story(request):
     profile = ChurchProfile.objects.first()
     story_sections = split_story(profile.story if profile else None)
-    practice_intro, practice_items, practice_closing = split_practice(profile.vision_practice if profile else None)
     if story_sections and profile and profile.story_image:
-        before = next((i for i, s in enumerate(story_sections) if s['title'] == 'Witnessing the Faithfulness of God'), None)
+        before = next(
+            (i for i, section in enumerate(story_sections)
+             if section['title'] == 'Witnessing the Faithfulness of God'),
+            None,
+        )
         if before is not None:
             story_sections.insert(before, {'image': True})
-    context = {
+    return render(request, 'about/story.html', {
+        'profile': profile,
+        'story_sections': story_sections,
+    })
+
+
+def vision(request):
+    profile = ChurchProfile.objects.first()
+    practice_intro, practice_items, practice_closing = split_practice(
+        profile.vision_practice if profile else None
+    )
+    return render(request, 'about/vision.html', {
         'profile': profile,
         'pillars': VisionPillar.objects.all(),
-        'components': MissionComponent.objects.all(),
-        'pathway': PathwayStep.objects.all(),
-        'actions': actions,
-        'leaders': Leader.objects.all(),
-        'story_sections': story_sections,
         'practice_intro': practice_intro,
         'practice_items': practice_items,
         'practice_closing': practice_closing,
-    }
-    return render(request, 'about.html', context)
+    })
+
+
+def mission(request):
+    actions = list(MissionAction.objects.all())
+    for action in actions:
+        action.icon = icon_for(action.title)
+    return render(request, 'about/mission.html', {
+        'profile': ChurchProfile.objects.first(),
+        'components': MissionComponent.objects.all(),
+        'pathway': PathwayStep.objects.all(),
+        'actions': actions,
+    })

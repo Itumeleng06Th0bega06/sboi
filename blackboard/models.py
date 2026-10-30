@@ -16,6 +16,9 @@ class Devotion(models.Model):
 
     class Meta:
         ordering = ['-date']
+        permissions = [
+            ('manage_blackboard', 'Blackboard: manage content'),
+        ]
 
     def __str__(self):
         return self.title or f'Devotion ({self.date})'
@@ -64,6 +67,9 @@ class EventRsvp(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        permissions = [
+            ('manage_rsvps', 'Blackboard: manage event RSVPs'),
+        ]
 
     def __str__(self):
         return f'{self.name} - {self.event.title}'
@@ -143,6 +149,11 @@ class MemberProfile(models.Model):
     suspended_until = models.DateField(blank=True, null=True)
     blocked_reason = models.CharField(max_length=300, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        permissions = [
+            ('manage_member_access', 'Blackboard: manage member access'),
+        ]
 
     def __str__(self):
         return self.user.username

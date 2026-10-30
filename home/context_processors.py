@@ -31,13 +31,14 @@ def build_admin_notifications():
 
     week = timezone.now() - timedelta(days=7)
 
-    def item(label, queryset, view_name, icon, tone):
+    def item(label, queryset, view_name, icon, tone, permission):
         return {
             'label': label,
             'count': queryset.count(),
             'url': reverse(view_name),
             'icon': icon,
             'tone': tone,
+            'permission': permission,
         }
 
     notifications = [
@@ -47,6 +48,7 @@ def build_admin_notifications():
             'admin:contact_contactmessage_changelist',
             'mail',
             'attention',
+            'contact.manage_contact_messages',
         ),
         item(
             'Pending testimonies',
@@ -54,6 +56,7 @@ def build_admin_notifications():
             'admin:home_testimony_changelist',
             'message',
             'attention',
+            'home.manage_testimonies',
         ),
         item(
             'Blocked / suspended members',
@@ -61,6 +64,7 @@ def build_admin_notifications():
             'admin:blackboard_memberprofile_changelist',
             'user-slash',
             'warning',
+            'blackboard.manage_member_access',
         ),
         item(
             'New newsletter subscribers (7 days)',
@@ -68,6 +72,7 @@ def build_admin_notifications():
             'admin:home_subscriber_changelist',
             'mail-open',
             'info',
+            'home.manage_subscribers',
         ),
         item(
             'New event RSVPs (7 days)',
@@ -75,6 +80,7 @@ def build_admin_notifications():
             'admin:blackboard_eventrsvp_changelist',
             'clipboard',
             'info',
+            'blackboard.manage_rsvps',
         ),
         item(
             'New members (7 days)',
@@ -82,10 +88,19 @@ def build_admin_notifications():
             'admin:blackboard_memberprofile_changelist',
             'id-card',
             'info',
+            'blackboard.manage_member_access',
         ),
     ]
     cache.set(NOTIFICATIONS_CACHE_KEY, notifications, NOTIFICATIONS_CACHE_TTL)
     return notifications
+
+
+def notifications_for_user(user):
+    """Hide counts/links for areas the staff member cannot open."""
+    return [
+        item for item in build_admin_notifications()
+        if user.has_perm(item['permission'])
+    ]
 
 
 def site_info(request):
@@ -96,32 +111,58 @@ def site_info(request):
 
 
 def admin_notifications(request):
-    """Quick "add" shortcuts for the admin navbar's quick-add menu.
+    """Navbar shortcuts and notification counts for signed-in staff.
 
-    The admin dashboard is now generated from the (permission-filtered)
-    sidebar menu, so no dashboard widgets are built here. The notification
-    bell fetches its own data from the notifications JSON API.
+    The dashboard itself is generated from the full section list; this context
+    only supplies the quick-add menu and bell. Both are filtered by the same
+    area permissions so an unassigned staff member never sees a working
+    shortcut or a count for an area they cannot open.
     """
     try:
         admin_path = reverse('admin:index')
     except Exception:
         admin_path = '/admin/'
-    if not request.path.startswith(admin_path):
+    if not request.path.startswith(admin_path) or not request.user.is_authenticated:
         return {}
 
-    def quick_action(label, icon, add_view_name):
-        return {'label': label, 'icon': icon, 'url': reverse(add_view_name)}
+    def quick_action(label, icon, add_view_name, permission):
+        return {
+            'label': label,
+            'icon': icon,
+            'url': reverse(add_view_name),
+            'permission': permission,
+        }
 
-    notifications = build_admin_notifications()
+    quick_actions = [
+        quick_action(
+            'Add devotion', 'book', 'admin:blackboard_devotion_add',
+            'blackboard.manage_blackboard',
+        ),
+        quick_action(
+            'Add event', 'calendar', 'admin:blackboard_event_add',
+            'blackboard.manage_blackboard',
+        ),
+        quick_action(
+            'Add sermon', 'video', 'admin:blackboard_sermon_add',
+            'blackboard.manage_blackboard',
+        ),
+        quick_action(
+            'Add announcement', 'bullhorn', 'admin:blackboard_announcement_add',
+            'blackboard.manage_blackboard',
+        ),
+        quick_action(
+            'Add slider image', 'image', 'admin:gallery_sliderimage_add',
+            'gallery.manage_gallery',
+        ),
+    ]
+    quick_actions = [
+        action for action in quick_actions
+        if request.user.has_perm(action['permission'])
+    ]
+    notifications = notifications_for_user(request.user)
     return {
         'admin_dashboard': {
-            'quick_actions': [
-                quick_action('Add devotion', 'book', 'admin:blackboard_devotion_add'),
-                quick_action('Add event', 'calendar', 'admin:blackboard_event_add'),
-                quick_action('Add sermon', 'video', 'admin:blackboard_sermon_add'),
-                quick_action('Add announcement', 'bullhorn', 'admin:blackboard_announcement_add'),
-                quick_action('Add slider image', 'image', 'admin:gallery_sliderimage_add'),
-            ],
+            'quick_actions': quick_actions,
             'notifications': notifications,
             'notification_badge': sum(
                 item['count'] for item in notifications

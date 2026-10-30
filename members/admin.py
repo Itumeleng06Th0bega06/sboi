@@ -2,12 +2,14 @@ import csv
 import re
 
 from django import forms
-from django.contrib import admin, messages
+from django.contrib import admin
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import path
+
+from sboi.admin_permissions import AreaPermissionMixin
 
 from . import dashboard
 from .models import (
@@ -18,12 +20,14 @@ from .models import (
 )
 
 
-class MembershipInterestInline(admin.TabularInline):
+class MembershipInterestInline(AreaPermissionMixin, admin.TabularInline):
+    area_permission = 'members.manage_membership'
     model = MembershipInterest
     extra = 0
 
 
-class MembershipMinistryInline(admin.TabularInline):
+class MembershipMinistryInline(AreaPermissionMixin, admin.TabularInline):
+    area_permission = 'members.manage_membership'
     model = MembershipMinistry
     extra = 0
 
@@ -175,7 +179,8 @@ class ChurchMembershipAdminForm(forms.ModelForm):
 
 
 @admin.register(ChurchMembership)
-class ChurchMembershipAdmin(admin.ModelAdmin):
+class ChurchMembershipAdmin(AreaPermissionMixin, admin.ModelAdmin):
+    area_permission = 'members.manage_membership'
     list_display = [
         'membership_id', 'full_name', 'email', 'phone',
         'membership_category', 'status', 'baptism_status', 'created_at',
@@ -269,6 +274,8 @@ class ChurchMembershipAdmin(admin.ModelAdmin):
             from django.shortcuts import redirect
             from django.urls import reverse
 
+            if not self.has_view_permission(request):
+                raise PermissionDenied
             return redirect(reverse('admin:members_churchmembership_dashboard') + '?' + request.GET.urlencode())
         return super().changelist_view(request, extra_context=extra_context)
 
@@ -292,17 +299,8 @@ class ChurchMembershipAdmin(admin.ModelAdmin):
             context,
         )
 
-    def has_export_permission(self, request):
-        return request.user.has_perm('members.export_churchmembership')
-
     @admin.action(description='Export selected members to CSV')
     def export_csv(self, request, queryset):
-        if not (request.user.is_superuser or self.has_export_permission(request)):
-            self.message_user(
-                request, 'You do not have permission to export membership data.',
-                level=30,
-            )
-            return None
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="church_members.csv"'
         writer = csv.writer(response)

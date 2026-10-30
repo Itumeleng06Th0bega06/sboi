@@ -56,17 +56,23 @@ class SiteSmokeTests(TestCase):
         self.client.force_login(user)
         response = self.client.get(reverse('admin:index'))
         self.assertEqual(response.status_code, 200)
-        # Menu-driven dashboard: one card per permitted sidebar section.
+        # Menu-driven dashboard: one card per admin section.
         self.assertContains(response, 'sboi-app__title')
         self.assertContains(response, reverse('admin_section', args=['home']))
 
-    def test_dashboard_hides_sections_without_permission(self):
+    def test_dashboard_shows_locked_sections_without_permission(self):
         user = User.objects.create_user('staff', 'staff@example.com', 'pw', is_staff=True)
         self.client.force_login(user)
         response = self.client.get(reverse('admin:index'))
         self.assertEqual(response.status_code, 200)
-        # Permission-filtered, exactly like the sidebar: no permission, no card.
-        self.assertNotContains(response, 'sboi-app__title')
+        # Every section is visible; unassigned ones are greyed out with a lock.
+        self.assertContains(response, 'sboi-app__title')
+        self.assertContains(response, 'sboi-app--locked')
+        self.assertContains(response, reverse('admin_section', args=['home']))
+        self.assertEqual(
+            self.client.get(reverse('admin_section', args=['home'])).status_code,
+            403,
+        )
 
     def test_section_page_lists_submenus(self):
         user = User.objects.create_superuser('admin', 'admin@example.com', 'pw')
@@ -79,11 +85,16 @@ class SiteSmokeTests(TestCase):
         # A back tab returns to the dashboard.
         self.assertContains(response, reverse('admin:index'))
 
-    def test_section_page_hidden_without_permission(self):
+    def test_section_page_denied_without_permission(self):
         user = User.objects.create_user('staff', 'staff@example.com', 'pw', is_staff=True)
         self.client.force_login(user)
         response = self.client.get(reverse('admin_section', args=['home']))
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(
+            response,
+            "You don't have permission to open this section",
+            status_code=403,
+        )
 
 
 class AdminPasswordResetTests(TestCase):

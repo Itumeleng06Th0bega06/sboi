@@ -38,7 +38,8 @@ ADMIN_URL = 'admin/'
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    # Custom AdminSite: show every section, enforce area permissions on access.
+    'sboi.apps.SBOIAdminConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',

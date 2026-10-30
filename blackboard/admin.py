@@ -1,10 +1,11 @@
 from datetime import timedelta
 
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import User
+from django.contrib.auth.admin import GroupAdmin, UserAdmin
+from django.contrib.auth.models import Group, User
 from django.utils import timezone
 
+from sboi.admin_permissions import AreaPermissionMixin
 from sboi.admin_utils import ImageThumbMixin, OptionalDateAdminMixin
 
 from .models import (
@@ -18,23 +19,40 @@ from .models import (
 )
 
 
-class EventRsvpInline(admin.TabularInline):
+class EventRsvpInline(AreaPermissionMixin, admin.TabularInline):
+    area_permission = 'blackboard.manage_rsvps'
     model = EventRsvp
     extra = 0
     readonly_fields = ['name', 'email', 'phone', 'guests', 'created_at']
 
 
-class MemberProfileInline(admin.StackedInline):
+class MemberProfileInline(AreaPermissionMixin, admin.StackedInline):
+    area_permission = 'blackboard.manage_member_access'
     model = MemberProfile
     can_delete = False
     fields = ['status', 'suspended_until', 'blocked_reason', 'created_at']
     readonly_fields = ['created_at']
 
 
-class MemberUserAdmin(UserAdmin):
+class MemberUserAdmin(AreaPermissionMixin, UserAdmin):
+    area_permission = 'auth.manage_staff_accounts'
     inlines = [MemberProfileInline]
     list_display = ['username', 'email', 'first_name', 'last_name', 'is_staff', 'is_active', 'member_status']
     list_filter = ['is_active', 'is_staff', 'member_profile__status']
+
+    def get_list_display(self, request):
+        columns = list(super().get_list_display(request) or self.list_display)
+        if not request.user.has_perm('blackboard.manage_member_access'):
+            columns = [column for column in columns if column != 'member_status']
+        return columns
+
+    def get_list_filter(self, request):
+        filters = list(super().get_list_filter(request) or self.list_filter)
+        if not request.user.has_perm('blackboard.manage_member_access'):
+            filters = [
+                item for item in filters if item != 'member_profile__status'
+            ]
+        return filters
 
     @admin.display(description='Member status')
     def member_status(self, obj):
@@ -42,12 +60,19 @@ class MemberUserAdmin(UserAdmin):
         return profile.status if profile else '—'
 
 
+class MemberGroupAdmin(AreaPermissionMixin, GroupAdmin):
+    area_permission = 'auth.manage_staff_accounts'
+
+
 admin.site.unregister(User)
 admin.site.register(User, MemberUserAdmin)
+admin.site.unregister(Group)
+admin.site.register(Group, MemberGroupAdmin)
 
 
 @admin.register(MemberProfile)
-class MemberProfileAdmin(admin.ModelAdmin):
+class MemberProfileAdmin(AreaPermissionMixin, admin.ModelAdmin):
+    area_permission = 'blackboard.manage_member_access'
     list_display = ['user', 'status', 'suspended_until', 'recorded_at']
     list_filter = ['status']
     list_editable = ['status']
@@ -91,7 +116,10 @@ class MemberProfileAdmin(admin.ModelAdmin):
 
 
 @admin.register(Devotion)
-class DevotionAdmin(OptionalDateAdminMixin, ImageThumbMixin, admin.ModelAdmin):
+class DevotionAdmin(
+    AreaPermissionMixin, OptionalDateAdminMixin, ImageThumbMixin, admin.ModelAdmin,
+):
+    area_permission = 'blackboard.manage_blackboard'
     thumb_field = 'image'
     list_display = ['thumb', 'title', 'date', 'author', 'is_published']
     list_display_links = ['title']
@@ -102,7 +130,10 @@ class DevotionAdmin(OptionalDateAdminMixin, ImageThumbMixin, admin.ModelAdmin):
 
 
 @admin.register(Announcement)
-class AnnouncementAdmin(OptionalDateAdminMixin, ImageThumbMixin, admin.ModelAdmin):
+class AnnouncementAdmin(
+    AreaPermissionMixin, OptionalDateAdminMixin, ImageThumbMixin, admin.ModelAdmin,
+):
+    area_permission = 'blackboard.manage_blackboard'
     thumb_field = 'image'
     list_display = ['thumb', 'title', 'date', 'is_published']
     list_display_links = ['title']
@@ -113,7 +144,10 @@ class AnnouncementAdmin(OptionalDateAdminMixin, ImageThumbMixin, admin.ModelAdmi
 
 
 @admin.register(Event)
-class EventAdmin(OptionalDateAdminMixin, ImageThumbMixin, admin.ModelAdmin):
+class EventAdmin(
+    AreaPermissionMixin, OptionalDateAdminMixin, ImageThumbMixin, admin.ModelAdmin,
+):
+    area_permission = 'blackboard.manage_blackboard'
     thumb_field = 'poster'
     list_display = ['thumb', 'title', 'date', 'is_published']
     list_display_links = ['title']
@@ -125,7 +159,8 @@ class EventAdmin(OptionalDateAdminMixin, ImageThumbMixin, admin.ModelAdmin):
 
 
 @admin.register(EventRsvp)
-class EventRsvpAdmin(admin.ModelAdmin):
+class EventRsvpAdmin(AreaPermissionMixin, admin.ModelAdmin):
+    area_permission = 'blackboard.manage_rsvps'
     list_display = ['name', 'event', 'email', 'phone', 'guests', 'created_at']
     list_filter = ['event']
     search_fields = ['name', 'email']
@@ -133,7 +168,10 @@ class EventRsvpAdmin(admin.ModelAdmin):
 
 
 @admin.register(Sermon)
-class SermonAdmin(OptionalDateAdminMixin, admin.ModelAdmin):
+class SermonAdmin(
+    AreaPermissionMixin, OptionalDateAdminMixin, admin.ModelAdmin,
+):
+    area_permission = 'blackboard.manage_blackboard'
     list_display = ['title', 'speaker', 'date', 'series', 'has_video', 'is_published']
     list_filter = ['is_published', 'series']
     search_fields = ['title', 'speaker', 'scripture']
@@ -146,6 +184,7 @@ class SermonAdmin(OptionalDateAdminMixin, admin.ModelAdmin):
 
 
 @admin.register(PdfMaterial)
-class PdfMaterialAdmin(admin.ModelAdmin):
+class PdfMaterialAdmin(AreaPermissionMixin, admin.ModelAdmin):
+    area_permission = 'blackboard.manage_blackboard'
     list_display = ['title', 'is_published', 'order']
     list_editable = ['is_published', 'order']
