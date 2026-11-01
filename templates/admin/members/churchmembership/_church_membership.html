@@ -73,21 +73,21 @@
       </div>
       <div class="cm-table-wrap">
         <table class="cm-table">
-          <thead><tr><th scope="col">{% trans 'Member' %}</th><th scope="col">{% trans 'Contact' %}</th><th scope="col">{% trans 'Type' %}</th><th scope="col">{% trans 'Group' %}</th><th scope="col">{% trans 'Status' %}</th><th scope="col"><span class="cm-visually-hidden">{% trans 'Actions' %}</span></th></tr></thead>
+          <thead><tr><th scope="col" class="cm-col-member">{% trans 'Member' %}</th><th scope="col" class="cm-col-contact">{% trans 'Contact' %}</th><th scope="col" class="cm-col-type">{% trans 'Type' %}</th><th scope="col" class="cm-col-group">{% trans 'Group' %}</th><th scope="col" class="cm-col-status">{% trans 'Status' %}</th><th scope="col" class="cm-col-actions"><span class="cm-visually-hidden">{% trans 'Actions' %}</span></th></tr></thead>
           <tbody>
           {% for member in members %}
             <tr {% if selected_member and selected_member.id == member.id %}class="is-selected"{% endif %}>
-              <td>
+              <td class="cm-col-member">
                 <a class="cm-member-cell" href="{{ membership_list_url }}?member={{ member.id }}&amp;q={{ search_query|urlencode }}&amp;type={{ selected_type|urlencode }}&amp;group={{ selected_group|urlencode }}&amp;status={{ selected_status|urlencode }}" aria-label="View {{ member.full_name }}">
                   <span class="cm-avatar">{{ member.initials|default:'M' }}</span>
                   <span class="cm-member-name-wrap"><strong>{{ member.full_name|default:'Unnamed member' }}</strong><small>{{ member.member_id|default:'ID not assigned' }}</small></span>
                 </a>
               </td>
-              <td class="cm-contact-cell"><span>{{ member.email|default:'—' }}</span><small>{{ member.phone|default:'—' }}</small></td>
-              <td><span class="cm-type-badge">{{ member.membership_type|default:'Not specified' }}</span></td>
-              <td><span class="cm-group-label">{% if member.group_names %}{{ member.group_names|join:', ' }}{% else %}—{% endif %}</span></td>
-              <td><span class="cm-status-badge cm-status-{{ member.status|default:'unknown'|slugify }}">{{ member.status|default:'Not specified' }}</span></td>
-              <td>
+              <td class="cm-contact-cell cm-col-contact"><span>{{ member.email|default:'—' }}</span><small>{{ member.phone|default:'—' }}</small></td>
+              <td class="cm-col-type"><span class="cm-type-badge">{{ member.membership_type|default:'Not specified' }}</span></td>
+              <td class="cm-col-group"><span class="cm-group-label">{% if member.group_names %}{{ member.group_names|join:', ' }}{% else %}—{% endif %}</span></td>
+              <td class="cm-col-status"><span class="cm-status-badge cm-status-{{ member.status|default:'unknown'|slugify }}">{{ member.status|default:'Not specified' }}</span></td>
+              <td class="cm-col-actions">
                 <details class="cm-actions-menu">
                   <summary aria-label="{% blocktrans with name=member.full_name %}Actions for {{ name }}{% endblocktrans %}">•••</summary>
                   <div class="cm-actions-popover"><a href="{{ member.profile_url }}">{% trans 'View profile' %}</a>{% if can_change %}<a href="{{ member.edit_url }}">{% trans 'Edit member' %}</a>{% endif %}</div>

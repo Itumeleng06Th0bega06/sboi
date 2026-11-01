@@ -380,7 +380,14 @@ class AdminAccessTests(TestCase):
         self.assertContains(response, reverse('admin_section', args=['members']))
         section = self.client.get(reverse('admin_section', args=['members']))
         self.assertEqual(section.status_code, 200)
-        self.assertContains(section, reverse('admin:members_churchmembership_dashboard'))
+        self.assertContains(
+            section, reverse('admin:members_churchmembership_changelist'),
+        )
+        # The separate "Membership dashboard" tile was removed; the model
+        # tile itself opens the dashboard via the changelist redirect.
+        self.assertNotContains(
+            section, reverse('admin:members_churchmembership_dashboard'),
+        )
 
     def test_blank_profile_displays_in_admin(self):
         admin_user = User.objects.create_superuser('blankadmin', 'blankadmin@example.com', STRONG)
@@ -426,8 +433,39 @@ class AdminMemberFormTests(TestCase):
         self.assertIn('marital_status', form.fields)
         self.assertIn('spouse_name', form.fields)
         self.assertIn('children_names', form.fields)
+        self.assertIn('gender', form.fields)
         self.assertNotIn('user', form.fields)
-        self.assertNotIn('gender', form.fields)
+
+    def test_add_form_matches_the_public_church_form(self):
+        """The admin form asks exactly the same questions as the public one."""
+        from .forms import ChurchMembershipRegistrationForm
+
+        admin_user = User.objects.create_superuser(
+            'parityadmin', 'parityadmin@example.com', STRONG,
+        )
+        self.client.force_login(admin_user)
+        response = self.client.get(reverse('admin:members_churchmembership_add'))
+        admin_form = response.context['adminform'].form
+        public_form = ChurchMembershipRegistrationForm()
+
+        # `status` is an internal record field, so it is the only extra.
+        self.assertEqual(
+            set(admin_form.fields),
+            set(public_form.fields) | {'status'},
+        )
+        # The public and admin forms render the same section headings.
+        from .admin import ChurchMembershipAdmin
+
+        public_titles = [
+            section['title']
+            for section in public_form.personal_sections()
+            if section['id'] != 'account'
+        ] + [section['title'] for section in public_form.sections()]
+        admin_titles = [
+            title for title, _options in ChurchMembershipAdmin.fieldsets
+            if title not in ('Account details', 'Record')
+        ]
+        self.assertEqual(admin_titles, public_titles)
 
     def test_add_member_creates_linked_account(self):
         admin_user = User.objects.create_superuser('formadmin2', 'formadmin2@example.com', STRONG)
@@ -469,6 +507,122 @@ class AdminMemberFormTests(TestCase):
         self.assertEqual(membership.marital_status, 'married')
         self.assertEqual(membership.spouse_name, 'Thabo Mokoena')
         self.assertEqual(membership.children_names, 'Lerato Mokoena')
+
+    def test_add_member_saves_the_public_questions(self):
+        admin_user = User.objects.create_superuser(
+            'fulladmin', 'fulladmin@example.com', STRONG,
+        )
+        self.client.force_login(admin_user)
+        response = self.client.post(
+            reverse('admin:members_churchmembership_add'),
+            {
+                'username': 'full_m',
+                'password1': STRONG,
+                'password2': STRONG,
+                'first_name': 'Full',
+                'last_name': 'Member',
+                'email': 'full@example.com',
+                'gender': 'female',
+                'marital_status': 'married',
+                'spouse_name': 'Spouse Name',
+                'children_names': 'Child One',
+                'membership_category': 'regular',
+                'baptism_status': 'baptized',
+                'interests': ['bible_study', 'youth'],
+                'current_ministries': ['choir'],
+                'volunteer_ministries': ['ushering'],
+                'wants_to_join': ['media_sound'],
+                'guidance_support': 'Some guidance',
+                'prayer_request': 'Please pray',
+                'pastoral_support_requested': 'on',
+                'status': 'active',
+                '_save': 'Save',
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        membership = ChurchMembership.objects.get(user__username='full_m')
+        self.assertEqual(membership.gender, 'female')
+        self.assertEqual(
+            set(membership.interests.values_list('name', flat=True)),
+            {'bible_study', 'youth'},
+        )
+        self.assertTrue(
+            membership.ministries.filter(name='choir', status='current').exists()
+        )
+        self.assertTrue(
+            membership.ministries.filter(name='ushering', status='volunteer').exists()
+        )
+        self.assertTrue(
+            membership.ministries.filter(name='media_sound', status='join').exists()
+        )
+        note = MembershipPastoralNote.objects.get(membership=membership)
+        self.assertEqual(note.guidance_support, 'Some guidance')
+        self.assertEqual(note.prayer_request, 'Please pray')
+        self.assertTrue(note.pastoral_support_requested)
+
+    def test_change_form_prefills_the_public_questions(self):
+        user = User.objects.create_user(
+            'prefilled', 'prefilled@example.com', STRONG,
+        )
+        membership = ChurchMembership.objects.create(
+            user=user, gender='male', marital_status='married',
+            spouse_name='Spouse Name',
+        )
+        MembershipInterest.objects.create(membership=membership, name='youth')
+        MembershipMinistry.objects.create(
+            membership=membership, name='choir', status='current',
+        )
+        MembershipPastoralNote.objects.create(
+            membership=membership, prayer_request='Please pray',
+        )
+        admin_user = User.objects.create_superuser(
+            'prefilladmin', 'prefilladmin@example.com', STRONG,
+        )
+        self.client.force_login(admin_user)
+        response = self.client.get(
+            reverse('admin:members_churchmembership_change', args=[membership.pk]),
+        )
+        form = response.context['adminform'].form
+        self.assertEqual(form['gender'].value(), 'male')
+        self.assertEqual(form.initial['interests'], ['youth'])
+        self.assertEqual(form.initial['current_ministries'], ['choir'])
+        self.assertEqual(form.initial['prayer_request'], 'Please pray')
+
+    def test_change_form_saves_the_public_questions(self):
+        user = User.objects.create_user(
+            'changesave', 'changesave@example.com', STRONG,
+        )
+        membership = ChurchMembership.objects.create(user=user)
+        admin_user = User.objects.create_superuser(
+            'changeadmin', 'changeadmin@example.com', STRONG,
+        )
+        self.client.force_login(admin_user)
+        response = self.client.post(
+            reverse('admin:members_churchmembership_change', args=[membership.pk]),
+            {
+                'username': 'changesave',
+                'email': 'changesave@example.com',
+                'first_name': 'Changed',
+                'last_name': 'Member',
+                'gender': 'female',
+                'marital_status': 'single',
+                'interests': ['bible_study', 'youth'],
+                'current_ministries': ['choir'],
+                'status': 'active',
+                '_save': 'Save',
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        membership.refresh_from_db()
+        self.assertEqual(membership.gender, 'female')
+        self.assertEqual(membership.marital_status, 'single')
+        self.assertEqual(
+            set(membership.interests.values_list('name', flat=True)),
+            {'bible_study', 'youth'},
+        )
+        self.assertTrue(
+            membership.ministries.filter(name='choir', status='current').exists()
+        )
 
     def test_add_member_generates_username_from_email(self):
         admin_user = User.objects.create_superuser('formadmin3', 'formadmin3@example.com', STRONG)

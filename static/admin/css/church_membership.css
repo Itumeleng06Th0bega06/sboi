@@ -166,10 +166,24 @@
   .cm-page-heading { align-items:flex-start; flex-direction:column; }
   .cm-page-heading .cm-primary-button { width:100%; }
   .cm-filters { align-items:stretch; flex-direction:column; }
-  .cm-filter-field { flex:1 1 auto; width:100%; }
+  /* Stacked flex column: flex-basis would be read as a height, so reset it. */
+  .cm-search-field { flex:0 0 auto; width:100%; min-height:38px; }
+  .cm-filter-field { flex:0 0 auto; width:100%; }
   .cm-filter-actions { justify-content:space-between; }
   .cm-stats-grid { grid-template-columns:1fr; }
   .cm-profile-heading { padding:15px 12px; }
   .cm-profile-content { padding:13px; }
   .cm-pagination { align-items:flex-start; flex-direction:column; }
+
+  /* Keep the member directory readable on a phone: name and status only. */
+  .cm-table { min-width:0; }
+  .cm-col-contact,
+  .cm-col-type,
+  .cm-col-group,
+  .cm-col-actions { display:none; }
+  .cm-table th,
+  .cm-table td { padding:10px 8px; }
+  .cm-member-cell { min-width:0; }
+  .cm-member-name-wrap strong { max-width:none; white-space:normal; }
+  .cm-member-name-wrap small { display:none; }
 }

@@ -123,7 +123,6 @@ class DevotionAdmin(
     thumb_field = 'image'
     list_display = ['thumb', 'title', 'date', 'author', 'is_published']
     list_display_links = ['title']
-    list_filter = ['is_published']
     search_fields = ['title', 'message']
     list_editable = ['is_published']
     date_hierarchy = 'date'
@@ -137,7 +136,6 @@ class AnnouncementAdmin(
     thumb_field = 'image'
     list_display = ['thumb', 'title', 'date', 'is_published']
     list_display_links = ['title']
-    list_filter = ['is_published']
     search_fields = ['title', 'body']
     list_editable = ['is_published']
     date_hierarchy = 'date'

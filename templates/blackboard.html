@@ -17,11 +17,11 @@
 <section class="section">
     <div class="container">
         <div class="pillbar" role="tablist" aria-label="Blackboard sections">
-            <button class="pill-btn active" data-pill="announcements" role="tab" aria-selected="true" aria-label="Announcements" title="Announcements">{% include 'partials/_icon.html' with icon='megaphone' %}<span class="sr-only">Announcements</span></button>
-            <button class="pill-btn" data-pill="events" role="tab" aria-selected="false" aria-label="Events" title="Events">{% include 'partials/_icon.html' with icon='calendar' %}<span class="sr-only">Events</span></button>
-            <button class="pill-btn" data-pill="sermons" role="tab" aria-selected="false" aria-label="Sermons" title="Sermons">{% include 'partials/_icon.html' with icon='play' %}<span class="sr-only">Sermons</span></button>
-            <button class="pill-btn" data-pill="materials" role="tab" aria-selected="false" aria-label="PDF Material" title="PDF Material">{% include 'partials/_icon.html' with icon='doc' %}<span class="sr-only">PDF Material</span></button>
-            <button class="pill-btn" data-pill="devotions" role="tab" aria-selected="false" aria-label="Devotions" title="Devotions">{% include 'partials/_icon.html' with icon='book' %}<span class="sr-only">Devotions</span></button>
+            <button class="pill-btn active" data-pill="announcements" role="tab" aria-selected="true" aria-label="Announcements" title="Announcements">{% include 'partials/_icon.html' with icon='megaphone' %}<span class="pill-label"><span class="pill-label-full">Announcements</span><span class="pill-label-short">Notices</span></span></button>
+            <button class="pill-btn" data-pill="events" role="tab" aria-selected="false" aria-label="Events" title="Events">{% include 'partials/_icon.html' with icon='calendar' %}<span class="pill-label"><span class="pill-label-full">Events</span><span class="pill-label-short">Events</span></span></button>
+            <button class="pill-btn" data-pill="sermons" role="tab" aria-selected="false" aria-label="Sermons" title="Sermons">{% include 'partials/_icon.html' with icon='play' %}<span class="pill-label"><span class="pill-label-full">Sermons</span><span class="pill-label-short">Sermons</span></span></button>
+            <button class="pill-btn" data-pill="materials" role="tab" aria-selected="false" aria-label="PDF Material" title="PDF Material">{% include 'partials/_icon.html' with icon='doc' %}<span class="pill-label"><span class="pill-label-full">PDF Material</span><span class="pill-label-short">Material</span></span></button>
+            <button class="pill-btn" data-pill="devotions" role="tab" aria-selected="false" aria-label="Devotions" title="Devotions">{% include 'partials/_icon.html' with icon='book' %}<span class="pill-label"><span class="pill-label-full">Devotions</span><span class="pill-label-short">Devotions</span></span></button>
         </div>
 
         <div class="tabpanel" id="panel-announcements" data-tabpanel="announcements">

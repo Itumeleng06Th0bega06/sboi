@@ -111,20 +111,57 @@
   /* ---------- Blackboard pill sections ---------- */
   var pillButtons = document.querySelectorAll('[data-pill]');
   var pillPanels = document.querySelectorAll('[data-tabpanel]');
+  var pillBar = document.querySelector('.pillbar');
 
-  function openPill(name) {
-    pillButtons.forEach(function (btn) {
-      btn.classList.toggle('active', btn.getAttribute('data-pill') === name);
-      btn.setAttribute('aria-selected', btn.getAttribute('data-pill') === name ? 'true' : 'false');
-    });
-    pillPanels.forEach(function (p) {
-      p.classList.toggle('hidden', p.getAttribute('data-tabpanel') !== name);
+  /* On phones the bar is a horizontal scroller, so a tab that is partly or
+     fully off-screen must be brought into view when it becomes active. */
+  function keepPillInView(btn) {
+    if (!pillBar || pillBar.scrollWidth <= pillBar.clientWidth) return;
+    var barRect = pillBar.getBoundingClientRect();
+    var btnRect = btn.getBoundingClientRect();
+    if (btnRect.left >= barRect.left && btnRect.right <= barRect.right) return;
+    pillBar.scrollTo({
+      left: pillBar.scrollLeft + (btnRect.left - barRect.left) - (barRect.width - btnRect.width) / 2,
+      behavior: 'smooth'
     });
   }
 
+  function openPill(name, userInitiated) {
+    /* Read the sticky state before swapping panels: the container height can
+       change and move the bar, which would confuse the check afterwards. */
+    var barPinned = !!(pillBar && Math.abs(pillBar.getBoundingClientRect().top) <= 1);
+    pillButtons.forEach(function (btn) {
+      var on = btn.getAttribute('data-pill') === name;
+      btn.classList.toggle('active', on);
+      btn.setAttribute('aria-selected', on ? 'true' : 'false');
+      if (on) keepPillInView(btn);
+    });
+    var shown = null;
+    pillPanels.forEach(function (p) {
+      var on = p.getAttribute('data-tabpanel') === name;
+      p.classList.toggle('hidden', !on);
+      if (on) shown = p;
+    });
+    /* When the tabs are stuck to the top, a tap can otherwise open the new
+       section far below the fold. Bring its start back under the bar. */
+    if (userInitiated && barPinned && shown && window.matchMedia('(max-width: 960px)').matches) {
+      window.scrollTo({
+        top: shown.getBoundingClientRect().top + window.scrollY - pillBar.offsetHeight - 10,
+        behavior: 'smooth'
+      });
+    }
+  }
+
   pillButtons.forEach(function (btn) {
-    btn.addEventListener('click', function () { openPill(btn.getAttribute('data-pill')); });
+    btn.addEventListener('click', function () {
+      openPill(btn.getAttribute('data-pill'), true);
+    });
   });
+
+  if (pillButtons.length) {
+    var activePill = document.querySelector('.pillbar .pill-btn.active');
+    if (activePill) keepPillInView(activePill);
+  }
 
   /* Quick-link sub-pills in nav sync with page pills */
   var navSubtabLinks = document.querySelectorAll('[data-tablink]');
@@ -294,20 +331,44 @@
     });
   }
 
-  /* ---------- Reveal on scroll ---------- */
+  /* ---------- Reveal on scroll ----------
+     Content must never stay invisible. A ratio threshold breaks for blocks
+     taller than the viewport (the founder's message, for one), and a page
+     that opens with content already on screen should not wait for a scroll.
+     So: reveal anything already in view straight away, observe the rest with
+     threshold 0, and sweep once more after load as a safety net. */
   var revealEls = document.querySelectorAll('.reveal');
-  if ('IntersectionObserver' in window) {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          io.unobserve(entry.target);
+  if (revealEls.length) {
+    var revealNow = function (el) { el.classList.add('visible'); };
+    var inView = function (el) {
+      var rect = el.getBoundingClientRect();
+      var viewport = window.innerHeight || document.documentElement.clientHeight;
+      return rect.top < viewport && rect.bottom > 0;
+    };
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            revealNow(entry.target);
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0 });
+      revealEls.forEach(function (el) {
+        if (inView(el)) {
+          revealNow(el);
+        } else {
+          io.observe(el);
         }
       });
-    }, { threshold: 0.12 });
-    revealEls.forEach(function (el) { io.observe(el); });
-  } else {
-    revealEls.forEach(function (el) { el.classList.add('visible'); });
+      window.addEventListener('load', function () {
+        revealEls.forEach(function (el) {
+          if (!el.classList.contains('visible') && inView(el)) revealNow(el);
+        });
+      });
+    } else {
+      revealEls.forEach(revealNow);
+    }
   }
 
   /* ---------- Church membership: family details ----------

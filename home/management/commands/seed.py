@@ -312,7 +312,7 @@ class Command(BaseCommand):
             'phone': '+27 53 712 0000',
             'whatsapp': '+27 53 712 0000',
             'email': 'admin@shekinahblaze.org',
-            'service_times': 'Sundays: 09:00 & 11:00\nWednesdays: 17:00 — Bible Study\nFridays: 17:00 — Intercession',
+            'service_times': 'Sundays: 09:00 – 12:00\nWednesdays: 17:00 — Bible Study\nFridays: 17:00 — Intercession',
             'facebook': 'https://facebook.com/ShekinahBlazeOutreachInternational',
             'twitter': '',
             'instagram': 'https://instagram.com/shekinahblazeoutreach',

@@ -46,7 +46,6 @@ MODULE_DESCRIPTIONS = {
     'gallery.sliderimage': 'Images in the homepage slider',
     # members
     'members.churchmembership': 'Church member records and directory',
-    'membership dashboard': 'Overview of church membership statistics',
     # auth
     'auth.group': 'Permission groups for admin users',
     'auth.user': 'Admin and staff user accounts',
@@ -128,8 +127,6 @@ MODEL_ICONS_3D = {
     'members.churchmembership': 'users',
     'auth.group': 'groups',
     'auth.user': 'person',
-    # Custom links keyed like app-list models.
-    'members.dashboard': 'growth',
 }
 
 # Every 3D icon stem shipped in ``static/images/3d/`` — used to validate

@@ -66,6 +66,12 @@ class MemberRegistrationForm(UserCreationForm):
 
 _DATE_FORMATS = ['%Y-%m-%d', '%d/%m/%Y', '%d %B %Y', '%d %b %Y']
 
+# "Prefer not to say" is not offered in the church form. Every question there
+# is optional, so leaving a group untouched already says nothing; the blank
+# value stays on the model for rows captured before this change.
+MARITAL_STATUS_FORM_CHOICES = [c for c in MARITAL_STATUS_CHOICES if c[0]]
+BAPTISM_STATUS_FORM_CHOICES = [c for c in BAPTISM_STATUS_CHOICES if c[0]]
+
 # Short single-choice questions render as neat checkbox-style controls
 # (radios), and the long "pick as many as you like" lists render as true
 # multi-checkbox groups, so members can always tick more than one option.
@@ -114,7 +120,7 @@ class ChurchMembershipFieldsMixin(forms.Form):
         widget=forms.RadioSelect(attrs={'class': 'choice-list'}),
     )
     marital_status = forms.ChoiceField(
-        label='Marital status', required=False, choices=MARITAL_STATUS_CHOICES,
+        label='Marital status', required=False, choices=MARITAL_STATUS_FORM_CHOICES,
         widget=forms.RadioSelect(attrs={'class': 'choice-list'}),
     )
     address = forms.CharField(
@@ -173,7 +179,7 @@ class ChurchMembershipFieldsMixin(forms.Form):
         ),
     )
     baptism_status = forms.ChoiceField(
-        label='Baptism status', required=False, choices=BAPTISM_STATUS_CHOICES,
+        label='Baptism status', required=False, choices=BAPTISM_STATUS_FORM_CHOICES,
         widget=forms.RadioSelect(attrs={'class': 'choice-list'}),
     )
     baptism_date = forms.DateField(

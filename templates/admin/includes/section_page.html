@@ -48,16 +48,5 @@
                 </span>
             {% endif %}
         {% endfor %}
-
-        {% if section_label == 'members' and perms.members.manage_membership %}
-            <a class="sboi-tile" href="{% url 'admin:members_churchmembership_dashboard' %}">
-                <span class="sboi-tile__icon">{% model_icon 'members' 'dashboard' %}</span>
-                <span class="sboi-tile__body">
-                    <span class="sboi-tile__name">{% translate 'Membership dashboard' %}</span>
-                    <span class="sboi-tile__desc">{% translate 'Overview of church membership statistics' %}</span>
-                </span>
-                <span class="sboi-tile__go">{% admin_icon 'arrow-right' %}</span>
-            </a>
-        {% endif %}
     </div>
 </div>

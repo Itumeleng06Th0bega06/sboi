@@ -12,24 +12,8 @@ from django.urls import path
 from sboi.admin_permissions import AreaPermissionMixin
 
 from . import dashboard
-from .models import (
-    MINISTRY_CHOICES,
-    ChurchMembership,
-    MembershipInterest,
-    MembershipMinistry,
-)
-
-
-class MembershipInterestInline(AreaPermissionMixin, admin.TabularInline):
-    area_permission = 'members.manage_membership'
-    model = MembershipInterest
-    extra = 0
-
-
-class MembershipMinistryInline(AreaPermissionMixin, admin.TabularInline):
-    area_permission = 'members.manage_membership'
-    model = MembershipMinistry
-    extra = 0
+from .forms import ChurchMembershipFieldsMixin
+from .models import MINISTRY_CHOICES, ChurchMembership
 
 
 class MinistryFilter(admin.SimpleListFilter):
@@ -46,26 +30,27 @@ class MinistryFilter(admin.SimpleListFilter):
         return queryset
 
 
-class ChurchMembershipAdminForm(forms.ModelForm):
+class ChurchMembershipAdminForm(ChurchMembershipFieldsMixin, forms.ModelForm):
     """Admin form for :class:`ChurchMembership`.
 
-    Instead of asking an administrator to pick a ``User`` from a search box,
-    the linked account is managed inline: first/last name and email live in
-    the Personal details tab, and username + password live in the Account tab
-    (passwords are only requested when creating a member).
+    The church questions come from
+    :class:`members.forms.ChurchMembershipFieldsMixin`, the same mixin the
+    public register/join forms use, so administrators see exactly the same
+    fields, in the same order, with the same widgets. The linked account and
+    the internal record status are the only admin-only additions.
     """
 
     first_name = forms.CharField(
         required=False, max_length=150, label='First name',
-        widget=forms.TextInput(attrs={'placeholder': 'e.g. Grace'}),
+        widget=forms.TextInput(attrs={'placeholder': 'First name'}),
     )
     last_name = forms.CharField(
         required=False, max_length=150, label='Last name',
-        widget=forms.TextInput(attrs={'placeholder': 'e.g. Mokoena'}),
+        widget=forms.TextInput(attrs={'placeholder': 'Last name'}),
     )
     email = forms.EmailField(
         required=False, label='Email address',
-        widget=forms.EmailInput(attrs={'placeholder': 'you@example.com'}),
+        widget=forms.EmailInput(attrs={'placeholder': 'Email address'}),
     )
     username = forms.CharField(
         required=False, max_length=150, label='Username',
@@ -83,18 +68,11 @@ class ChurchMembershipAdminForm(forms.ModelForm):
     class Meta:
         model = ChurchMembership
         fields = '__all__'
-        widgets = {
-            'date_of_birth': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-            'baptism_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-            'date_joined_church': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # The raw account picker has nothing to select on a fresh install, and
-        # gender is only offered on the public registration forms.
+        # The raw account picker has nothing to select on a fresh install.
         self.fields.pop('user', None)
-        self.fields.pop('gender', None)
 
         instance = self.instance
         if instance and instance.pk:
@@ -106,6 +84,29 @@ class ChurchMembershipAdminForm(forms.ModelForm):
             self.fields.pop('password1')
             self.fields.pop('password2')
             self.fields['username'].help_text = 'Linked site account username.'
+
+            # The multi-choice questions and the pastoral note live in
+            # related tables, so they need to be loaded by hand.
+            self.initial['interests'] = list(
+                instance.interests.values_list('name', flat=True)
+            )
+            for field_name, status in (
+                ('current_ministries', 'current'),
+                ('volunteer_ministries', 'volunteer'),
+                ('wants_to_join', 'join'),
+            ):
+                self.initial[field_name] = list(
+                    instance.ministries.filter(status=status)
+                    .values_list('name', flat=True)
+                )
+
+            note = getattr(instance, 'pastoral_note', None)
+            if note is not None:
+                self.initial['guidance_support'] = note.guidance_support
+                self.initial['prayer_request'] = note.prayer_request
+                self.initial['pastoral_support_requested'] = (
+                    note.pastoral_support_requested
+                )
         else:
             self.fields['username'].help_text = (
                 'Optional — generated from the email address when left blank.'
@@ -149,7 +150,6 @@ class ChurchMembershipAdminForm(forms.ModelForm):
         return candidate
 
     def save(self, commit=True):
-        obj = super().save(commit=False)
         cleaned = self.cleaned_data
 
         if self.instance.pk:
@@ -168,14 +168,21 @@ class ChurchMembershipAdminForm(forms.ModelForm):
         if 'password1' in self.fields and cleaned.get('password1'):
             user.set_password(cleaned['password1'])
         user.save()
+
+        obj = super().save(commit=False)
         obj.user = user
+        obj.status = cleaned.get('status') or obj.status
 
         if commit:
             obj.save()
-            self.save_m2m()
-        else:
-            self.save_m2m = lambda: None
+            self._populate(obj)
         return obj
+
+    def _save_m2m(self):
+        """Persist the church questions after the admin saves the instance."""
+        super()._save_m2m()
+        if self.instance.pk:
+            self._populate(self.instance)
 
 
 @admin.register(ChurchMembership)
@@ -196,48 +203,62 @@ class ChurchMembershipAdmin(AreaPermissionMixin, admin.ModelAdmin):
     ]
     date_hierarchy = 'created_at'
     list_per_page = 25
-    inlines = [MembershipInterestInline, MembershipMinistryInline]
     form = ChurchMembershipAdminForm
     readonly_fields = ['membership_id', 'created_at', 'updated_at']
     actions = ['export_csv']
+    # Keep this list in step with the public church form's sections (see
+    # ChurchMembershipFieldsMixin.sections). Only the account and record
+    # blocks are admin-only.
     fieldsets = [
-        ('Account', {'fields': ['username', 'password1', 'password2']}),
+        ('Account details', {
+            'fields': ['username', 'email', 'password1', 'password2'],
+        }),
         ('Personal details', {'fields': [
-            'first_name', 'last_name', 'email', 'phone', 'alt_phone',
-            'date_of_birth', 'marital_status', 'address', 'city', 'province',
+            'first_name', 'last_name', 'phone', 'alt_phone', 'date_of_birth',
+            'gender', 'marital_status', 'address', 'city', 'province',
             'emergency_contact_name', 'emergency_contact_phone',
         ]}),
-        ('Family', {'fields': ['spouse_name', 'children_names']}),
-        ('Church membership', {'fields': [
-            'membership_category', 'status', 'date_joined_church',
-            'baptism_status', 'baptism_date', 'previous_church',
-            'transferring_from_church', 'preferred_language',
-            'campus_branch',
+        ('Family details', {
+            'fields': ['spouse_name', 'children_names'],
+            'description': (
+                'Add your spouse and children so the church can care for your '
+                'whole family.'
+            ),
+        }),
+        ('Church membership information', {'fields': [
+            'membership_category', 'date_joined_church', 'baptism_status',
+            'baptism_date', 'previous_church', 'transferring_from_church',
+            'preferred_language', 'campus_branch',
         ]}),
         ('Interests and spiritual growth', {'fields': [
-            'interests_other', 'spiritual_growth_goals',
-            'wants_bible_study', 'wants_contact',
+            'interests', 'interests_other', 'spiritual_growth_goals',
+            'wants_bible_study', 'wants_contact', 'guidance_support',
         ]}),
         ('Current church activities', {'fields': [
-            'currently_involved', 'current_activities', 'small_group_name',
-            'volunteers_currently', 'volunteer_details', 'wants_to_volunteer',
+            'currently_involved', 'current_ministries', 'current_activities',
+            'small_group_name', 'volunteers_currently', 'volunteer_ministries',
+            'volunteer_details', 'wants_to_join', 'wants_to_volunteer',
         ]}),
-        ('Skills and availability', {'fields': [
+        ('Skills, talents and availability', {'fields': [
             'skills', 'talents', 'service_areas', 'preferred_times',
             'additional_info',
         ]}),
-        ('Additional information', {'fields': ['notes']}),
-        ('Record', {'fields': ['membership_id', 'created_at', 'updated_at']}),
+        ('Additional information', {'fields': [
+            'notes', 'prayer_request', 'pastoral_support_requested',
+        ]}),
+        ('Record', {'fields': [
+            'membership_id', 'status', 'created_at', 'updated_at',
+        ]}),
     ]
 
     def get_fieldsets(self, request, obj=None):
         # Passwords are only requested when creating a member; on the change
-        # view the Account tab shows just the username.
+        # view the Account tab shows just the username and email.
         if obj is None:
             return self.fieldsets
         fieldsets = []
         for title, opts in self.fieldsets:
-            if title == 'Account':
+            if title == 'Account details':
                 fields = [f for f in opts['fields'] if f not in ('password1', 'password2')]
                 fieldsets.append((title, {'fields': fields}))
             else:
