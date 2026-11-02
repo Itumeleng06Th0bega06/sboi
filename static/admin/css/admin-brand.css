@@ -448,6 +448,50 @@ a:not([role='button'], #header a, #content-main.app-list a, .object-tools a):hov
   color: var(--sboi-muted);
 }
 
+/* Admin Communications link + unread pill in the header. */
+.sboi-comms-link {
+  position: relative;
+  color: var(--sboi-gold-soft);
+  text-decoration: none;
+}
+
+.sboi-comms-link .sboi-ico {
+  color: var(--sboi-gold);
+}
+
+.sboi-comms-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--sboi-gold);
+  color: #14111e;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.sboi-comms-badge--large {
+  min-width: 28px;
+  height: 28px;
+  font-size: 0.75rem;
+}
+
+.sboi-app--communications {
+  border-color: rgba(210, 162, 78, 0.4);
+  background:
+    radial-gradient(circle at 90% 12%, rgba(210, 162, 78, 0.18), transparent 50%),
+    linear-gradient(150deg, #2d2642, var(--sboi-surface-2));
+}
+
+.sboi-app--communications .sboi-app__icon {
+  background: rgba(210, 162, 78, 0.2);
+  color: var(--sboi-gold-soft);
+}
+
 .sboi-menu {
   position: relative;
   flex: 0 0 auto;

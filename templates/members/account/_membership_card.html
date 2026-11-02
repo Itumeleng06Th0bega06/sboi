@@ -1,0 +1,100 @@
+<section class="account-card account-card--membership" id="membership">
+    <header class="account-card-head">
+        <div>
+            <h2>Church membership</h2>
+            <p class="account-muted">Your status, church family details and ministry life.</p>
+        </div>
+        {% if membership %}
+        <span class="status-pill status-{{ membership.status }}">{{ membership.get_status_display }}</span>
+        {% else %}
+        <span class="status-pill status-none">Not joined yet</span>
+        {% endif %}
+    </header>
+
+    {% if membership %}
+    <div class="account-membership-summary">
+        <div class="account-membership-mark" aria-hidden="true">{{ member_initials|default:'S' }}</div>
+        <div>
+            <h3>{{ membership.full_name }}</h3>
+            <p class="account-muted">
+                {% if membership.membership_id %}Member ID {{ membership.membership_id }}{% else %}Membership record{% endif %}
+                {% if membership_snapshot.member_since %} · Since {{ membership_snapshot.member_since|date:"M Y" }}{% endif %}
+            </p>
+        </div>
+    </div>
+
+    <dl class="account-detail-list">
+        <div><dt>Category</dt><dd>{{ membership.get_membership_category_display|default:'Not recorded' }}</dd></div>
+        <div><dt>Baptism</dt><dd>{{ membership.get_baptism_status_display|default:'Not recorded' }}</dd></div>
+        <div><dt>Preferred language</dt><dd>{{ membership.preferred_language|default:'Not recorded' }}</dd></div>
+        <div><dt>Campus / branch</dt><dd>{{ membership.campus_branch|default:'Not recorded' }}</dd></div>
+    </dl>
+
+    {% if pending_change %}
+    <div class="account-alert account-alert--info">
+        <strong>Your {% if pending_change.is_application %}membership application{% else %}membership update{% endif %} is with the church office.</strong>
+        It was submitted {{ pending_change.created_at|date:"d M Y, H:i" }}.
+        {% if membership.status == 'active' %} You remain an active member while it is reviewed.{% endif %}
+    </div>
+    {% endif %}
+
+    {% if latest_decision %}
+    <div class="account-decision account-decision--{{ latest_decision.status }}">
+        <p class="account-decision-title">
+            Latest review: {{ latest_decision.get_status_display }}
+            <span>· {{ latest_decision.reviewed_at|default:latest_decision.updated_at|date:"d M Y" }}</span>
+        </p>
+        {% if latest_decision.admin_note %}
+        <p class="account-decision-note">“{{ latest_decision.admin_note|linebreaksbr }}”</p>
+        {% endif %}
+        {% if latest_decision.reviewed_by %}
+        <p class="account-muted">Reviewed by {{ latest_decision.reviewed_by.get_full_name|default:latest_decision.reviewed_by.username }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if membership_snapshot.interests %}
+    <div class="account-subsection">
+        <h4>Areas of interest</h4>
+        <div class="account-chip-row">
+            {% for interest in membership_snapshot.interests %}<span class="account-chip">{{ interest.name }}</span>{% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if membership_snapshot.current_ministries or membership_snapshot.volunteer_ministries %}
+    <div class="account-subsection">
+        <h4>Ministry life</h4>
+        <div class="account-chip-row">
+            {% for ministry in membership_snapshot.current_ministries %}<span class="account-chip account-chip--green">{{ ministry.name }}</span>{% endfor %}
+            {% for ministry in membership_snapshot.volunteer_ministries %}<span class="account-chip">{{ ministry.name }} · volunteer</span>{% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if membership_snapshot.wants_to_join %}
+    <div class="account-subsection">
+        <h4>Waiting to join</h4>
+        <div class="account-chip-row">
+            {% for ministry in membership_snapshot.wants_to_join %}<span class="account-chip">{{ ministry.name }}</span>{% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="account-card-foot">
+        <button type="button" class="btn btn-gold" data-account-open="membershipModal">Edit membership details</button>
+        <a class="btn btn-ghost" href="{% url 'members:account_activities' %}">View activities</a>
+    </div>
+    {% else %}
+    <div class="account-empty-state">
+        <h3>You have not joined the church membership yet</h3>
+        <p>
+            Your website account is active. Joining the church membership is a separate,
+            optional step that tells the church office about your church family and
+            ministry interests.
+        </p>
+        <p class="account-muted">Nothing you enter here can approve your own membership. The church office reviews every application.</p>
+        <button type="button" class="btn btn-gold" data-account-open="membershipModal">Join the church</button>
+    </div>
+    {% endif %}
+</section>

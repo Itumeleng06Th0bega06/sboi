@@ -1,0 +1,115 @@
+/* Private member conversation inside the custom admin shell. */
+.sboi-conversation {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.sboi-conversation-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.sboi-conversation-head h1 { margin: 0 0 4px; }
+.sboi-conversation-head p { margin: 0; color: var(--body-quiet-color, #666); font-size: 13px; }
+.sboi-head-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.sboi-thread-state { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px !important; }
+.sboi-thread-state .sboi-tag { margin-left: 0; }
+
+.sboi-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  margin-bottom: 18px;
+  border: 1px solid var(--hairline-color, #ddd);
+  border-radius: 12px;
+  background: var(--darkened-bg, #f8f8f8);
+}
+
+.sboi-bubble {
+  max-width: 78%;
+  padding: 10px 12px;
+  border: 1px solid var(--hairline-color, #ddd);
+  border-radius: 12px;
+  background: var(--body-bg, #fff);
+}
+
+.sboi-bubble--member {
+  align-self: flex-end;
+  border-bottom-right-radius: 3px;
+  background: #eef6f3;
+}
+
+.sboi-bubble--admin {
+  align-self: flex-start;
+  border-bottom-left-radius: 3px;
+}
+
+.sboi-bubble header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 5px;
+  font-size: 11px;
+}
+
+.sboi-bubble header strong { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; }
+.sboi-bubble header time { color: var(--body-quiet-color, #666); }
+
+.sboi-tag {
+  margin-left: auto;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #d2a24e;
+  color: #002f2b;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.sboi-tag--new { background: #002f2b; color: #f7f5ee; }
+.sboi-tag--read { background: #e5e5e5; color: #555; }
+
+.sboi-bubble-body { font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+
+.sboi-attachment {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 6px 9px;
+  border: 1px solid #d2a24e;
+  border-radius: 8px;
+  background: #fffaf0;
+  color: inherit;
+  font-size: 12px;
+}
+
+.sboi-attachment small { color: #666; }
+
+.sboi-empty { margin: auto; color: #666; }
+
+.sboi-reply-form {
+  padding: 18px;
+  border: 1px solid var(--hairline-color, #ddd);
+  border-radius: 12px;
+  background: var(--body-bg, #fff);
+}
+
+.sboi-reply-form h2 { margin-top: 0; }
+.sboi-help { margin-top: 0; color: var(--body-quiet-color, #666); font-size: 12px; }
+.sboi-field { margin-bottom: 12px; }
+.sboi-field label { display: block; margin-bottom: 4px; font-weight: 600; }
+.sboi-field textarea { width: 100%; min-height: 90px; }
+.sboi-error { margin: 4px 0 0; color: #b3261e; font-size: 12px; }
+.sboi-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.sboi-actions .button { cursor: pointer; }
+
+@media (max-width: 720px) {
+  .sboi-conversation-head { flex-direction: column; }
+  .sboi-bubble { max-width: 92%; }
+}

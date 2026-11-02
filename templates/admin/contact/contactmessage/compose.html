@@ -1,0 +1,79 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/contact-inbox.css' %}?v=1">
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{{ changelist_url }}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; <a href="{{ inbox_url }}">{% translate 'Member inbox' %}</a>
+    &rsaquo; {% translate 'New message' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="sboi-compose">
+    <div class="sboi-inbox-head">
+        <div>
+            <h1>{% translate 'New member message' %}</h1>
+            <p>
+                Write to any church member, even if they have never contacted
+                the office. The message is delivered to their private account
+                inbox and in-app notifications only.
+            </p>
+        </div>
+        <div class="sboi-inbox-actions">
+            <a class="button" href="{{ inbox_url }}">{% translate 'Back to inbox' %}</a>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="sboi-compose-form" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="errornote">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="sboi-compose-field">
+            <label for="{{ form.membership.id_for_label }}">{{ form.membership.label }}</label>
+            {{ form.membership }}
+            <p class="sboi-help">
+                Only members with a church membership record are listed.
+                {% if form.membership.help_text %}{{ form.membership.help_text }}{% endif %}
+            </p>
+            {% for error in form.membership.errors %}<p class="sboi-error">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="sboi-compose-field">
+            <label for="{{ form.subject.id_for_label }}">{{ form.subject.label }}</label>
+            {{ form.subject }}
+            {% for error in form.subject.errors %}<p class="sboi-error">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="sboi-compose-field">
+            <label for="{{ form.message.id_for_label }}">{{ form.message.label }}</label>
+            {{ form.message }}
+            {% for error in form.message.errors %}<p class="sboi-error">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="sboi-compose-field">
+            <label for="{{ form.attachment.id_for_label }}">{{ form.attachment.label }}</label>
+            {{ form.attachment }}
+            <p class="sboi-help">
+                PDF, Word, text or image files up to 10 MB. Attachments are
+                stored privately and streamed only to the member and staff
+                with contact-message permission.
+            </p>
+            {% for error in form.attachment.errors %}<p class="sboi-error">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="sboi-actions">
+            <button type="submit" class="button default">{% translate 'Send message' %}</button>
+            <a class="button" href="{{ inbox_url }}">{% translate 'Cancel' %}</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

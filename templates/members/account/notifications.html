@@ -1,0 +1,52 @@
+{% extends 'members/account/base_account.html' %}
+
+{% block title %}Notifications · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
+
+{% block account_content %}
+<section class="account-hero account-hero--compact">
+    <div class="account-hero-copy">
+        <p class="account-eyebrow">Updates</p>
+        <h1>Notifications</h1>
+        <p>Membership decisions, replies from the church office and important account updates.</p>
+    </div>
+    <div class="account-hero-actions">
+        {% if unread_notifications %}
+        <form method="post" action="{% url 'members:account_notification_read' %}" data-account-notification-read>
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost">Mark all as read</button>
+        </form>
+        {% endif %}
+    </div>
+</section>
+
+<section class="account-card">
+    <header class="account-card-head">
+        <div>
+            <h2>All notifications</h2>
+            <p class="account-muted">{{ unread_notifications }} unread</p>
+        </div>
+    </header>
+
+    {% if notifications %}
+    <ul class="account-notification-list">
+        {% for notification in notifications %}
+        <li class="account-notification{% if notification.unread %} is-unread{% endif %}">
+            <a href="{% url 'members:account_notification_open' notification.id %}" class="account-notification-link">
+                <span class="account-notification-dot tone-{{ notification.tone|default:'info' }}"></span>
+                <span class="account-notification-copy">
+                    <strong>{{ notification.title }}</strong>
+                    <span>{{ notification.body|linebreaksbr }}</span>
+                </span>
+                <span class="account-notification-side">
+                    <time>{{ notification.date }}</time>
+                    {% if notification.unread %}<span class="account-unread-pill">New</span>{% endif %}
+                </span>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="account-empty">No notifications yet. Membership decisions and replies will appear here.</p>
+    {% endif %}
+</section>
+{% endblock %}

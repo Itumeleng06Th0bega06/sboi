@@ -58,19 +58,88 @@
 
 .sboi-bell-item {
   display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.55rem 0.65rem;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.6rem 0.65rem;
   border-radius: 9px;
   color: var(--sboi-ink);
   text-decoration: none;
 }
 
 .sboi-bell-item:hover,
-.sboi-bell-item:focus {
+.sboi-bell-item:focus-within {
   background: rgba(210, 162, 78, 0.12);
   color: #ffffff;
   text-decoration: none;
+}
+
+.sboi-bell-item__link {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.sboi-bell-item__link:hover,
+.sboi-bell-item__link:focus {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.sboi-bell-copy {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.14rem;
+}
+
+.sboi-bell-desc {
+  overflow: hidden;
+  color: var(--sboi-muted);
+  font-size: 0.73rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.sboi-bell-date {
+  color: var(--sboi-gold-2);
+  font-size: 0.63rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.sboi-bell-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  padding-left: 2.75rem;
+}
+
+.sboi-bell-action {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sboi-gold-soft);
+  font: inherit;
+  font-size: 0.68rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.sboi-bell-action:hover {
+  color: #ffffff;
+}
+
+.sboi-bell-action:disabled {
+  opacity: 0.5;
+  cursor: wait;
 }
 
 .sboi-bell-icon {

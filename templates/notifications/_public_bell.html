@@ -1,0 +1,54 @@
+{% comment %}
+  Public / member notification bell.
+
+  The server renders the current active items; static/js/notifications.js
+  refreshes the same payload from notifications:feed so the badge and list stay
+  current without a full page reload. Read and dismiss are per-user (or
+  per-session for visitors), never global.
+{% endcomment %}
+<details class="notif-bell" data-sboi-public-bell data-api-url="{{ notification_feed_url }}">
+    <summary class="notif-bell-trigger" title="Notifications" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M6.2 10.3a5.8 5.8 0 0 1 11.6 0c0 4.2 1.6 5.5 1.6 5.5H4.6s1.6-1.3 1.6-5.5Z"/>
+            <path d="M10 19.2a2.2 2.2 0 0 0 4 0"/>
+        </svg>
+        <span class="notif-bell-badge" data-sboi-public-badge{% if not notification_badge %} hidden{% endif %}>{{ notification_badge }}</span>
+    </summary>
+    <div class="notif-bell-menu">
+        <div class="notif-bell-head">
+            <span>Notifications</span>
+            <span class="notif-bell-head-note">Unread and still active</span>
+        </div>
+        <div class="notif-bell-list" data-sboi-public-list>
+            {% for item in notification_items %}
+                <div class="notif-item tone-{{ item.tone }}" data-notification-id="{{ item.id }}">
+                    <a class="notif-item-link" href="{{ item.url|default:'#' }}">
+                        <span class="notif-item-title">{{ item.title }}</span>
+                        {% if item.body %}<span class="notif-item-desc">{{ item.body|truncatechars:100 }}</span>{% endif %}
+                        <span class="notif-item-date">{{ item.date }}</span>
+                    </a>
+                    <div class="notif-item-actions">
+                        {% if item.unread %}
+                            <button type="button" class="notif-item-action" data-notif-action="{{ item.mark_read_url }}">Mark read</button>
+                        {% endif %}
+                        <button type="button" class="notif-item-action" data-notif-action="{{ item.dismiss_url }}">Dismiss</button>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="notif-empty">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M6.2 10.3a5.8 5.8 0 0 1 8.4-5.1"/>
+                        <path d="M17.8 12.5c0 2.2.4 3.3 1.6 3.3H4.6s1.6-1.3 1.6-5.5"/>
+                        <path d="M10 19.2a2.2 2.2 0 0 0 4 0"/>
+                        <path d="M3.5 3.5 20.5 20.5"/>
+                    </svg>
+                    <span>You're all caught up. No active notifications.</span>
+                </div>
+            {% endfor %}
+        </div>
+        <a class="notif-bell-foot" href="{{ notification_history_url }}">
+            <span>Notification history</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.5 12h15M13.5 6l6 6-6 6"/></svg>
+        </a>
+    </div>
+</details>

@@ -1,0 +1,117 @@
+{% extends 'members/account/base_account.html' %}
+
+{% block title %}Activities · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
+
+{% block account_content %}
+<section class="account-hero account-hero--compact">
+    <div class="account-hero-copy">
+        <p class="account-eyebrow">Church life</p>
+        <h1>Activities</h1>
+        <p>Your ministries, small groups, interests and the events you have responded to.</p>
+    </div>
+</section>
+
+<div class="account-grid">
+    <div class="account-col">
+        <section class="account-card">
+            <header class="account-card-head">
+                <div>
+                    <h2>Current ministries</h2>
+                    <p class="account-muted">Where you serve today.</p>
+                </div>
+                <span class="account-count">{{ confirmed|length }}</span>
+            </header>
+            {% if confirmed %}
+            <ul class="account-plain-list">
+                {% for ministry in confirmed %}
+                <li>
+                    <span class="account-list-dot"></span>
+                    <span>{{ ministry.name }}</span>
+                    <span class="account-list-meta">{{ ministry.get_status_display }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="account-empty">No current ministries recorded.</p>
+            {% endif %}
+        </section>
+    </div>
+
+    <div class="account-col">
+        <section class="account-card">
+            <header class="account-card-head">
+                <div>
+                    <h2>Ministries you want to join</h2>
+                    <p class="account-muted">Requests recorded with the church office.</p>
+                </div>
+                <span class="account-count">{{ requests|length }}</span>
+            </header>
+            {% if requests %}
+            <ul class="account-plain-list">
+                {% for ministry in requests %}
+                <li>
+                    <span class="account-list-dot account-list-dot--gold"></span>
+                    <span>{{ ministry.name }}</span>
+                    <span class="account-list-meta">Awaiting review</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="account-empty">No join requests recorded.</p>
+            {% endif %}
+        </section>
+    </div>
+</div>
+
+<div class="account-grid">
+    <div class="account-col">
+        <section class="account-card">
+            <header class="account-card-head">
+                <div>
+                    <h2>Areas of interest</h2>
+                    <p class="account-muted">What you told the church you care about.</p>
+                </div>
+            </header>
+            {% if interests %}
+            <div class="account-chip-row">
+                {% for interest in interests %}<span class="account-chip">{{ interest.name }}</span>{% endfor %}
+            </div>
+            {% else %}
+            <p class="account-empty">No areas of interest recorded.</p>
+            {% endif %}
+        </section>
+    </div>
+    <div class="account-col">
+        <section class="account-card">
+            <header class="account-card-head">
+                <div>
+                    <h2>Event responses</h2>
+                    <p class="account-muted">Events you have RSVP’d to with this email address.</p>
+                </div>
+            </header>
+            {% if rsvps %}
+            <ul class="account-plain-list">
+                {% for rsvp in rsvps %}
+                <li>
+                    <span class="account-list-dot"></span>
+                    <span>{{ rsvp.event.title }}</span>
+                    <span class="account-list-meta">{{ rsvp.event.date|date:"d M Y" }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="account-empty">No event responses found. Explore the blackboard for upcoming events.</p>
+            {% endif %}
+            <a class="btn btn-ghost account-card-cta" href="{% url 'blackboard:blackboard' %}">Open the blackboard</a>
+        </section>
+    </div>
+</div>
+
+<div class="account-card account-card--soft">
+    <p class="account-muted">
+        Ministry changes and new join requests are reviewed by the church office.
+        <a class="account-text-link" href="{% url 'members:account' %}#membership">Update your membership details</a>
+        to tell us about a new area of service.
+    </p>
+</div>
+{% endblock %}

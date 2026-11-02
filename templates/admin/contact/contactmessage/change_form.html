@@ -1,0 +1,10 @@
+{% extends "admin/change_form.html" %}
+
+{% block object-tools-items %}
+{% if original.user_id %}
+<li>
+    <a href="{% url 'admin:contact_contactmessage_conversation' original.pk %}" class="viewsitelink">Open conversation</a>
+</li>
+{% endif %}
+{{ block.super }}
+{% endblock %}

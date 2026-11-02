@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notification history · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
+{% block body_class %}account-page{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/account.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 820px; padding-block: 2rem 4rem;">
+    <section class="account-hero account-hero--compact">
+        <div class="account-hero-copy">
+            <p class="account-eyebrow">Updates</p>
+            <h1>Notification history</h1>
+            <p>Everything still on record for this account, including items you have already read.</p>
+        </div>
+        {% if request.user.is_authenticated %}
+        <div class="account-hero-actions">
+            <a class="btn btn-gold" href="{% url 'members:account_notifications' %}">My account</a>
+        </div>
+        {% else %}
+        <div class="account-hero-actions">
+            <a class="btn btn-gold" href="{% url 'members:login' %}">Sign in</a>
+        </div>
+        {% endif %}
+    </section>
+
+    <section class="account-card">
+        {% if notifications %}
+        <ul class="account-notification-list">
+            {% for notification in notifications %}
+            <li class="account-notification{% if notification.unread %} is-unread{% endif %}">
+                <a class="account-notification-link" href="{{ notification.url|default:'#' }}">
+                    <span class="account-notification-dot tone-{{ notification.tone }}"></span>
+                    <span class="account-notification-copy">
+                        <strong>{{ notification.title }}</strong>
+                        <span>{{ notification.body|linebreaksbr }}</span>
+                    </span>
+                    <span class="account-notification-side"><time>{{ notification.date }}</time></span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="account-empty">No notifications on record.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

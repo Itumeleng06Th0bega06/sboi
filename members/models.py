@@ -46,7 +46,19 @@ MEMBERSHIP_CATEGORY_CHOICES = [
 MEMBERSHIP_STATUS_CHOICES = [
     ('active', 'Active'),
     ('inactive', 'Inactive'),
-    ('pending', 'Pending'),
+    ('pending', 'Pending approval'),
+    ('rejected', 'Rejected'),
+]
+
+# Delivery states for the optional WhatsApp membership notification. No
+# provider is bundled with the project, so ``not_configured`` is the honest
+# default until the deployment supplies credentials (see docs/WHATSAPP.md).
+WHATSAPP_STATUS_CHOICES = [
+    ('not_attempted', 'Not attempted'),
+    ('not_configured', 'Not configured'),
+    ('skipped', 'Skipped (no consent or phone)'),
+    ('sent', 'Sent'),
+    ('failed', 'Failed'),
 ]
 
 BAPTISM_STATUS_CHOICES = [
@@ -187,6 +199,12 @@ class ChurchMembership(models.Model):
 
     # --- Section F: additional information --------------------------------
     notes = models.TextField('Additional notes', blank=True)
+    # Explicit opt-in for the optional WhatsApp membership notification. The
+    # in-app notification is always created; WhatsApp is only attempted when
+    # this is true and a provider is configured.
+    whatsapp_consent = models.BooleanField(
+        'I agree to receive membership updates on WhatsApp', default=False,
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -288,3 +306,90 @@ class MembershipPastoralNote(models.Model):
     def is_empty(self):
         return not (self.guidance_support or self.prayer_request
                     or self.pastoral_support_requested)
+
+
+class MembershipChangeRequest(models.Model):
+    """A membership application or edit waiting for an administrator.
+
+    Members can update their own details, but they can never change their own
+    approval status. Each submission records what was submitted here so an
+    authorised administrator can approve or reject it. An existing *active*
+    member keeps that status while the change is reviewed; only a brand-new
+    application (or a resubmission after rejection) moves the membership
+    through the pending/rejected states.
+    """
+
+    KIND_APPLICATION = 'application'
+    KIND_UPDATE = 'update'
+    KIND_CHOICES = [
+        (KIND_APPLICATION, 'Membership application'),
+        (KIND_UPDATE, 'Membership details update'),
+    ]
+
+    STATUS_PENDING = 'pending'
+    STATUS_APPROVED = 'approved'
+    STATUS_REJECTED = 'rejected'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Pending review'),
+        (STATUS_APPROVED, 'Approved'),
+        (STATUS_REJECTED, 'Rejected'),
+    ]
+
+    membership = models.ForeignKey(
+        ChurchMembership, on_delete=models.CASCADE,
+        related_name='change_requests',
+    )
+    submitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='membership_change_requests',
+    )
+    kind = models.CharField(max_length=20, choices=KIND_CHOICES)
+    status = models.CharField(
+        max_length=12, choices=STATUS_CHOICES, default=STATUS_PENDING,
+    )
+    # Human-readable snapshot of the submitted membership fields. This is
+    # deliberately a plain summary rather than a diff: it is shown to the
+    # reviewer and never used to overwrite the live record.
+    summary = models.TextField(blank=True)
+    admin_note = models.TextField('Note to the member', blank=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='reviewed_membership_changes',
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    # Honest delivery record for the optional WhatsApp notice. The in-app
+    # notification (shared ``notifications.Notification``) is always created;
+    # WhatsApp is only attempted when a provider is configured and the member
+    # opted in. See docs/WHATSAPP.md.
+    whatsapp_status = models.CharField(
+        max_length=20, choices=WHATSAPP_STATUS_CHOICES,
+        default='not_attempted',
+    )
+    whatsapp_error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Membership change request'
+        verbose_name_plural = 'Membership change requests'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', 'created_at']),
+        ]
+        constraints = [
+            # At most one open request per membership, so repeated edits update
+            # the same review item instead of spamming the administrators.
+            models.UniqueConstraint(
+                fields=['membership'],
+                condition=models.Q(status='pending'),
+                name='one_pending_membership_change',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.get_kind_display()} — {self.membership.full_name}'
+
+    @property
+    def is_application(self):
+        return self.kind == self.KIND_APPLICATION

@@ -148,6 +148,12 @@ class MemberProfile(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
     suspended_until = models.DateField(blank=True, null=True)
     blocked_reason = models.CharField(max_length=300, blank=True)
+    # Optional account photo for the member portal. It is intentionally on the
+    # existing profile model rather than a second profile table.
+    avatar = OptimizedImageField(upload_to='member_avatars/', blank=True)
+    # Email is only used for optional account notices; in-app notifications are
+    # always created and are not controlled by this preference.
+    email_notifications = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -1,0 +1,50 @@
+<nav class="account-nav" aria-label="Account sections">
+    <a href="{% url 'members:account' %}" class="account-nav-link{% if account_section == 'account' %} active{% endif %}">
+        <span class="account-nav-label">My profile</span>
+        <span class="account-nav-hint">Overview</span>
+    </a>
+    <a href="{% url 'members:account_children' %}" class="account-nav-link{% if account_section == 'children' %} active{% endif %}">
+        <span class="account-nav-label">Children</span>
+        <span class="account-nav-hint">Family</span>
+    </a>
+    <a href="{% url 'members:account_activities' %}" class="account-nav-link{% if account_section == 'activities' %} active{% endif %}">
+        <span class="account-nav-label">Activities</span>
+        <span class="account-nav-hint">Ministries</span>
+    </a>
+    <a href="{% url 'members:account' %}#membership" class="account-nav-link{% if account_section == 'membership' %} active{% endif %}">
+        <span class="account-nav-label">Membership</span>
+        <span class="account-nav-hint">Church membership</span>
+    </a>
+    <a href="{% url 'members:account_messages' %}" class="account-nav-link{% if account_section == 'messages' %} active{% endif %}">
+        <span class="account-nav-label">Messages</span>
+        <span class="account-nav-hint">
+            Private inbox
+            {% if unread_messages %}<span class="account-nav-badge">{{ unread_messages }}</span>{% endif %}
+        </span>
+    </a>
+    <a href="{% url 'members:account_notifications' %}" class="account-nav-link{% if account_section == 'notifications' %} active{% endif %}">
+        <span class="account-nav-label">Notifications</span>
+        <span class="account-nav-hint">
+            Updates
+            {% if unread_notifications %}<span class="account-nav-badge">{{ unread_notifications }}</span>{% endif %}
+        </span>
+    </a>
+    <a href="{% url 'members:account_settings' %}" class="account-nav-link{% if account_section == 'settings' %} active{% endif %}">
+        <span class="account-nav-label">Settings</span>
+        <span class="account-nav-hint">Security</span>
+    </a>
+    <div class="account-nav-divider"></div>
+    <form method="post" action="{% url 'members:logout' %}" class="account-nav-form">
+        {% csrf_token %}
+        <button type="submit" class="account-nav-link account-nav-link--danger account-nav-button">
+            <span class="account-nav-label">Sign Out</span>
+            <span class="account-nav-hint">Leave your account</span>
+        </button>
+    </form>
+</nav>
+
+<!-- Mobile drawer overlay -->
+<div class="account-drawer-overlay" data-account-drawer-close></div>
+<button class="account-drawer-toggle" data-account-drawer-toggle aria-label="Open navigation menu" aria-expanded="false">
+    <span class="account-drawer-icon"></span>
+</button>

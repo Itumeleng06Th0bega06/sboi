@@ -1,0 +1,75 @@
+/* ADMIN MOBILE — GLOBAL RESPONSIVE */
+@media (max-width: 767px) {
+  html, body { overflow-x: hidden; max-width: 100vw; }
+  #content { padding-inline: 0.5rem; padding-block: 0.75rem; }
+  .breadcrumbs { padding-inline: 0.5rem; font-size: 0.75rem; }
+  .form-row { flex-direction: column !important; align-items: stretch !important; gap: 0.35rem !important; }
+  .aligned label, .form-row > label { flex-basis: auto !important; padding-top: 0 !important; width: 100% !important; text-align: left !important; }
+  .form-row > div, .aligned .form-row > div { width: 100% !important; max-width: 100% !important; }
+  .vTextField, .vLargeTextField, .vURLField, .vEmailField, .vIntegerField, .vBigIntegerField, .vDecimalField, .vFloatField, .vDateField, .vTimeField, .vDateTimeField, .vForeignKeyRawIdAdminField, .vFilterSelect, .form-row select, .form-row input[type="text"], .form-row input[type="password"], .form-row input[type="email"], .form-row input[type="url"], .form-row input[type="number"], .form-row input[type="tel"], .form-row textarea { width: 100% !important; max-width: 100% !important; }
+  .submit-row { flex-direction: column !important; align-items: stretch !important; gap: 0.4rem !important; }
+  .submit-row input, .submit-row button, .submit-row a.button, .submit-row a.closelink, .submit-row a.deletelink { width: 100% !important; justify-content: center !important; margin-left: 0 !important; }
+  .errornote { font-size: 0.8rem; padding: 0.6rem 0.75rem; }
+  .object-tools { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .object-tools li { margin: 0; }
+  .object-tools a { font-size: 0.75rem; padding: 0.4rem 0.7rem; }
+  #result_list { border: 0; background: transparent; box-shadow: none; }
+  #result_list thead { display: none; }
+  #result_list tbody { display: block; }
+  #result_list tr { display: block; margin-bottom: 0.6rem; padding: 0.65rem 0.75rem; background: var(--sboi-surface); border: 1px solid var(--sboi-line); border-radius: var(--sboi-radius-sm); box-shadow: var(--sboi-shadow-sm); }
+  #result_list td { display: block; padding: 0.2rem 0; border: 0; font-size: 0.82rem; line-height: 1.4; }
+  #result_list td:first-child { font-weight: 600; font-size: 0.88rem; color: var(--sboi-gold-soft); }
+  #result_list td:nth-child(n+3):not(.action-checkbox):not(:last-child) { display: none; }
+  #result_list td.action-checkbox { display: inline-block; width: auto; padding: 0; margin-right: 0.5rem; }
+  #result_list td:last-child { display: none; }
+  .sboi-mobile-actions { display: flex; justify-content: flex-end; margin-top: 0.4rem; padding-top: 0.4rem; border-top: 1px solid var(--sboi-line); }
+  .sboi-three-dot { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid var(--sboi-line); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--sboi-ink); cursor: pointer; font-size: 1.1rem; line-height: 1; }
+  .sboi-three-dot:hover { background: rgba(210,162,78,0.12); color: var(--sboi-gold-soft); }
+  .sboi-mobile-menu { position: absolute; right: 0; bottom: calc(100% + 4px); min-width: 140px; padding: 0.35rem; background: var(--sboi-surface-2); border: 1px solid var(--sboi-line-strong); border-radius: 10px; box-shadow: var(--sboi-shadow-sm); z-index: 100; display: none; }
+  .sboi-mobile-menu.is-open { display: block; }
+  .sboi-mobile-menu a, .sboi-mobile-menu button { display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.5rem 0.7rem; border: 0; background: none; color: var(--sboi-ink); font: inherit; font-size: 0.8rem; font-weight: 500; text-decoration: none; border-radius: 6px; cursor: pointer; text-align: left; }
+  .sboi-mobile-menu a:hover, .sboi-mobile-menu button:hover { background: rgba(210,162,78,0.12); color: var(--sboi-gold-soft); }
+  .sboi-mobile-menu .sboi-menu-divider { height: 1px; margin: 0.25rem 0; background: var(--sboi-line); }
+  #changelist-filter { position: static !important; width: 100% !important; max-height: none !important; flex-basis: auto !important; margin-bottom: 0.75rem; }
+  #changelist-filter h2 { font-size: 0.85rem; }
+  #changelist-filter h3 { font-size: 0.8rem; }
+  #changelist-filter li { font-size: 0.78rem; }
+  #changelist-filter input[type="text"] { width: 100%; }
+  .paginator { flex-wrap: wrap; gap: 0.3rem; font-size: 0.78rem; }
+  .paginator a, .paginator span { padding: 0.3rem 0.6rem; font-size: 0.78rem; }
+  .search-form, #changelist-search { flex-direction: column; gap: 0.4rem; }
+  .search-form input[type="text"], #changelist-search input[type="text"] { width: 100%; }
+  .actions { flex-direction: column; align-items: stretch; gap: 0.4rem; }
+  .actions select { width: 100%; }
+  .actions button, .actions input[type="submit"] { width: 100%; }
+  .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs a { white-space: nowrap; font-size: 0.8rem; }
+  .sboi-apps { grid-template-columns: 1fr !important; gap: 0.5rem; }
+  .sboi-app { padding: 0.75rem; }
+  .sboi-app__title { font-size: 0.85rem; }
+  .sboi-app__count { font-size: 0.72rem; }
+  .sboi-dash__hero { padding: 1rem; }
+  .sboi-dash__hero h1 { font-size: 1.2rem; }
+  .sboi-dash__lead { font-size: 0.8rem; }
+  .sboi-dash__hero-side { flex-direction: row; align-items: center; gap: 0.5rem; }
+  .inline-group { margin: 0.75rem 0; }
+  .inline-group h2 { font-size: 0.9rem; }
+  .inline-related { padding: 0.6rem; }
+  .inline-related h3 { font-size: 0.8rem; }
+  .ui-dialog, .ui-widget { width: calc(100vw - 1rem) !important; max-width: calc(100vw - 1rem) !important; left: 0.5rem !important; }
+  #changelist-filter h2 { font-size: 0.85rem; }
+  #changelist-filter h3 { font-size: 0.8rem; }
+  #changelist-filter li { font-size: 0.78rem; }
+  #changelist-filter input[type="text"] { width: 100%; }
+  .sboi-delete-modal { width: calc(100vw - 1rem) !important; max-width: calc(100vw - 1rem) !important; }
+}
+.sboi-three-dot { display: none; }
+@media (max-width: 767px) { .sboi-three-dot { display: inline-flex; } }
+@media (min-width: 768px) { .sboi-mobile-actions { display: none !important; } .sboi-three-dot { display: none !important; } }
+@media (min-width: 768px) and (max-width: 1024px) {
+  #result_list td:nth-child(n+5):not(:last-child) { display: none; }
+  .form-row { flex-wrap: wrap; }
+  .vTextField, .vLargeTextField, .vURLField, .vEmailField { max-width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }

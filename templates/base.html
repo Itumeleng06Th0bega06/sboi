@@ -10,7 +10,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=69">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=70">
+  <link rel="stylesheet" href="{% static 'css/notifications.css' %}?v=1">
+  {% block extra_head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
     {% block nav %}
@@ -43,9 +45,49 @@
                     <li><a href="{% url 'contact:contact' %}" class="nav-tab{% if request.resolver_match.namespace == 'contact' %} active{% endif %}"><img src="{% static 'images/3d/envelope.png' %}" alt="" class="nav-tab-ico" loading="lazy" decoding="async">Contact</a></li>
                 </ul>
                 <div class="nav-auth">
+                    {% include 'notifications/_public_bell.html' %}
                     {% if request.user.is_authenticated %}
-                    <span class="nav-user">Hi, {{ request.user.first_name|default:request.user.username }}</span>
-                    <form method="post" action="{% url 'members:logout' %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Logout</button></form>
+                    <details class="nav-account">
+                        <summary class="nav-account-toggle" aria-label="My account" title="My account">
+                            {% if member_avatar_url %}
+                            <img src="{{ member_avatar_url }}" alt="" class="nav-avatar nav-avatar-img">
+                            {% else %}
+                            <span class="nav-avatar" aria-hidden="true">{{ member_initials|default:'S' }}</span>
+                            {% endif %}
+                            <span class="nav-account-name">{{ request.user.first_name|default:request.user.username }}</span>
+                            <svg class="nav-account-chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41Z"/></svg>
+                        </summary>
+                        <div class="nav-account-menu">
+                            <div class="nav-account-head">
+                                {% if member_avatar_url %}
+                                <img src="{{ member_avatar_url }}" alt="" class="nav-avatar nav-avatar-lg nav-avatar-img">
+                                {% else %}
+                                <span class="nav-avatar nav-avatar-lg" aria-hidden="true">{{ member_initials|default:'S' }}</span>
+                                {% endif %}
+                                <span class="nav-account-id">
+                                    <strong>{{ member_display_name|default:request.user.username }}</strong>
+                                    {% if request.user.email %}<small>{{ request.user.email }}</small>{% endif %}
+                                </span>
+                            </div>
+                            <a href="{% url 'members:account' %}" class="nav-account-link">My profile</a>
+                            <a href="{% url 'members:account_messages' %}" class="nav-account-link">
+                                <span>My messages</span>
+                                {% if member_unread_messages %}<span class="nav-menu-badge">{{ member_unread_messages }}</span>{% endif %}
+                            </a>
+                            <a href="{% url 'members:account_notifications' %}" class="nav-account-link">
+                                <span>Notifications</span>
+                                {% if member_unread_notifications %}<span class="nav-menu-badge">{{ member_unread_notifications }}</span>{% endif %}
+                            </a>
+                            <a href="{% url 'members:account_settings' %}" class="nav-account-link">Account settings</a>
+                            {% if request.user.is_staff %}
+                            <a href="{% url 'admin:index' %}" class="nav-account-link">Admin console</a>
+                            {% endif %}
+                            <form method="post" action="{% url 'members:logout' %}" class="nav-account-logout">
+                                {% csrf_token %}
+                                <button type="submit" class="nav-account-link nav-account-button">Sign out</button>
+                            </form>
+                        </div>
+                    </details>
                     {% else %}
                     <a href="{% url 'members:login' %}" class="nav-subtab"><img src="{% static 'images/3d/person.png' %}" alt="" class="nav-tab-ico" loading="lazy" decoding="async">Login</a>
                     {% endif %}
@@ -86,12 +128,10 @@
             </a>
             <div class="bnav-auth">
                 {% if request.user.is_authenticated %}
-                <form method="post" action="{% url 'members:logout' %}">{% csrf_token %}
-                    <button type="submit" class="bnav-item">
-                        <img src="{% static 'images/3d/person.png' %}" alt="" class="bnav-ico" loading="lazy" decoding="async">
-                        <span>Logout</span>
-                    </button>
-                </form>
+                <a class="bnav-item{% if request.resolver_match.namespace == 'members' %} active{% endif %}" href="{% url 'members:account' %}">
+                    <span class="bnav-avatar" aria-hidden="true">{{ member_initials|default:'S' }}</span>
+                    <span>Account</span>
+                </a>
                 {% else %}
                 <a class="bnav-item" href="{% url 'members:login' %}">
                     <img src="{% static 'images/3d/person.png' %}" alt="" class="bnav-ico" loading="lazy" decoding="async">
@@ -178,6 +218,10 @@
 
     <script src="{% static 'js/script.js' %}?v=11"></script>
     <script src="{% static 'js/ajax-forms.js' %}"></script>
+    <script src="{% static 'js/notifications.js' %}?v=1"></script>
+    {% block extra_scripts %}{% endblock %}
+    {# Ensures the CSRF cookie exists for bell actions on pages without a form. #}
+    <div hidden aria-hidden="true">{% csrf_token %}</div>
 </body>
 </html>
 

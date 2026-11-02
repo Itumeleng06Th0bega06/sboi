@@ -1,0 +1,211 @@
+{% load i18n admin_menu %}
+<section class="comms-chat" data-comms-chat>
+    <header class="comms-chat__head">
+        <button type="button" class="comms-iconbtn comms-back" data-comms-back aria-label="{% translate 'Back to conversations' %}">
+            {% admin_icon 'arrow-left' %}
+        </button>
+        <span class="comms-avatar{% if selected.is_group %} comms-avatar--group{% endif %}" aria-hidden="true">{{ conversation_initials }}</span>
+        <div class="comms-chat__identity">
+            <h2>{{ display_name }}</h2>
+            <p>
+                {% if selected.is_direct %}
+                    {% translate 'Direct message' %}{% if other_participant %} &middot; {{ other_participant.display_name }}{% endif %}
+                {% else %}
+                    {{ selected.description|default:'No group description yet.'|truncatechars:120 }}
+                {% endif %}
+            </p>
+        </div>
+        <div class="comms-chat__actions">
+            <span class="comms-member-pill" title="{% translate 'Conversation members' %}">
+                {% admin_icon 'users' %}
+                <span>{{ participants|length }}</span>
+            </span>
+            <button type="button" class="comms-iconbtn" data-comms-info-toggle aria-label="{% translate 'Conversation information' %}" title="{% translate 'Conversation information' %}">
+                {% admin_icon 'info' %}
+            </button>
+        </div>
+    </header>
+
+    <form class="comms-thread-search" method="get" action="{% url 'communications:inbox' %}" data-comms-thread-search data-workspace-url="{% url 'communications:conversation_workspace' selected.pk %}">
+        <input type="hidden" name="conversation" value="{{ selected.pk }}">
+        <span class="comms-search__icon">{% admin_icon 'search' %}</span>
+        <input type="search" name="mq" value="{{ message_query }}" placeholder="{% translate 'Search this conversation' %}" aria-label="{% translate 'Search this conversation' %}">
+        {% if message_query %}
+            <a class="comms-thread-search__clear" href="{% url 'communications:inbox' %}?conversation={{ selected.pk }}" data-comms-clear-search>{% translate 'Clear' %}</a>
+        {% endif %}
+    </form>
+
+    <div class="comms-messages-wrap">
+        <div class="comms-messages"
+             data-comms-messages
+             data-poll-url="{% url 'communications:conversation_messages' selected.pk %}"
+             data-last-id="{% with last_message=thread_messages.last %}{% if last_message %}{{ last_message.pk }}{% endif %}{% endwith %}">
+            {% include "admin/communications/_messages.html" %}
+        </div>
+        <div class="comms-scroll-latest" data-comms-scroll-latest hidden>
+            <button type="button" class="comms-scroll-latest__button" data-comms-scroll-bottom>{% admin_icon 'chevron-down' %} {% translate 'Latest messages' %}</button>
+        </div>
+    </div>
+
+    <form class="comms-composer"
+          method="post"
+          action="{% url 'communications:send_message' selected.pk %}"
+          enctype="multipart/form-data"
+          data-comms-send>
+        {% csrf_token %}
+        <input type="hidden" name="reply_to" value="" data-comms-reply-input>
+        <div class="comms-reply-preview" data-comms-reply-preview hidden>
+            <span class="comms-reply-preview__text"></span>
+            <button type="button" class="comms-iconbtn" data-comms-reply-cancel aria-label="{% translate 'Cancel reply' %}">{% admin_icon 'close' %}</button>
+        </div>
+        <div class="comms-composer__row">
+            <label class="comms-attach" title="{% translate 'Attach a document or image' %}">
+                {% admin_icon 'file' %}
+                <input type="file" name="attachment" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.rtf,.odt,.ods,.jpg,.jpeg,.png,.gif,.webp" data-comms-file>
+                <span class="comms-attach__name" data-comms-file-name>{% translate 'Attach' %}</span>
+            </label>
+            <textarea name="body"
+                      rows="1"
+                      maxlength="4000"
+                      placeholder="{% translate 'Write a message…' %}"
+                      aria-label="{% translate 'Message' %}"
+                      data-comms-textarea></textarea>
+            <button type="submit" class="comms-send">
+                {% admin_icon 'arrow-right' %}
+                <span>{% translate 'Send' %}</span>
+            </button>
+        </div>
+        <div class="comms-composer__hint">
+            <span>{% translate 'Press Enter to send, Shift + Enter for a new line.' %}</span>
+            <span data-comms-file-hint></span>
+        </div>
+        <p class="comms-composer__error" data-comms-error hidden></p>
+    </form>
+</section>
+
+<aside class="comms-info" id="comms-info" data-comms-info aria-label="{% translate 'Conversation information' %}">
+    <header class="comms-info__head">
+        <h2>{% translate 'Conversation details' %}</h2>
+        <button type="button" class="comms-iconbtn comms-info__close" data-comms-info-close aria-label="{% translate 'Close details' %}">
+            {% admin_icon 'close' %}
+        </button>
+    </header>
+
+    <div class="comms-info__scroll">
+        <div class="comms-info__identity">
+            <span class="comms-avatar comms-avatar--lg{% if selected.is_group %} comms-avatar--group{% endif %}" aria-hidden="true">{{ conversation_initials }}</span>
+            <div>
+                <h3>{{ display_name }}</h3>
+                {% if selected.is_direct %}
+                    <p>{% translate 'Private conversation between you and this staff member.' %}</p>
+                {% else %}
+                    <p>{{ selected.description|default:'No group description yet.' }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <dl class="comms-facts">
+            <div>
+                <dt>{% translate 'Type' %}</dt>
+                <dd>{% if selected.is_direct %}{% translate 'Direct message' %}{% else %}{% translate 'Group conversation' %}{% endif %}</dd>
+            </div>
+            <div>
+                <dt>{% translate 'Created' %}</dt>
+                <dd>{{ selected.created_at|date:'j M Y' }}{% if selected.created_by %} {% translate 'by' %} {{ selected.created_by.get_full_name|default:selected.created_by.get_username }}{% endif %}</dd>
+            </div>
+            <div>
+                <dt>{% translate 'Members' %}</dt>
+                <dd>{{ participants|length }}</dd>
+            </div>
+            {% if selected.last_message_at %}
+                <div>
+                    <dt>{% translate 'Last activity' %}</dt>
+                    <dd>{{ selected.last_message_at|date:'j M Y, H:i' }}</dd>
+                </div>
+            {% endif %}
+        </dl>
+
+        <section class="comms-info__section">
+            <div class="comms-info__section-head">
+                <h4>{% translate 'Members' %}</h4>
+                <span class="comms-muted">{{ participants|length }}</span>
+            </div>
+            <ul class="comms-member-list">
+                {% for participant in participants %}
+                    <li class="comms-member">
+                        <span class="comms-avatar" aria-hidden="true">{{ participant.initials }}</span>
+                        <span class="comms-member__body">
+                            <span class="comms-member__name">{{ participant.display_name }}{% if participant.user_id == user.pk %} <small>({% translate 'you' %})</small>{% endif %}</span>
+                            <span class="comms-member__role">{{ participant.get_role_display }}</span>
+                        </span>
+                        {% if can_manage and participant.user_id != user.pk %}
+                            <form method="post" action="{% url 'communications:remove_member' selected.pk %}" onsubmit="return confirm('{% translate "Remove this member from the group?" %}');">
+                                {% csrf_token %}
+                                <input type="hidden" name="participant" value="{{ participant.pk }}">
+                                <button type="submit" class="comms-iconbtn comms-iconbtn--danger" title="{% translate 'Remove member' %}" aria-label="{% translate 'Remove member' %}">{% admin_icon 'trash' %}</button>
+                            </form>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        {% if selected.is_group and can_add_members %}
+            <details class="comms-info__section comms-disclosure">
+                <summary>{% translate 'Add members' %}</summary>
+                {% if available_users %}
+                    <form method="post" action="{% url 'communications:add_members' selected.pk %}">
+                        {% csrf_token %}
+                        <div class="comms-check-list">
+                            {% for member in available_users %}
+                                <label class="comms-check">
+                                    <input type="checkbox" name="members" value="{{ member.pk }}">
+                                    <span class="comms-avatar comms-avatar--sm" aria-hidden="true">{{ member.get_full_name|default:member.get_username|first|upper }}</span>
+                                    <span>{{ member.get_full_name|default:member.get_username }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        <button type="submit" class="sboi-comms-button sboi-comms-button--small">{% translate 'Add selected' %}</button>
+                    </form>
+                {% else %}
+                    <p class="comms-muted">{% translate 'All authorised staff are already in this group.' %}</p>
+                {% endif %}
+            </details>
+        {% endif %}
+
+        {% if selected.is_group and can_edit_group %}
+            <details class="comms-info__section comms-disclosure">
+                <summary>{% translate 'Group settings' %}</summary>
+                <form method="post" action="{% url 'communications:update_group' selected.pk %}" class="comms-stack">
+                    {% csrf_token %}
+                    <label class="comms-field">
+                        <span>{% translate 'Group name' %}</span>
+                        <input type="text" name="name" value="{{ selected.name }}" maxlength="120" required>
+                    </label>
+                    <label class="comms-field">
+                        <span>{% translate 'Description' %}</span>
+                        <textarea name="description" rows="3" maxlength="2000">{{ selected.description }}</textarea>
+                    </label>
+                    {% if can_manage %}
+                        <label class="comms-check">
+                            <input type="checkbox" name="members_can_add_members"{% if selected.members_can_add_members %} checked{% endif %}>
+                            <span>{% translate 'Members can add new members' %}</span>
+                        </label>
+                        <label class="comms-check">
+                            <input type="checkbox" name="members_can_edit_group"{% if selected.members_can_edit_group %} checked{% endif %}>
+                            <span>{% translate 'Members can edit group details' %}</span>
+                        </label>
+                    {% endif %}
+                    <button type="submit" class="sboi-comms-button sboi-comms-button--small">{% translate 'Save changes' %}</button>
+                </form>
+            </details>
+        {% endif %}
+
+        {% if selected.is_group %}
+            <form method="post" action="{% url 'communications:leave_group' selected.pk %}" class="comms-leave" onsubmit="return confirm('{% translate "Leave this group?" %}');">
+                {% csrf_token %}
+                <button type="submit" class="comms-linkbutton comms-linkbutton--danger">{% translate 'Leave group' %}</button>
+            </form>
+        {% endif %}
+    </div>
+</aside>

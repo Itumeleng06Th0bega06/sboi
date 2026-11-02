@@ -1,0 +1,102 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/contact-conversation.css' %}?v=1">
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url 'admin:contact_contactmessage_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; {% translate 'Conversation' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="sboi-conversation">
+    <div class="sboi-conversation-head">
+        <div>
+            <h1>{{ title }}</h1>
+            <p>
+                Private member inbox · {{ thread|length }} message{{ thread|length|pluralize }}
+                {% if original.user %} · {{ original.user.email|default:original.user.username }}{% endif %}
+            </p>
+            <p class="sboi-thread-state">
+                {% if awaiting_reply %}
+                <span class="sboi-tag sboi-tag--new">Awaiting your reply</span>
+                {% else %}
+                <span class="sboi-tag sboi-tag--read">Replied — waiting on member</span>
+                {% endif %}
+                {% if member_unread %}
+                <span class="sboi-tag">{{ member_unread }} unread by member</span>
+                {% else %}
+                <span class="sboi-tag sboi-tag--read">Member has read every reply</span>
+                {% endif %}
+            </p>
+        </div>
+        <div class="sboi-head-actions">
+            <a class="button" href="{{ inbox_url }}">All conversations</a>
+            <a class="button" href="{{ compose_url }}">New message</a>
+            <a class="button" href="{{ change_url }}">Open record</a>
+        </div>
+    </div>
+
+    <div class="sboi-thread">
+        {% for item in thread %}
+        <article class="sboi-bubble {% if item.is_from_admin %}sboi-bubble--admin{% else %}sboi-bubble--member{% endif %}" id="message-{{ item.pk }}">
+            <header>
+                <strong>{% if item.is_from_admin %}Church administration{% else %}{{ item.sender_name }}{% endif %}</strong>
+                <time datetime="{{ item.created_at|date:'c' }}">{{ item.created_at|date:"d M Y, H:i" }}</time>
+                {% if item.is_from_admin %}
+                    {% if item.read_by_member %}
+                    <span class="sboi-tag sboi-tag--read">Read by member</span>
+                    {% else %}
+                    <span class="sboi-tag sboi-tag--new">Unread by member</span>
+                    {% endif %}
+                {% elif item.is_read %}
+                <span class="sboi-tag sboi-tag--read">Read</span>
+                {% else %}
+                <span class="sboi-tag sboi-tag--new">New</span>
+                {% endif %}
+            </header>
+            <div class="sboi-bubble-body">{{ item.message|linebreaksbr }}</div>
+            {% if item.attachment %}
+            <a class="sboi-attachment" href="{{ item.attachment_url }}" target="_blank" rel="noopener">
+                <span aria-hidden="true">↓</span>
+                {{ item.attachment_name }}
+                <small>Private attachment</small>
+            </a>
+            {% endif %}
+        </article>
+        {% empty %}
+        <p class="sboi-empty">No messages in this conversation yet.</p>
+        {% endfor %}
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="sboi-reply-form">
+        {% csrf_token %}
+        <h2>Reply privately</h2>
+        <p class="sboi-help">
+            This reply appears only in the member’s private account inbox and adds an
+            in-app notification. It is not emailed unless the member opted in.
+        </p>
+        {% if form.non_field_errors %}<div class="errornote">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="sboi-field">
+            <label for="{{ form.message.id_for_label }}">{{ form.message.label }}</label>
+            {{ form.message }}
+            {% for error in form.message.errors %}<p class="sboi-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="sboi-field">
+            <label for="{{ form.attachment.id_for_label }}">{{ form.attachment.label }}</label>
+            {{ form.attachment }}
+            {% for error in form.attachment.errors %}<p class="sboi-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="sboi-actions">
+            <button type="submit" class="button default">Send reply</button>
+            <a class="button" href="{% url 'admin:contact_contactmessage_changelist' %}">Back to messages</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

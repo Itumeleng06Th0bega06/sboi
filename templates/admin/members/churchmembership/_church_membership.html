@@ -6,12 +6,20 @@
       <h1 id="cm-page-title">{% trans 'Church Membership' %}</h1>
       <p>{% trans 'Manage church members, view details and keep track of their information.' %}</p>
     </div>
-    {% if can_add %}
+    <div class="cm-heading-actions">
+      {% if perms.contact.manage_contact_messages %}
+      <a class="cm-secondary-button" href="{% url 'admin:contact_contactmessage_compose' %}">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H5.17L4 17.17V4Zm0 0 8 7 8-7"/></svg>
+        <span>{% trans 'Message a member' %}</span>
+      </a>
+      {% endif %}
+      {% if can_add %}
       <a class="cm-primary-button" href="{{ add_member_url }}">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
         <span>{% trans 'Add New Member' %}</span>
       </a>
-    {% endif %}
+      {% endif %}
+    </div>
   </div>
 
   <div class="cm-stats-grid" aria-label="{% trans 'Membership statistics' %}">
@@ -180,6 +188,9 @@
           </section>
         </div>
         <div class="cm-profile-actions">
+          {% if perms.contact.manage_contact_messages %}
+          <a class="cm-secondary-button cm-button-full" href="{% url 'admin:contact_contactmessage_compose' %}?member={{ selected_member.id }}">{% trans 'Send message' %}</a>
+          {% endif %}
           {% if can_change %}<a class="cm-primary-button cm-button-full" href="{{ selected_member.edit_url }}">{% trans 'Edit Member' %}</a>{% endif %}
           <a class="cm-secondary-button cm-button-full" href="{{ directory_url }}">{% trans 'Manage records' %}</a>
         </div>

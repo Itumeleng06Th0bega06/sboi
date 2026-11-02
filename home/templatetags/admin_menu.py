@@ -46,6 +46,7 @@ MODULE_DESCRIPTIONS = {
     'gallery.sliderimage': 'Images in the homepage slider',
     # members
     'members.churchmembership': 'Church member records and directory',
+    'members.membershipchangerequest': 'Member-submitted membership changes awaiting review',
     # auth
     'auth.group': 'Permission groups for admin users',
     'auth.user': 'Admin and staff user accounts',
@@ -85,6 +86,7 @@ MODEL_ICONS = {
     'contact.contactmessage': 'mail',
     'gallery.sliderimage': 'image',
     'members.churchmembership': 'users',
+    'members.membershipchangerequest': 'id-card',
     'auth.group': 'users',
     'auth.user': 'user',
 }
@@ -125,6 +127,7 @@ MODEL_ICONS_3D = {
     'contact.contactmessage': 'envelope',
     'gallery.sliderimage': 'frame',
     'members.churchmembership': 'users',
+    'members.membershipchangerequest': 'idcard',
     'auth.group': 'groups',
     'auth.user': 'person',
 }

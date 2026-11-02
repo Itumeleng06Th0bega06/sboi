@@ -1,9 +1,10 @@
 from django.contrib import messages
-from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.contrib.auth.decorators import login_required
+from django.http import FileResponse, Http404, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import ContactMessageForm
-from .models import ContactInfo
+from .models import ContactInfo, ContactMessage
 
 
 def contact(request):
@@ -26,3 +27,29 @@ def contact(request):
         'form': form,
     }
     return render(request, 'contact.html', context)
+
+
+@login_required
+def message_attachment(request, pk):
+    """Stream a private attachment only to its owner or an authorised admin.
+
+    ``ContactMessage.attachment`` uses ``PrivateMediaStorage`` with no base URL,
+    so this permission-checked response is the only way to read the file.
+    """
+    message = get_object_or_404(ContactMessage, pk=pk)
+    allowed = (
+        message.user_id == request.user.pk
+        or request.user.has_perm('contact.manage_contact_messages')
+        or request.user.is_superuser
+    )
+    if not allowed:
+        raise Http404('Attachment not found.')
+    if not message.attachment:
+        raise Http404('No attachment on this message.')
+    content_type = getattr(message.attachment.file, 'content_type', None)
+    return FileResponse(
+        message.attachment.open('rb'),
+        as_attachment=True,
+        filename=message.attachment_name,
+        content_type=content_type or 'application/octet-stream',
+    )

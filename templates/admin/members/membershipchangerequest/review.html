@@ -1,0 +1,84 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+    .review-wrap { max-width: 880px; }
+    .review-card { background: var(--body-bg, #fff); border: 1px solid var(--hairline-color, #ddd); border-radius: 10px; padding: 20px; margin-bottom: 18px; }
+    .review-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 24px; margin: 0; }
+    .review-meta dt { color: var(--body-quiet-color, #666); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+    .review-meta dd { margin: 0 0 6px; font-size: 14px; }
+    .review-summary { margin: 0; padding-left: 18px; line-height: 1.7; }
+    .review-summary li { margin-bottom: 3px; }
+    .review-note textarea { width: 100%; min-height: 90px; }
+    .review-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .review-actions .button { cursor: pointer; }
+    .review-actions .reject { background: #9b3232; }
+    .review-note-label { display: block; margin-bottom: 6px; font-weight: 600; }
+    .review-pill { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #eee; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url 'admin:members_membershipchangerequest_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; {% translate 'Review' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="review-wrap">
+    <h1>Review membership request</h1>
+
+    <div class="review-card">
+        <p>
+            <span class="review-pill">{{ change.get_kind_display }}</span>
+            <span class="review-pill">{{ change.get_status_display }}</span>
+        </p>
+        <h2>{{ membership.full_name }}</h2>
+        <dl class="review-meta">
+            <div><dt>Account</dt><dd>{{ membership.user.get_username }} · {{ membership.user.email|default:'No email' }}</dd></div>
+            <div><dt>Current membership status</dt><dd>{{ membership.get_status_display }}</dd></div>
+            <div><dt>Membership ID</dt><dd>{{ membership.membership_id|default:'—' }}</dd></div>
+            <div><dt>Submitted</dt><dd>{{ change.created_at|date:"d M Y, H:i" }} by {{ change.submitted_by.get_username|default:'member' }}</dd></div>
+        </dl>
+    </div>
+
+    <div class="review-card">
+        <h2>Submitted answers</h2>
+        {% if summary_lines %}
+        <ul class="review-summary">
+            {% for line in summary_lines %}<li>{{ line }}</li>{% endfor %}
+        </ul>
+        {% else %}
+        <p>No written summary was supplied. Open the membership record to inspect the stored answers.</p>
+        {% endif %}
+    </div>
+
+    <form method="post" class="review-card">
+        {% csrf_token %}
+        <h2>Decision</h2>
+        <p>
+            {% if change.is_application %}
+            Approving an application makes the member active. Rejecting it records a
+            rejection and the member can update their details and apply again.
+            {% else %}
+            This is a details update. Approving it keeps the member active. Rejecting
+            it does <strong>not</strong> remove an existing active membership.
+            {% endif %}
+        </p>
+        <div class="review-note">
+            <label class="review-note-label" for="{{ form.admin_note.id_for_label }}">{{ form.admin_note.label }}</label>
+            {{ form.admin_note }}
+            {% for error in form.admin_note.errors %}<p class="errornote">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="review-actions">
+            <button type="submit" name="decision" value="approve" class="button default">Approve</button>
+            <button type="submit" name="decision" value="reject" class="button reject" style="color:#fff">Reject</button>
+            <a class="button" href="{% url 'admin:members_membershipchangerequest_changelist' %}">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

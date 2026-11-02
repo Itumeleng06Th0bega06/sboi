@@ -1,105 +1,55 @@
-from datetime import timedelta
-
-from django.core.cache import cache
 from django.urls import reverse
-from django.utils import timezone
 
 from about.models import ChurchProfile
 from contact.models import ContactInfo
 
-# Cache window for the admin notification bell counts.
+# Kept for the membership service's cache invalidation hook. The new bell uses
+# per-user notification rows and no longer serves stale cached counts, but the
+# constant remains part of the existing public API.
 NOTIFICATIONS_CACHE_KEY = 'admin_notifications'
 NOTIFICATIONS_CACHE_TTL = 45
 
 
 def build_admin_notifications():
-    """Admin notification items used by the bell's JSON API.
+    """Category summaries for callers that still want the old shape.
 
-    Returns six fixed rows (labels always present) whose counts are cached
-    briefly (45s) so admin page loads and the bell's periodic polling cost
-    near-zero DB work; badges may lag by up to a minute, which is fine for
-    this purpose.
+    The live bell uses the shared notification service instead; this helper
+    exists only for backwards-compatible imports.
     """
-    cached = cache.get(NOTIFICATIONS_CACHE_KEY)
-    if cached is not None:
-        return cached
+    from notifications.models import Notification
+    from notifications.services import open_notifications
 
-    from blackboard.models import EventRsvp, MemberProfile
-    from contact.models import ContactMessage
-
-    from .models import Subscriber, Testimony
-
-    week = timezone.now() - timedelta(days=7)
-
-    def item(label, queryset, view_name, icon, tone, permission):
-        return {
-            'label': label,
-            'count': queryset.count(),
-            'url': reverse(view_name),
-            'icon': icon,
-            'tone': tone,
-            'permission': permission,
-        }
-
-    notifications = [
-        item(
-            'Unread contact messages',
-            ContactMessage.objects.filter(is_read=False),
-            'admin:contact_contactmessage_changelist',
-            'mail',
-            'attention',
-            'contact.manage_contact_messages',
-        ),
-        item(
-            'Pending testimonies',
-            Testimony.objects.filter(is_approved=False),
-            'admin:home_testimony_changelist',
-            'message',
-            'attention',
-            'home.manage_testimonies',
-        ),
-        item(
-            'Blocked / suspended members',
-            MemberProfile.objects.exclude(status='active'),
-            'admin:blackboard_memberprofile_changelist',
-            'user-slash',
-            'warning',
-            'blackboard.manage_member_access',
-        ),
-        item(
-            'New newsletter subscribers (7 days)',
-            Subscriber.objects.filter(subscribed_at__gte=week),
-            'admin:home_subscriber_changelist',
-            'mail-open',
-            'info',
-            'home.manage_subscribers',
-        ),
-        item(
-            'New event RSVPs (7 days)',
-            EventRsvp.objects.filter(created_at__gte=week),
-            'admin:blackboard_eventrsvp_changelist',
-            'clipboard',
-            'info',
-            'blackboard.manage_rsvps',
-        ),
-        item(
-            'New members (7 days)',
-            MemberProfile.objects.filter(created_at__gte=week),
-            'admin:blackboard_memberprofile_changelist',
-            'id-card',
-            'info',
-            'blackboard.manage_member_access',
-        ),
-    ]
-    cache.set(NOTIFICATIONS_CACHE_KEY, notifications, NOTIFICATIONS_CACHE_TTL)
-    return notifications
+    rows = []
+    seen = set()
+    for notification in open_notifications('staff').filter(
+        recipient__isnull=True,
+    ).order_by('category', '-created_at'):
+        if notification.category in seen:
+            continue
+        seen.add(notification.category)
+        rows.append({
+            'label': notification.title,
+            'count': open_notifications('staff').filter(
+                recipient__isnull=True,
+                category=notification.category,
+            ).count(),
+            'url': notification.url,
+            'icon': notification.icon,
+            'tone': notification.tone,
+            'permission': notification.permission,
+        })
+    return rows
 
 
 def notifications_for_user(user):
-    """Hide counts/links for areas the staff member cannot open."""
+    """Serialised open staff notifications for one user (no request state)."""
+    from notifications import services
+
     return [
-        item for item in build_admin_notifications()
-        if user.has_perm(item['permission'])
+        services.serialize(notification)
+        for notification in services.visible_notifications(
+            user, services.STAFF_SCOPE,
+        ).select_related('recipient')
     ]
 
 
@@ -111,13 +61,7 @@ def site_info(request):
 
 
 def admin_notifications(request):
-    """Navbar shortcuts and notification counts for signed-in staff.
-
-    The dashboard itself is generated from the full section list; this context
-    only supplies the quick-add menu and bell. Both are filtered by the same
-    area permissions so an unassigned staff member never sees a working
-    shortcut or a count for an area they cannot open.
-    """
+    """Navbar shortcuts and notification counts for signed-in staff."""
     try:
         admin_path = reverse('admin:index')
     except Exception:
@@ -154,19 +98,47 @@ def admin_notifications(request):
             'Add slider image', 'image', 'admin:gallery_sliderimage_add',
             'gallery.manage_gallery',
         ),
+        quick_action(
+            'Message a member', 'mail',
+            'admin:contact_contactmessage_compose',
+            'contact.manage_contact_messages',
+        ),
     ]
     quick_actions = [
         action for action in quick_actions
         if request.user.has_perm(action['permission'])
     ]
-    notifications = notifications_for_user(request.user)
+
+    from notifications import services
+
+    services.sync_admin_messages_for_user(request.user)
+    items = services.notification_items(request, services.STAFF_SCOPE)
+    badge = services.unread_count(request, services.STAFF_SCOPE)
+    communications = {'allowed': False, 'url': '', 'unread': 0}
+    try:
+        from communications.services import can_use_portal, unread_summary
+
+        if can_use_portal(request.user):
+            total, latest_conversation = unread_summary(request.user)
+            inbox_url = reverse('communications:inbox')
+            communications = {
+                'allowed': True,
+                'url': (
+                    f'{inbox_url}?conversation={latest_conversation}'
+                    if latest_conversation else inbox_url
+                ),
+                'unread': total,
+            }
+    except Exception:
+        # The portal is optional on a fresh install; the rest of the admin
+        # console must still render if its tables have not been migrated yet.
+        pass
     return {
         'admin_dashboard': {
             'quick_actions': quick_actions,
-            'notifications': notifications,
-            'notification_badge': sum(
-                item['count'] for item in notifications
-                if item['tone'] in ('attention', 'warning')
-            ),
+            'notifications': items,
+            'notification_badge': badge,
+            'notification_history_url': reverse('admin_notifications_history'),
+            'communications': communications,
         },
     }

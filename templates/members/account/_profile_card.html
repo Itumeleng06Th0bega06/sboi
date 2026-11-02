@@ -1,0 +1,33 @@
+<section class="account-card account-card--profile" id="profile">
+    <header class="account-card-head">
+        <div>
+            <h2>Personal profile</h2>
+            <p class="account-muted">Your contact details, kept private to the church office.</p>
+        </div>
+        <button type="button" class="account-text-link" data-account-open="profileModal">Edit</button>
+    </header>
+
+    <div class="account-profile-head">
+        {% if member_avatar_url %}
+        <img src="{{ member_avatar_url }}" alt="" class="account-avatar account-avatar--md">
+        {% else %}
+        <span class="account-avatar account-avatar--md" aria-hidden="true">{{ member_initials|default:'S' }}</span>
+        {% endif %}
+        <div>
+            <h3>{{ request.user.get_full_name|default:request.user.username }}</h3>
+            <p class="account-muted">@{{ request.user.username }}</p>
+            <span class="account-type-badge">{{ account_type }}</span>
+        </div>
+    </div>
+
+    <dl class="account-detail-list">
+        <div><dt>Email</dt><dd>{{ request.user.email|default:'Not provided' }}</dd></div>
+        <div><dt>Phone</dt><dd>{% if membership and membership.phone %}{{ membership.phone }}{% else %}Not provided{% endif %}</dd></div>
+        <div><dt>Date of birth</dt><dd>{% if membership and membership.date_of_birth %}{{ membership.date_of_birth|date:"d M Y" }}{% else %}Not provided{% endif %}</dd></div>
+        <div><dt>Gender</dt><dd>{% if membership and membership.gender %}{{ membership.get_gender_display }}{% else %}Not provided{% endif %}</dd></div>
+        <div><dt>Marital status</dt><dd>{% if membership and membership.marital_status %}{{ membership.get_marital_status_display }}{% else %}Not provided{% endif %}</dd></div>
+        <div class="account-detail-list--full"><dt>Address</dt><dd>{% if membership and membership.address %}{{ membership.address|linebreaksbr }}{% else %}Not provided{% endif %}</dd></div>
+        <div><dt>Emergency contact</dt><dd>{% if membership and membership.emergency_contact_name %}{{ membership.emergency_contact_name }}{% else %}Not provided{% endif %}</dd></div>
+        <div><dt>Emergency phone</dt><dd>{% if membership and membership.emergency_contact_phone %}{{ membership.emergency_contact_phone }}{% else %}Not provided{% endif %}</dd></div>
+    </dl>
+</section>

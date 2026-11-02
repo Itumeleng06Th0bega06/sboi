@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My account · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
+{% block body_class %}account-page{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/account.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="account-shell container">
+    <aside class="account-sidebar">
+        <div class="account-identity">
+            {% if member_avatar_url %}
+            <img src="{{ member_avatar_url }}" alt="" class="account-avatar account-avatar--lg">
+            {% else %}
+            <span class="account-avatar account-avatar--lg" aria-hidden="true">{{ member_initials|default:'S' }}</span>
+            {% endif %}
+            <div class="account-identity-text">
+                <strong>{{ member_display_name|default:request.user.username }}</strong>
+                <span>{{ request.user.email }}</span>
+            </div>
+            {% if membership %}
+            <span class="status-pill status-{{ membership.status }}">{{ membership.get_status_display }}</span>
+            {% else %}
+            <span class="status-pill status-none">Website account</span>
+            {% endif %}
+        </div>
+
+        {% include 'members/account/_account_nav.html' %}
+
+        <div class="account-sidebar-foot">
+            <a href="{% url 'blackboard:blackboard' %}" class="account-side-link">Church blackboard</a>
+            <a href="{% url 'contact:contact' %}" class="account-side-link">Contact the church</a>
+        </div>
+    </aside>
+
+    <section class="account-main">
+        {% if messages %}
+        <div class="account-flashes" role="status" aria-live="polite">
+            {% for message in messages %}
+            <p class="account-flash account-flash--{{ message.tags|default:'info' }}">{{ message }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block account_content %}{% endblock %}
+    </section>
+</div>
+
+{% block account_modals %}{% endblock %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/account.js' %}?v=1" defer></script>
+{% block account_scripts %}{% endblock %}
+{% endblock %}

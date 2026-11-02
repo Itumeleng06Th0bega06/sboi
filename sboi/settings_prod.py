@@ -188,6 +188,17 @@ DEFAULT_FROM_EMAIL = os.environ.get(
 )
 
 # ---------------------------------------------------------------------------
+# WhatsApp (optional — provider credentials are never bundled)
+# ---------------------------------------------------------------------------
+# When all of WHATSAPP_API_URL and WHATSAPP_API_TOKEN are blank, the membership
+# review records "Not configured" and never pretends a message was delivered.
+# See docs/WHATSAPP.md for the expected request shape.
+
+WHATSAPP_API_URL = os.environ.get('WHATSAPP_API_URL', '').strip()
+WHATSAPP_API_TOKEN = os.environ.get('WHATSAPP_API_TOKEN', '').strip()
+WHATSAPP_SENDER_ID = os.environ.get('WHATSAPP_SENDER_ID', '').strip()
+
+# ---------------------------------------------------------------------------
 # Logging (Passenger captures stderr into the app's error log)
 # ---------------------------------------------------------------------------
 

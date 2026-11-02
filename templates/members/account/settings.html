@@ -1,0 +1,75 @@
+{% extends 'members/account/base_account.html' %}
+
+{% block title %}Settings · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
+
+{% block account_content %}
+<section class="account-hero account-hero--compact">
+    <div class="account-hero-copy">
+        <p class="account-eyebrow">Account</p>
+        <h1>Settings</h1>
+        <p>Control how the church contacts you and keep your sign-in secure.</p>
+    </div>
+</section>
+
+<div class="account-grid">
+    <div class="account-col">
+        <section class="account-card">
+            <header class="account-card-head">
+                <div>
+                    <h2>Notifications</h2>
+                    <p class="account-muted">In-app notifications are always on. Email is optional.</p>
+                </div>
+            </header>
+            <form method="post" action="{% url 'members:account_settings' %}" class="account-form">
+                {% csrf_token %}
+                <div class="account-form-grid">
+                    {% for field in preference_form %}
+                    {% include 'members/account/_account_field.html' with field=field %}
+                    {% endfor %}
+                </div>
+                <div class="account-form-actions">
+                    <button type="submit" name="save_preferences" value="1" class="btn btn-gold">Save preferences</button>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <div class="account-col">
+        <section class="account-card">
+            <header class="account-card-head">
+                <div>
+                    <h2>Change password</h2>
+                    <p class="account-muted">Use a strong password you do not reuse elsewhere.</p>
+                </div>
+            </header>
+            <form method="post" action="{% url 'members:account_settings' %}" class="account-form">
+                {% csrf_token %}
+                {% if password_form.non_field_errors %}
+                <div class="account-alert account-alert--error">{{ password_form.non_field_errors }}</div>
+                {% endif %}
+                <div class="account-form-grid account-form-grid--single">
+                    {% for field in password_form %}
+                    {% include 'members/account/_account_field.html' with field=field %}
+                    {% endfor %}
+                </div>
+                <div class="account-form-actions">
+                    <button type="submit" name="change_password" value="1" class="btn btn-gold">Update password</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="account-card account-card--soft">
+            <h2 class="account-card-title">Your account</h2>
+            <dl class="account-detail-list">
+                <div><dt>Username</dt><dd>{{ request.user.username }}</dd></div>
+                <div><dt>Email</dt><dd>{{ request.user.email|default:'Not provided' }}</dd></div>
+                <div><dt>Joined</dt><dd>{{ request.user.date_joined|date:"d M Y" }}</dd></div>
+            </dl>
+            <p class="account-muted">
+                To change your email address or name, use
+                <a class="account-text-link" href="{% url 'members:account' %}">your profile</a>.
+            </p>
+        </section>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+<form method="post"
+      action="{% url 'members:account_membership_edit' %}"
+      class="account-form account-form--membership"
+      data-account-form="membership">
+    {% csrf_token %}
+    {% if membership_form.non_field_errors %}
+    <div class="account-alert account-alert--error">{{ membership_form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="account-alert account-alert--info">
+        <strong>How this works.</strong>
+        {% if membership %}
+        Your church membership stays exactly as it is while the church office reviews
+        this update. You can keep using your account normally.
+        {% else %}
+        Your application is sent to the church office for review. You will be notified
+        in your account when it has been approved.
+        {% endif %}
+    </div>
+
+    {% for section in membership_form.sections %}
+    {% if section.fields %}
+    <section class="account-form-section" id="{{ section.id }}">
+        <h3>{{ section.title }}</h3>
+        {% if section.blurb %}<p class="account-muted">{{ section.blurb }}</p>{% endif %}
+        <div class="account-form-grid">
+            {% for field in section.fields %}
+            {% include 'members/account/_account_field.html' with field=field %}
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+    {% endfor %}
+
+    <div class="account-form-actions">
+        <button type="submit" class="btn btn-gold">
+            {% if membership %}Submit changes for review{% else %}Submit membership application{% endif %}
+        </button>
+        <button type="button" class="btn btn-ghost" data-account-modal-close>Cancel</button>
+    </div>
+</form>

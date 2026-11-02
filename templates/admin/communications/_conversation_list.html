@@ -1,0 +1,35 @@
+{% load i18n admin_menu %}
+{% for row in conversation_rows %}
+    <a class="comms-conversation{% if selected_id == row.conversation.pk %} is-active{% endif %}"
+       href="{% url 'communications:inbox' %}?conversation={{ row.conversation.pk }}"
+       data-comms-open
+       data-conversation-id="{{ row.conversation.pk }}"
+       data-workspace-url="{% url 'communications:conversation_workspace' row.conversation.pk %}">
+        <span class="comms-avatar{% if row.conversation.is_group %} comms-avatar--group{% endif %}" aria-hidden="true">{{ row.initials }}</span>
+        <span class="comms-conversation__body">
+            <span class="comms-conversation__top">
+                <span class="comms-conversation__name">{{ row.display_name }}</span>
+                <time class="comms-conversation__time" datetime="{{ row.last_activity|date:'c' }}">{{ row.last_activity|timesince }} {% translate 'ago' %}</time>
+            </span>
+            <span class="comms-conversation__bottom">
+                <span class="comms-conversation__preview">
+                    {% if row.last_message and row.last_message.sender %}{{ row.last_message.sender_name }}: {% endif %}{{ row.preview }}
+                </span>
+                {% if row.unread_count %}
+                    <span class="comms-unread" aria-label="{% blocktranslate count counter=row.unread_count %}{{ counter }} unread message{% plural %}{{ counter }} unread messages{% endblocktranslate %}">{{ row.unread_count }}</span>
+                {% endif %}
+            </span>
+        </span>
+        {% if row.conversation.is_group %}
+            <span class="comms-conversation__members" title="{% translate 'Group members' %}">
+                {% admin_icon 'users' %}{{ row.participant_count }}
+            </span>
+        {% endif %}
+    </a>
+{% empty %}
+    <div class="comms-list-empty">
+        <span class="comms-list-empty__icon">{% admin_icon 'message' %}</span>
+        <p>{% translate 'No conversations yet.' %}</p>
+        <p class="comms-muted">{% translate 'Create a group or start a direct message to get going.' %}</p>
+    </div>
+{% endfor %}

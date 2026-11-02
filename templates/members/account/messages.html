@@ -1,0 +1,75 @@
+{% extends 'members/account/base_account.html' %}
+{% load static %}
+
+{% block title %}Messages · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
+
+{% block account_content %}
+<section class="account-message-shell">
+    <header class="account-message-header">
+        <div>
+            <p class="account-eyebrow">Private conversation</p>
+            <h1>Messages</h1>
+            <p class="account-muted">
+                One private inbox for testimonies, prayer requests, questions and concerns.
+                Only you and the church administration can read this conversation.
+            </p>
+        </div>
+        <span class="account-secure-badge">Private</span>
+    </header>
+
+    <div class="account-thread"
+         id="accountThread"
+         data-account-thread
+         data-after="{% if thread %}{{ thread.last.pk }}{% endif %}"
+         data-poll-url="{% url 'members:account_message_poll' %}"
+         aria-live="polite">
+        {% for message in thread %}
+        {% include 'members/account/_message_bubble.html' %}
+        {% empty %}
+        <div class="account-thread-empty" data-account-thread-empty>
+            <h2>Start the conversation</h2>
+            <p>Nothing has been sent yet. Whenever you are ready, write below. The church office will reply here.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <form method="post"
+          action="{% url 'members:account_message_send' %}"
+          enctype="multipart/form-data"
+          class="account-composer"
+          data-account-message-form>
+        {% csrf_token %}
+        <div class="account-composer-field">
+            <label class="sr-only" for="{{ message_form.message.id_for_label }}">Message</label>
+            {{ message_form.message }}
+            {% for error in message_form.message.errors %}<p class="account-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="account-composer-actions">
+            <label class="account-attach-button" for="{{ message_form.attachment.id_for_label }}">
+                <span aria-hidden="true">＋</span> Attach a file
+                {{ message_form.attachment }}
+            </label>
+            <span class="account-composer-note" data-account-attachment-name></span>
+            <button type="submit" class="btn btn-gold">Send privately</button>
+        </div>
+        <div class="account-composer-status" data-account-message-status role="status" aria-live="polite"></div>
+        {% for error in message_form.attachment.errors %}<p class="account-error">{{ error }}</p>{% endfor %}
+    </form>
+</section>
+{% endblock %}
+
+{% block account_scripts %}
+<script>
+(function () {
+    var form = document.querySelector('[data-account-message-form]');
+    if (!form) return;
+    var input = form.querySelector('input[type="file"]');
+    var name = form.querySelector('[data-account-attachment-name]');
+    if (input && name) {
+        input.addEventListener('change', function () {
+            name.textContent = input.files && input.files[0] ? input.files[0].name : '';
+        });
+    }
+})();
+</script>
+{% endblock %}

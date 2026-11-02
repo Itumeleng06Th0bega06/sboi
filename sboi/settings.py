@@ -52,6 +52,8 @@ INSTALLED_APPS = [
     'contact',
     'gallery',
     'members',
+    'communications',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -79,7 +81,9 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'home.context_processors.site_info',
                 'home.context_processors.admin_notifications',
+                'notifications.context_processors.notification_bell',
                 'about.context_processors.about_chapters',
+                'members.context_processors.member_account',
             ],
         },
     },
@@ -142,6 +146,11 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Private uploads. Files here are deliberately outside MEDIA_ROOT so the web
+# server can never serve them directly: the communications portal streams
+# attachments through an authorised Django view instead.
+PRIVATE_MEDIA_ROOT = BASE_DIR / 'private_media'
+
 # Uploaded files are stored on the local disk: media/ in development and
 # public_html/media in production (see sboi/settings_prod.py).
 STORAGES = {
@@ -166,6 +175,14 @@ LOGOUT_REDIRECT_URL = 'home:home'
 # raise on send. Use `manage.py reset_admin_password <user>` to get a link
 # directly instead of digging through the console.
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Optional WhatsApp membership notifications. Nothing is bundled with the
+# project and no message is claimed as sent unless a real provider accepts it.
+# Leave these blank in development; see docs/WHATSAPP.md. Production reads the
+# same names from .env (sboi/settings_prod.py).
+WHATSAPP_API_URL = ''
+WHATSAPP_API_TOKEN = ''
+WHATSAPP_SENDER_ID = ''
 
 
 CSRF_TRUSTED_ORIGINS = [

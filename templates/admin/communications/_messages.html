@@ -1,0 +1,13 @@
+{% load i18n admin_menu %}
+{% for message in thread_messages %}
+    {% include "admin/communications/_message.html" %}
+{% empty %}
+    <div class="comms-thread-empty">
+        <span class="comms-thread-empty__icon">{% admin_icon 'message' %}</span>
+        {% if message_query %}
+            <p>{% translate 'No messages match your search.' %}</p>
+        {% else %}
+            <p>{% translate 'No messages yet. Start the conversation.' %}</p>
+        {% endif %}
+    </div>
+{% endfor %}

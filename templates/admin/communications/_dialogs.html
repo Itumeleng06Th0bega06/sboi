@@ -1,0 +1,102 @@
+{% load i18n admin_menu %}
+<dialog class="comms-dialog" data-comms-dialog="group"{% if open_dialog == 'group' %} data-auto-open="1"{% endif %}>
+    <form method="post" action="{% url 'communications:create_group' %}" class="comms-dialog__form">
+        {% csrf_token %}
+        <header class="comms-dialog__head">
+            <div>
+                <p class="sboi-dash__eyebrow">{% translate 'New conversation' %}</p>
+                <h2>{% translate 'Create a group' %}</h2>
+            </div>
+            <button type="button" class="comms-iconbtn" data-comms-dialog-close aria-label="{% translate 'Close' %}">{% admin_icon 'close' %}</button>
+        </header>
+
+        {% if group_form.errors %}
+            <div class="comms-form-errors">
+                {% for field in group_form %}
+                    {% for error in field.errors %}<p>{{ error }}</p>{% endfor %}
+                {% endfor %}
+                {% for error in group_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+
+        <label class="comms-field">
+            <span>{% translate 'Group name' %} <em>*</em></span>
+            <input type="text" name="name" value="{{ group_form.name.value|default:'' }}" maxlength="120" placeholder="{% translate 'e.g. Finance Team' %}" required>
+        </label>
+        <label class="comms-field">
+            <span>{% translate 'Description' %}</span>
+            <textarea name="description" rows="3" maxlength="2000" placeholder="{% translate 'What is this group for?' %}">{{ group_form.description.value|default:'' }}</textarea>
+        </label>
+
+        <fieldset class="comms-field">
+            <legend>{% translate 'Add staff members' %}</legend>
+            {% if portal_users %}
+                <div class="comms-check-list">
+                    {% for member in portal_users %}
+                        <label class="comms-check">
+                            <input type="checkbox" name="members" value="{{ member.pk }}">
+                            <span class="comms-avatar comms-avatar--sm" aria-hidden="true">{{ member.get_full_name|default:member.get_username|first|upper }}</span>
+                            <span>{{ member.get_full_name|default:member.get_username }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="comms-muted">{% translate 'No other staff accounts have communications access yet.' %}</p>
+            {% endif %}
+        </fieldset>
+
+        <div class="comms-stack comms-stack--tight">
+            <label class="comms-check">
+                <input type="checkbox" name="members_can_add_members">
+                <span>{% translate 'Members can add new members' %}</span>
+            </label>
+            <label class="comms-check">
+                <input type="checkbox" name="members_can_edit_group">
+                <span>{% translate 'Members can edit group details' %}</span>
+            </label>
+        </div>
+
+        <footer class="comms-dialog__foot">
+            <button type="button" class="sboi-comms-button sboi-comms-button--quiet" data-comms-dialog-close>{% translate 'Cancel' %}</button>
+            <button type="submit" class="sboi-comms-button">{% translate 'Create group' %}</button>
+        </footer>
+    </form>
+</dialog>
+
+<dialog class="comms-dialog" data-comms-dialog="direct"{% if open_dialog == 'direct' %} data-auto-open="1"{% endif %}>
+    <form method="post" action="{% url 'communications:start_direct' %}" class="comms-dialog__form">
+        {% csrf_token %}
+        <header class="comms-dialog__head">
+            <div>
+                <p class="sboi-dash__eyebrow">{% translate 'Private message' %}</p>
+                <h2>{% translate 'Start a direct message' %}</h2>
+            </div>
+            <button type="button" class="comms-iconbtn" data-comms-dialog-close aria-label="{% translate 'Close' %}">{% admin_icon 'close' %}</button>
+        </header>
+
+        {% if direct_form.errors %}
+            <div class="comms-form-errors">
+                {% for field in direct_form %}
+                    {% for error in field.errors %}<p>{{ error }}</p>{% endfor %}
+                {% endfor %}
+                {% for error in direct_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+
+        <p class="comms-muted">{% translate 'Only you and the selected staff member can see this conversation.' %}</p>
+        <label class="comms-field">
+            <span>{% translate 'Staff member' %}</span>
+            <select name="recipient" required>
+                <option value="">{% translate 'Choose a staff member' %}</option>
+                {% for member in portal_users %}
+                    <option value="{{ member.pk }}">{{ member.get_full_name|default:member.get_username }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <footer class="comms-dialog__foot">
+            <button type="button" class="sboi-comms-button sboi-comms-button--quiet" data-comms-dialog-close>{% translate 'Cancel' %}</button>
+            <button type="submit" class="sboi-comms-button">{% translate 'Start conversation' %}</button>
+        </footer>
+    </form>
+</dialog>

@@ -1,0 +1,129 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/contact-inbox.css' %}?v=1">
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{{ changelist_url }}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; {% translate 'Member inbox' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="sboi-inbox">
+    <div class="sboi-inbox-head">
+        <div>
+            <h1>{% translate 'Member inbox' %}</h1>
+            <p>
+                One private conversation per member. Replies appear in the
+                member’s account and in-app notification bell — never on the
+                public site.
+            </p>
+        </div>
+        <div class="sboi-inbox-actions">
+            <a class="button" href="{{ changelist_url }}">All messages</a>
+            <a class="button default" href="{{ compose_url }}">New message</a>
+        </div>
+    </div>
+
+    <div class="sboi-inbox-stats" aria-label="{% translate 'Inbox summary' %}">
+        <article>
+            <span>{% translate 'Conversations' %}</span>
+            <strong>{{ total_conversations }}</strong>
+        </article>
+        <article{% if total_unread_admin %} class="is-attention"{% endif %}>
+            <span>{% translate 'Unread by you' %}</span>
+            <strong>{{ total_unread_admin }}</strong>
+        </article>
+        <article{% if total_awaiting %} class="is-attention"{% endif %}>
+            <span>{% translate 'Awaiting a reply' %}</span>
+            <strong>{{ total_awaiting }}</strong>
+        </article>
+        <article>
+            <span>{% translate 'Unread by members' %}</span>
+            <strong>{{ total_unread_member }}</strong>
+        </article>
+    </div>
+
+    <form method="get" class="sboi-inbox-search" role="search">
+        <label class="visually-hidden" for="inbox-q">{% translate 'Search conversations' %}</label>
+        <input id="inbox-q" type="search" name="q" value="{{ query }}"
+               placeholder="{% translate 'Search member, email, subject or message' %}">
+        <button type="submit" class="button">{% translate 'Search' %}</button>
+        {% if query %}
+        <a class="button" href="{% url 'admin:contact_contactmessage_inbox' %}">{% translate 'Clear' %}</a>
+        {% endif %}
+    </form>
+
+    {% if rows %}
+    <div class="sboi-inbox-table-wrap">
+        <table class="sboi-inbox-table">
+            <thead>
+                <tr>
+                    <th scope="col">{% translate 'Member' %}</th>
+                    <th scope="col">{% translate 'Latest message' %}</th>
+                    <th scope="col">{% translate 'Unread by you' %}</th>
+                    <th scope="col">{% translate 'Unread by member' %}</th>
+                    <th scope="col">{% translate 'Status' %}</th>
+                    <th scope="col"><span class="visually-hidden">{% translate 'Actions' %}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr{% if row.unread_admin %} class="is-unread"{% endif %}>
+                    <td>
+                        <strong>{{ row.user.get_full_name|default:row.user.username }}</strong>
+                        <small>{{ row.user.email|default:row.user.username }}</small>
+                        {% if row.membership %}
+                        <small>{{ row.membership.membership_id }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <p>{{ row.latest.message|truncatechars:85 }}</p>
+                        <small>
+                            {% if row.latest.is_from_admin %}Church administration{% else %}Member{% endif %}
+                            · {{ row.latest.created_at|date:"d M Y, H:i" }}
+                        </small>
+                    </td>
+                    <td>
+                        {% if row.unread_admin %}
+                        <span class="sboi-count sboi-count--attention">{{ row.unread_admin }}</span>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>
+                        {% if row.unread_member %}
+                        <span class="sboi-count">{{ row.unread_member }}</span>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>
+                        {% if row.awaiting_reply %}
+                        <span class="sboi-pill sboi-pill--attention">{% translate 'Awaiting reply' %}</span>
+                        {% else %}
+                        <span class="sboi-pill">{% translate 'Waiting on member' %}</span>
+                        {% endif %}
+                    </td>
+                    <td class="sboi-inbox-row-actions">
+                        <a class="button" href="{{ row.conversation_url }}">{% translate 'Open' %}</a>
+                        <a class="button" href="{{ row.compose_url }}">{% translate 'Message' %}</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="sboi-inbox-empty">
+        <h2>{% translate 'No member conversations yet' %}</h2>
+        <p>
+            {% translate 'Start a private conversation with any church member — they do not need to have written first.' %}
+        </p>
+        <a class="button default" href="{{ compose_url }}">{% translate 'Message a member' %}</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

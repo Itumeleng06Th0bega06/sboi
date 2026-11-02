@@ -2,18 +2,23 @@ import csv
 import re
 
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
-from django.shortcuts import render
-from django.urls import path
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import path, reverse
+from django.utils.html import format_html
 
 from sboi.admin_permissions import AreaPermissionMixin
 
-from . import dashboard
+from . import dashboard, services
 from .forms import ChurchMembershipFieldsMixin
-from .models import MINISTRY_CHOICES, ChurchMembership
+from .models import (
+    MINISTRY_CHOICES,
+    ChurchMembership,
+    MembershipChangeRequest,
+)
 
 
 class MinistryFilter(admin.SimpleListFilter):
@@ -245,6 +250,7 @@ class ChurchMembershipAdmin(AreaPermissionMixin, admin.ModelAdmin):
         ]}),
         ('Additional information', {'fields': [
             'notes', 'prayer_request', 'pastoral_support_requested',
+            'whatsapp_consent',
         ]}),
         ('Record', {'fields': [
             'membership_id', 'status', 'created_at', 'updated_at',
@@ -350,3 +356,163 @@ class ChurchMembershipAdmin(AreaPermissionMixin, admin.ModelAdmin):
 
 def obj_value(value):
     return value or ''
+
+
+class MembershipReviewForm(forms.Form):
+    admin_note = forms.CharField(
+        label='Note to the member (optional)',
+        required=False,
+        widget=forms.Textarea(attrs={
+            'rows': 3,
+            'placeholder': 'Explain the decision or ask for any correction…',
+        }),
+    )
+
+
+@admin.register(MembershipChangeRequest)
+class MembershipChangeRequestAdmin(AreaPermissionMixin, admin.ModelAdmin):
+    """The administrator-only review queue for membership changes.
+
+    The actions call :func:`members.services.apply_membership_decision`, which
+    is also used by the review page. That function is the *only* place that
+    changes an approval status, and it always records the reviewer.
+    """
+
+    area_permission = 'members.manage_membership'
+    list_display = [
+        'membership', 'kind', 'status', 'submitted_by', 'created_at',
+        'reviewed_by', 'whatsapp_status', 'review_link',
+    ]
+    list_filter = ['status', 'kind', 'whatsapp_status', 'created_at']
+    search_fields = [
+        'membership__membership_id', 'membership__user__first_name',
+        'membership__user__last_name', 'membership__user__email',
+        'submitted_by__username', 'summary',
+    ]
+    date_hierarchy = 'created_at'
+    readonly_fields = [
+        'membership', 'submitted_by', 'kind', 'status', 'summary',
+        'reviewed_by', 'reviewed_at', 'created_at', 'updated_at',
+        'whatsapp_status', 'whatsapp_error',
+    ]
+    fields = readonly_fields + ['admin_note']
+    actions = ['approve_selected', 'reject_selected']
+
+    def get_urls(self):
+        custom = [
+            path(
+                '<int:pk>/review/',
+                self.admin_site.admin_view(self.review_view),
+                name='members_membershipchangerequest_review',
+            ),
+        ]
+        return custom + super().get_urls()
+
+    def has_add_permission(self, request):
+        # The queue is produced by member submissions, never hand-created.
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        # Keep the review history as an audit trail.
+        return False
+
+    @admin.display(description='Review')
+    def review_link(self, obj):
+        if obj.status != MembershipChangeRequest.STATUS_PENDING:
+            return 'Reviewed'
+        url = reverse(
+            'admin:members_membershipchangerequest_review', args=[obj.pk],
+        )
+        return format_html('<a class="button" href="{}">Review</a>', url)
+
+    def review_view(self, request, pk):
+        if not self.has_change_permission(request):
+            raise PermissionDenied
+        change = get_object_or_404(
+            MembershipChangeRequest.objects.select_related(
+                'membership', 'membership__user', 'submitted_by',
+                'reviewed_by',
+            ),
+            pk=pk,
+        )
+        form = MembershipReviewForm()
+        if request.method == 'POST':
+            form = MembershipReviewForm(request.POST)
+            if form.is_valid():
+                decision = request.POST.get('decision')
+                if decision not in ('approve', 'reject'):
+                    messages.error(request, 'Choose approve or reject.')
+                else:
+                    change, notification, _created = (
+                        services.apply_membership_decision(
+                            change.pk,
+                            request.user,
+                            approve=decision == 'approve',
+                            note=form.cleaned_data.get('admin_note', ''),
+                        )
+                    )
+                    if notification is not None:
+                        what = 'approved' if decision == 'approve' else 'rejected'
+                        self.message_user(
+                            request,
+                            f'{change.membership.full_name}\'s request was '
+                            f'{what}. The member has been notified in-app.',
+                            messages.SUCCESS,
+                        )
+                    else:
+                        self.message_user(
+                            request,
+                            'That request was already reviewed.',
+                            messages.WARNING,
+                        )
+                    return redirect(
+                        'admin:members_membershipchangerequest_changelist',
+                    )
+
+        context = {
+            **self.admin_site.each_context(request),
+            'title': 'Review membership request',
+            'opts': self.model._meta,
+            'original': change,
+            'change': change,
+            'membership': change.membership,
+            'summary_lines': [
+                line for line in (change.summary or '').splitlines() if line
+            ],
+            'form': form,
+        }
+        return render(
+            request,
+            'admin/members/membershipchangerequest/review.html',
+            context,
+        )
+
+    @admin.action(description='Approve selected membership requests')
+    def approve_selected(self, request, queryset):
+        count = 0
+        for change in queryset.filter(
+            status=MembershipChangeRequest.STATUS_PENDING,
+        ).select_related('membership__user'):
+            services.apply_membership_decision(
+                change.pk, request.user, approve=True,
+            )
+            count += 1
+        self.message_user(
+            request, f'{count} request(s) approved and members notified.',
+            messages.SUCCESS,
+        )
+
+    @admin.action(description='Reject selected membership requests')
+    def reject_selected(self, request, queryset):
+        count = 0
+        for change in queryset.filter(
+            status=MembershipChangeRequest.STATUS_PENDING,
+        ).select_related('membership__user'):
+            services.apply_membership_decision(
+                change.pk, request.user, approve=False,
+            )
+            count += 1
+        self.message_user(
+            request, f'{count} request(s) rejected and members notified.',
+            messages.SUCCESS,
+        )

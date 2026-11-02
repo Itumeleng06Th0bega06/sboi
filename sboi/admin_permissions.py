@@ -35,6 +35,7 @@ AREA_PERMISSIONS = (
     'contact.manage_contact_messages',
     'gallery.manage_gallery',
     'members.manage_membership',
+    'communications.manage_communications',
     'auth.manage_staff_accounts',
 )
 
@@ -54,6 +55,7 @@ ROLE_GROUPS = {
     'Contact Messages Manager': ('contact.manage_contact_messages',),
     'Gallery Manager': ('gallery.manage_gallery',),
     'Membership Manager': ('members.manage_membership',),
+    'Communications Manager': ('communications.manage_communications',),
     'Staff Accounts Manager': ('auth.manage_staff_accounts',),
 }
 

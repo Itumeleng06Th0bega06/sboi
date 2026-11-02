@@ -62,7 +62,12 @@ urlpatterns = [
     path(settings.ADMIN_URL + 'notifications/', admin.site.admin_view(views.admin_notifications_api), name='admin_notifications'),
     path(settings.ADMIN_URL + 'search/', admin.site.admin_view(views.admin_search), name='admin_search'),
     path(settings.ADMIN_URL + 'section/<str:app_label>/', admin.site.admin_view(views.admin_section), name='admin_section'),
+    # Internal staff communication portal. Its views are wrapped with the
+    # admin login flow and an explicit communications permission.
+    path(settings.ADMIN_URL + 'communications/', include('communications.urls')),
+    path(settings.ADMIN_URL + 'notifications/history/', admin.site.admin_view(views.admin_notifications_history), name='admin_notifications_history'),
     path(settings.ADMIN_URL, admin.site.urls),
+    path('notifications/', include('notifications.urls')),
     path('', include('home.urls')),
     path('about/', include('about.urls')),
     path('values/', include('values.urls')),

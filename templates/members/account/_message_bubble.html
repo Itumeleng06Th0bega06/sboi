@@ -1,0 +1,16 @@
+<article class="account-bubble {% if message.is_from_admin %}account-bubble--admin{% else %}account-bubble--member{% endif %}" id="message-{{ message.pk }}" data-message-id="{{ message.pk }}">
+    <header class="account-bubble-head">
+        <strong>{% if message.is_from_admin %}Church administration{% else %}You{% endif %}</strong>
+        <time datetime="{{ message.created_at|date:'c' }}">{{ message.created_at|date:"d M Y, H:i" }}</time>
+    </header>
+    <div class="account-bubble-body">{{ message.message|linebreaksbr }}</div>
+    {% if message.attachment %}
+    <a class="account-attachment" href="{{ message.attachment_url }}" target="_blank" rel="noopener">
+        <span class="account-attachment-icon" aria-hidden="true">↓</span>
+        <span>
+            <strong>{{ message.attachment_name }}</strong>
+            <small>Private attachment</small>
+        </span>
+    </a>
+    {% endif %}
+</article>

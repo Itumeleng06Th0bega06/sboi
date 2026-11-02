@@ -1,0 +1,89 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static admin_menu %}
+
+{% block bodyclass %}{{ block.super }} sboi-comms-page{% if selected %} comms-has-selection{% endif %}{% endblock %}
+{% block content_title %}{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+
+{% block responsive %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'admin/css/communications.css' %}?v=3">
+{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script src="{% static 'admin/js/communications.js' %}?v=2" defer></script>
+{% endblock %}
+
+{% block content %}
+<div id="content-main"
+     class="sboi-comms{% if selected %} has-selection{% endif %}"
+     data-comms-root
+     data-list-url="{% url 'communications:conversation_list' %}"
+     data-inbox-url="{% url 'communications:inbox' %}">
+    <header class="sboi-comms__topbar">
+        <div>
+            <p class="sboi-dash__eyebrow">{% translate 'Staff workspace' %}</p>
+            <h1>{% translate 'Admin Communications' %}</h1>
+            <p class="sboi-comms__lead">{% translate 'Private conversations for authorised church administrators and staff.' %}</p>
+        </div>
+        <div class="sboi-comms__topbar-actions">
+            <button type="button" class="sboi-comms-button" data-comms-dialog-open="group">
+                {% admin_icon 'plus' %}
+                <span>{% translate 'New group' %}</span>
+            </button>
+            <button type="button" class="sboi-comms-button sboi-comms-button--quiet" data-comms-dialog-open="direct">
+                {% admin_icon 'message' %}
+                <span>{% translate 'New direct message' %}</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="comms-shell" data-comms-shell>
+        <aside class="comms-sidebar" aria-label="{% translate 'Conversations' %}">
+            <div class="comms-sidebar__head">
+                <div>
+                    <h2>{% translate 'Conversations' %}</h2>
+                    <p class="comms-sidebar__meta">
+                        {% if total_unread %}
+                            {% blocktranslate count counter=total_unread %}{{ counter }} unread message{% plural %}{{ counter }} unread messages{% endblocktranslate %}
+                        {% else %}
+                            {% translate 'All caught up' %}
+                        {% endif %}
+                    </p>
+                </div>
+                <button type="button" class="comms-iconbtn" data-comms-dialog-open="group" title="{% translate 'New group' %}" aria-label="{% translate 'New group' %}">
+                    {% admin_icon 'plus' %}
+                </button>
+            </div>
+
+            <form class="comms-search" method="get" action="{% url 'communications:inbox' %}" data-comms-list-search>
+                <span class="comms-search__icon">{% admin_icon 'search' %}</span>
+                <input type="search" name="q" value="{{ conversation_query }}" placeholder="{% translate 'Search conversations' %}" aria-label="{% translate 'Search conversations' %}" autocomplete="off">
+            </form>
+
+            <div class="comms-list" data-comms-conversation-list>
+                {% include "admin/communications/_conversation_list.html" %}
+            </div>
+        </aside>
+
+        <div class="comms-workspace{% if not selected %} comms-workspace--empty{% endif %}" id="comms-workspace" data-comms-workspace>
+            {% if selected %}
+                {% include "admin/communications/_workspace.html" %}
+            {% else %}
+                <div class="comms-empty-state">
+                    <span class="comms-empty-state__icon">{% admin_icon 'message' %}</span>
+                    <h2>{% translate 'Select a conversation' %}</h2>
+                    <p>{% translate 'Choose a group or direct message from the list, or start a new conversation with a staff member.' %}</p>
+                    <div class="comms-empty-state__actions">
+                        <button type="button" class="sboi-comms-button" data-comms-dialog-open="group">{% translate 'Create a group' %}</button>
+                        <button type="button" class="sboi-comms-button sboi-comms-button--quiet" data-comms-dialog-open="direct">{% translate 'Send a direct message' %}</button>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% include "admin/communications/_dialogs.html" %}
+</div>
+{% endblock %}

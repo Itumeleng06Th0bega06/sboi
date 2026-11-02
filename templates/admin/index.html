@@ -30,6 +30,30 @@
     </header>
 
     <div class="sboi-apps">
+        {% if admin_dashboard.communications.allowed %}
+            <a class="sboi-app sboi-app--communications" href="{{ admin_dashboard.communications.url }}">
+                <span class="sboi-app__body">
+                    <span class="sboi-app__icon">{% admin_icon 'message' %}</span>
+                    <span class="sboi-app__text">
+                        <span class="sboi-app__title">{% translate 'Admin Communications' %}</span>
+                        <span class="sboi-app__count">
+                            {% if admin_dashboard.communications.unread %}
+                                {% blocktranslate count counter=admin_dashboard.communications.unread %}{{ counter }} unread message{% plural %}{{ counter }} unread messages{% endblocktranslate %}
+                            {% else %}
+                                {% translate 'Private staff conversations' %}
+                            {% endif %}
+                        </span>
+                    </span>
+                </span>
+                <span class="sboi-app__go">
+                    {% if admin_dashboard.communications.unread %}
+                        <span class="sboi-comms-badge sboi-comms-badge--large">{{ admin_dashboard.communications.unread }}</span>
+                    {% else %}
+                        {% admin_icon 'arrow-right' %}
+                    {% endif %}
+                </span>
+            </a>
+        {% endif %}
         {% for app in app_list %}
             <a class="sboi-app{% if not app.has_permission %} sboi-app--locked{% endif %}" href="{% url 'admin_section' app.app_label %}"{% if not app.has_permission %} title="{% translate 'Locked — ask an administrator for access' %}"{% endif %}>
                 <span class="sboi-app__body">

@@ -43,6 +43,8 @@
 .cm-page-heading { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:20px; }
 .cm-page-heading h1 { margin:0 0 5px; font-family:'Playfair Display', Georgia, 'Times New Roman', serif; font-size:clamp(1.35rem, 1.8vw, 1.7rem); line-height:1.25; font-weight:600; color:var(--cm-text); }
 .cm-page-heading p { margin:0; color:var(--cm-muted); font-size:.9rem; }
+.cm-heading-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.cm-page .cm-secondary-button svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 .cm-card { min-width:0; background:var(--cm-surface); border:1px solid var(--cm-border); border-radius:var(--cm-radius); box-shadow:var(--cm-shadow); }
 .cm-primary-button, .cm-secondary-button { min-height:38px; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:9px 13px; border:1px solid transparent; border-radius:10px; text-decoration:none!important; font-size:.86rem; line-height:1.2; font-weight:600; cursor:pointer; transition:background-color .15s ease, border-color .15s ease, box-shadow .15s ease; }
 /* Primary buttons use the same gold gradient as the rest of the admin. */
@@ -164,7 +166,9 @@
 @media (max-width: 600px) {
   .cm-page { padding:14px; }
   .cm-page-heading { align-items:flex-start; flex-direction:column; }
-  .cm-page-heading .cm-primary-button { width:100%; }
+  .cm-heading-actions { width:100%; }
+  .cm-page-heading .cm-primary-button,
+  .cm-page-heading .cm-secondary-button { width:100%; }
   .cm-filters { align-items:stretch; flex-direction:column; }
   /* Stacked flex column: flex-basis would be read as a height, so reset it. */
   .cm-search-field { flex:0 0 auto; width:100%; min-height:38px; }

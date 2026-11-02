@@ -105,15 +105,41 @@ def admin_section(request, app_label):
 
 
 def admin_notifications_api(request):
-    """JSON feed for the admin nav notification bell."""
-    from home.context_processors import notifications_for_user
+    """JSON feed for the admin nav notification bell.
 
-    items = notifications_for_user(request.user)
+    The same service that powers the public/member bell applies the open,
+    unread and per-user read/dismiss rules here.  Only staff-audience rows are
+    included.
+    """
+    from notifications import services
+
+    services.sync_admin_messages_for_user(request.user)
+    items = services.notification_items(request, services.STAFF_SCOPE)
     return JsonResponse({
-        'badge': sum(i['count'] for i in items if i['tone'] in ('attention', 'warning')),
-        'total': sum(i['count'] for i in items),
+        'badge': services.unread_count(request, services.STAFF_SCOPE),
+        'unread_count': services.unread_count(request, services.STAFF_SCOPE),
+        'total': len(items),
         'items': items,
     })
+
+
+def admin_notifications_history(request):
+    """Staff notification history, rendered inside the admin console shell."""
+    from notifications import services
+
+    items = [
+        services.serialize(notification, request)
+        for notification in services.history_notifications(
+            request.user, services.STAFF_SCOPE,
+        )
+    ]
+    context = admin.site.each_context(request)
+    context.update({
+        'title': 'Notification history',
+        'notifications': items,
+        'history_url': reverse('notifications:history_staff'),
+    })
+    return render(request, 'notifications/admin_history.html', context)
 
 
 def handler404(request, exception):

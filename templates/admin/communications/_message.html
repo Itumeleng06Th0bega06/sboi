@@ -1,0 +1,53 @@
+{% load i18n admin_menu %}
+<article class="comms-message{% if message.sender_id == user.pk %} is-outgoing{% else %} is-incoming{% endif %}" id="comms-message-{{ message.pk }}" data-message-id="{{ message.pk }}">
+    <span class="comms-avatar" aria-hidden="true">{{ message.initials }}</span>
+    <div class="comms-message__content">
+        <div class="comms-message__meta">
+            <strong>{{ message.sender_name }}</strong>
+            <time datetime="{{ message.created_at|date:'c' }}">{{ message.created_at|date:'j M Y, H:i' }}</time>
+            {% if message.sender_id == user.pk %}
+                <span class="comms-message__status">
+                    {% if message.read_count %}
+                        {% if selected.is_direct %}{% translate 'Seen' %}{% else %}{% blocktranslate count counter=message.read_count %}Read by {{ counter }}{% plural %}Read by {{ counter }}{% endblocktranslate %}{% endif %}
+                    {% else %}
+                        {% translate 'Sent' %}
+                    {% endif %}
+                </span>
+            {% endif %}
+        </div>
+        {% if message.reply_to %}
+            <div class="comms-reply-ref" title="{% translate 'In reply to' %}">
+                <span class="comms-reply-ref__name">{{ message.reply_to.sender_name }}</span>
+                <span class="comms-reply-ref__body">{{ message.reply_to.body|default:'Attachment'|truncatechars:90 }}</span>
+            </div>
+        {% endif %}
+        {% if message.body %}
+            <div class="comms-bubble">{{ message.body|linebreaksbr }}</div>
+        {% endif %}
+        {% if message.attachments.all %}
+            <div class="comms-attachments">
+                {% for attachment in message.attachments.all %}
+                    <a class="comms-attachment" href="{% url 'communications:download_attachment' attachment.pk %}" target="_blank" rel="noopener">
+                        {% if attachment.is_image %}
+                            <img class="comms-attachment__image" src="{% url 'communications:download_attachment' attachment.pk %}?inline=1" alt="{{ attachment.original_name }}" loading="lazy">
+                        {% else %}
+                            <span class="comms-attachment__icon">{% admin_icon 'file' %}</span>
+                        {% endif %}
+                        <span class="comms-attachment__body">
+                            <span class="comms-attachment__name">{{ attachment.original_name }}</span>
+                            <span class="comms-attachment__meta">{{ attachment.size|filesizeformat }}{% if attachment.content_type %} &middot; {{ attachment.content_type }}{% endif %}</span>
+                        </span>
+                        <span class="comms-attachment__download">{% admin_icon 'external' %}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+        <div class="comms-message__actions">
+            <button type="button"
+                    class="comms-reply-button"
+                    data-comms-reply
+                    data-message-id="{{ message.pk }}"
+                    data-sender="{{ message.sender_name }}">{% translate 'Reply' %}</button>
+        </div>
+    </div>
+</article>
