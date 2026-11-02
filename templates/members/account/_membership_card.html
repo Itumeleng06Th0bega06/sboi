@@ -53,34 +53,6 @@
     </div>
     {% endif %}
 
-    {% if membership_snapshot.interests %}
-    <div class="account-subsection">
-        <h4>Areas of interest</h4>
-        <div class="account-chip-row">
-            {% for interest in membership_snapshot.interests %}<span class="account-chip">{{ interest.name }}</span>{% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
-    {% if membership_snapshot.current_ministries or membership_snapshot.volunteer_ministries %}
-    <div class="account-subsection">
-        <h4>Ministry life</h4>
-        <div class="account-chip-row">
-            {% for ministry in membership_snapshot.current_ministries %}<span class="account-chip account-chip--green">{{ ministry.name }}</span>{% endfor %}
-            {% for ministry in membership_snapshot.volunteer_ministries %}<span class="account-chip">{{ ministry.name }} · volunteer</span>{% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
-    {% if membership_snapshot.wants_to_join %}
-    <div class="account-subsection">
-        <h4>Waiting to join</h4>
-        <div class="account-chip-row">
-            {% for ministry in membership_snapshot.wants_to_join %}<span class="account-chip">{{ ministry.name }}</span>{% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
     <div class="account-card-foot">
         <button type="button" class="btn btn-gold" data-account-open="membershipModal">Edit membership details</button>
         <a class="btn btn-ghost" href="{% url 'members:account_activities' %}">View activities</a>

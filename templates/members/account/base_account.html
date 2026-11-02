@@ -5,37 +5,11 @@
 {% block body_class %}account-page{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/account.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/account.css' %}?v=10">
 {% endblock %}
 
 {% block content %}
-<div class="account-shell container">
-    <aside class="account-sidebar">
-        <div class="account-identity">
-            {% if member_avatar_url %}
-            <img src="{{ member_avatar_url }}" alt="" class="account-avatar account-avatar--lg">
-            {% else %}
-            <span class="account-avatar account-avatar--lg" aria-hidden="true">{{ member_initials|default:'S' }}</span>
-            {% endif %}
-            <div class="account-identity-text">
-                <strong>{{ member_display_name|default:request.user.username }}</strong>
-                <span>{{ request.user.email }}</span>
-            </div>
-            {% if membership %}
-            <span class="status-pill status-{{ membership.status }}">{{ membership.get_status_display }}</span>
-            {% else %}
-            <span class="status-pill status-none">Website account</span>
-            {% endif %}
-        </div>
-
-        {% include 'members/account/_account_nav.html' %}
-
-        <div class="account-sidebar-foot">
-            <a href="{% url 'blackboard:blackboard' %}" class="account-side-link">Church blackboard</a>
-            <a href="{% url 'contact:contact' %}" class="account-side-link">Contact the church</a>
-        </div>
-    </aside>
-
+<div class="account-shell container" data-account-base="{% url 'members:account' %}" data-account-counts-url="{% url 'members:account_counts' %}">
     <section class="account-main">
         {% if messages %}
         <div class="account-flashes" role="status" aria-live="polite">
@@ -45,14 +19,15 @@
         </div>
         {% endif %}
 
-        {% block account_content %}{% endblock %}
+        <div data-account-section data-account-title="{{ account_page_title|default:'My account' }}">
+            {% block account_content %}{% endblock %}
+            {% block account_modals %}{% endblock %}
+        </div>
     </section>
 </div>
-
-{% block account_modals %}{% endblock %}
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="{% static 'js/account.js' %}?v=1" defer></script>
+<script src="{% static 'js/account.js' %}?v=7" defer></script>
 {% block account_scripts %}{% endblock %}
 {% endblock %}

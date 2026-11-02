@@ -32,8 +32,35 @@ from .forms import (
 from .models import ChurchMembership, MembershipChangeRequest
 
 
+ACCOUNT_SECTIONS = {
+    'account': ('My profile', 'Overview'),
+    'children': ('Children', 'Children'),
+    'activities': ('Activities', 'Activities'),
+    'messages': ('Messages', 'Messages'),
+    'notifications': ('Notifications', 'Notifications'),
+    'settings': ('Settings', 'Settings'),
+}
+
+
 def _is_ajax(request):
     return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+
+def _account_base(request):
+    if _is_ajax(request):
+        return 'members/account/_fragment_base.html'
+    return 'members/account/base_account.html'
+
+
+def _render_account(request, template, context):
+    """Render a normal page or only the replaceable account section."""
+    context['account_base'] = _account_base(request)
+    return render(request, template, context)
+
+
+def _section_fragment(request, template, context):
+    context['account_base'] = 'members/account/_fragment_base.html'
+    return render_to_string(template, context, request=request)
 
 
 def _profile(user):
@@ -74,8 +101,13 @@ def _account_context(request, section):
     user = request.user
     membership = _membership(user)
     profile = _profile(user)
+    section_label, page_title = ACCOUNT_SECTIONS.get(
+        section, ('My account', 'My account'),
+    )
     return {
         'account_section': section,
+        'account_section_label': section_label,
+        'account_page_title': page_title,
         'membership': membership,
         'member_profile': profile,
         'membership_snapshot': _membership_snapshot(membership),
@@ -84,6 +116,14 @@ def _account_context(request, section):
         'unread_notifications': services.unread_notification_count(request),
         'unread_messages': services.unread_message_count(user),
         'notification_preview': services.notification_preview(user),
+    }
+
+
+def _account_counts(request):
+    return {
+        'ok': True,
+        'unread_messages': services.unread_message_count(request.user),
+        'unread_notifications': services.unread_notification_count(request),
     }
 
 
@@ -115,7 +155,7 @@ def account_home(request):
         'children': services.child_names(membership),
         'account_type': 'Church Member' if membership else 'Regular User',
     })
-    return render(request, 'members/account/dashboard.html', context)
+    return _render_account(request, 'members/account/dashboard.html', context)
 
 
 # ---------------------------------------------------------------------------
@@ -137,20 +177,38 @@ def account_profile_edit(request):
     if form.is_valid():
         form.save()
         if _is_ajax(request):
+            context = _account_context(request, 'account')
             html = _form_fragment(
+                request, 'members/account/_profile_card.html', context,
+            )
+            membership_html = _form_fragment(
+                request, 'members/account/_membership_card.html', context,
+            )
+            form_html = _form_fragment(
                 request,
-                'members/account/_profile_card.html',
+                'members/account/_profile_form.html',
                 {
-                    'request': request,
+                    'profile_form': AccountProfileForm(
+                        user=request.user,
+                        membership=membership,
+                        profile=profile,
+                    ),
                     'membership': membership,
-                    'member_profile': profile,
-                    'account_type': 'Church Member' if membership else 'Regular User',
                 },
             )
             return JsonResponse({
                 'ok': True,
                 'message': 'Your profile has been updated.',
                 'html': html,
+                'membership_html': membership_html,
+                'form_html': form_html,
+                'display_name': (
+                    request.user.get_full_name() or request.user.get_username()
+                ),
+                'greeting_name': (
+                    request.user.first_name or request.user.get_username()
+                ),
+                'email': request.user.email,
             })
         messages.success(request, 'Your profile has been updated.')
         return redirect('members:account')
@@ -189,16 +247,9 @@ def account_membership_edit(request):
             membership, request.user, kind, form.summary(),
         )
         if _is_ajax(request):
+            context = _account_context(request, 'account')
             card_html = _form_fragment(
-                request,
-                'members/account/_membership_card.html',
-                {
-                    'request': request,
-                    'membership': membership,
-                    'membership_snapshot': _membership_snapshot(membership),
-                    'pending_change': services.pending_change_for(membership),
-                    'latest_decision': services.latest_decision_for(membership),
-                },
+                request, 'members/account/_membership_card.html', context,
             )
             form_html = _form_fragment(
                 request,
@@ -236,16 +287,33 @@ def account_membership_edit(request):
 # Children
 # ---------------------------------------------------------------------------
 
-@login_required
-def account_children(request):
+def _children_context(request, child_form=None):
     context = _account_context(request, 'children')
     membership = context['membership']
     context.update({
         'children': services.child_names(membership),
-        'child_form': ChildNameForm(),
+        'child_form': child_form or ChildNameForm(),
         'membership_form': MembershipDetailsForm(instance=membership),
     })
-    return render(request, 'members/account/children.html', context)
+    return context
+
+
+def _children_ajax(request, message, ok=True, status=200, child_form=None):
+    context = _children_context(request, child_form=child_form)
+    return JsonResponse({
+        'ok': ok,
+        'message': message,
+        'html': _section_fragment(
+            request, 'members/account/_children_card.html', context,
+        ),
+    }, status=status)
+
+
+@login_required
+def account_children(request):
+    return _render_account(
+        request, 'members/account/children.html', _children_context(request),
+    )
 
 
 def _require_membership(user):
@@ -264,13 +332,26 @@ def account_child_add(request):
         names = services.child_names(membership)
         candidate = form.cleaned_data['name']
         if candidate.casefold() in {name.casefold() for name in names}:
-            messages.error(request, 'That child is already on your list.')
+            message = 'That child is already on your list.'
+            if _is_ajax(request):
+                return _children_ajax(
+                    request, message, ok=False, status=400, child_form=form,
+                )
+            messages.error(request, message)
         else:
             names.append(candidate)
             services.save_child_names(membership, names)
-            messages.success(request, 'Child added.')
+            message = 'Child added.'
+            if _is_ajax(request):
+                return _children_ajax(request, message)
+            messages.success(request, message)
     else:
-        messages.error(request, 'Enter the child’s name.')
+        message = 'Enter the child’s name.'
+        if _is_ajax(request):
+            return _children_ajax(
+                request, message, ok=False, status=400, child_form=form,
+            )
+        messages.error(request, message)
     return redirect('members:account_children')
 
 
@@ -287,13 +368,22 @@ def account_child_edit(request, index):
         if candidate.casefold() in {
             name.casefold() for i, name in enumerate(names) if i != index
         }:
-            messages.error(request, 'That child is already on your list.')
+            message = 'That child is already on your list.'
+            if _is_ajax(request):
+                return _children_ajax(request, message, ok=False, status=400)
+            messages.error(request, message)
         else:
             names[index] = candidate
             services.save_child_names(membership, names)
-            messages.success(request, 'Child updated.')
+            message = 'Child updated.'
+            if _is_ajax(request):
+                return _children_ajax(request, message)
+            messages.success(request, message)
     else:
-        messages.error(request, 'Enter the child’s name.')
+        message = 'Enter the child’s name.'
+        if _is_ajax(request):
+            return _children_ajax(request, message, ok=False, status=400)
+        messages.error(request, message)
     return redirect('members:account_children')
 
 
@@ -306,7 +396,10 @@ def account_child_remove(request, index):
         raise Http404('Child not found.')
     removed = names.pop(index)
     services.save_child_names(membership, names)
-    messages.success(request, f'{removed} was removed from your children list.')
+    message = f'{removed} was removed from your children list.'
+    if _is_ajax(request):
+        return _children_ajax(request, message)
+    messages.success(request, message)
     return redirect('members:account_children')
 
 
@@ -334,7 +427,7 @@ def account_activities(request):
         'requests': snapshot['wants_to_join'],
         'interests': snapshot['interests'],
     })
-    return render(request, 'members/account/activities.html', context)
+    return _render_account(request, 'members/account/activities.html', context)
 
 
 # ---------------------------------------------------------------------------
@@ -350,7 +443,7 @@ def account_messages(request):
         'message_form': MemberMessageForm(),
         'unread_messages': 0,
     })
-    return render(request, 'members/account/messages.html', context)
+    return _render_account(request, 'members/account/messages.html', context)
 
 
 def _duplicate_message(user, body):
@@ -461,7 +554,7 @@ def account_notifications(request):
         ),
         'unread_notifications': services.unread_notification_count(request),
     })
-    return render(request, 'members/account/notifications.html', context)
+    return _render_account(request, 'members/account/notifications.html', context)
 
 
 @login_required
@@ -469,9 +562,17 @@ def account_notifications(request):
 def account_notification_read(request):
     services.mark_all_notifications_read(request)
     if _is_ajax(request):
+        context = _account_context(request, 'notifications')
+        context['notifications'] = services.serialized_notifications(
+            list(services.notification_history(request.user)[:100]), request,
+        )
+        context['unread_notifications'] = 0
         return JsonResponse({
-            'ok': True,
-            'unread': services.unread_notification_count(request),
+            **_account_counts(request),
+            'message': 'All notifications are marked as read.',
+            'html': _section_fragment(
+                request, 'members/account/notifications.html', context,
+            ),
         })
     return redirect('members:account_notifications')
 
@@ -488,7 +589,19 @@ def account_notification_open(request, pk):
     # Only follow paths produced by reverse(); never an off-site redirect.
     if not target.startswith('/') or target.startswith('//'):
         target = reverse('members:account_notifications')
+    if _is_ajax(request):
+        return JsonResponse({
+            **_account_counts(request),
+            'ok': True,
+            'url': target,
+        })
     return redirect(target)
+
+
+@login_required
+def account_counts(request):
+    """Small JSON endpoint used to keep account badges in sync without reloading."""
+    return JsonResponse(_account_counts(request))
 
 
 # ---------------------------------------------------------------------------
@@ -500,28 +613,56 @@ def account_settings(request):
     profile = _profile(request.user)
     password_form = PasswordChangeForm(request.user)
     preference_form = NotificationPreferenceForm(profile=profile)
+    message = ''
+    ok = True
+    status = 200
 
     if request.method == 'POST':
         if 'change_password' in request.POST:
             password_form = PasswordChangeForm(request.user, request.POST)
             if password_form.is_valid():
                 update_session_auth_hash(request, password_form.save())
-                messages.success(request, 'Your password has been changed.')
-                return redirect('members:account_settings')
-            messages.error(request, 'Please correct the password errors below.')
+                password_form = PasswordChangeForm(request.user)
+                message = 'Your password has been changed.'
+            else:
+                ok = False
+                status = 400
+                message = 'Please correct the password errors below.'
         elif 'save_preferences' in request.POST:
             preference_form = NotificationPreferenceForm(
                 request.POST, profile=profile,
             )
             if preference_form.is_valid():
                 preference_form.save()
-                messages.success(request, 'Your preferences have been saved.')
-                return redirect('members:account_settings')
-            messages.error(request, 'Could not save your preferences.')
+                preference_form = NotificationPreferenceForm(profile=profile)
+                message = 'Your preferences have been saved.'
+            else:
+                ok = False
+                status = 400
+                message = 'Could not save your preferences.'
+
+        if _is_ajax(request):
+            context = _account_context(request, 'settings')
+            context.update({
+                'password_form': password_form,
+                'preference_form': preference_form,
+            })
+            return JsonResponse({
+                'ok': ok,
+                'message': message,
+                'html': _section_fragment(
+                    request, 'members/account/settings.html', context,
+                ),
+            }, status=status)
+        if ok:
+            messages.success(request, message)
+        else:
+            messages.error(request, message)
+        return redirect('members:account_settings')
 
     context = _account_context(request, 'settings')
     context.update({
         'password_form': password_form,
         'preference_form': preference_form,
     })
-    return render(request, 'members/account/settings.html', context)
+    return _render_account(request, 'members/account/settings.html', context)

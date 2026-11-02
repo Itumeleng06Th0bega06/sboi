@@ -1,4 +1,4 @@
-{% extends 'members/account/base_account.html' %}
+{% extends account_base|default:'members/account/base_account.html' %}
 {% load static %}
 
 {% block title %}Overview · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
@@ -13,12 +13,9 @@
         <p class="account-verse">"For I know the plans I have for you," declares the Lord, "plans to prosper you and not to harm you, plans to give you hope and a future." — Jeremiah 29:11</p>
         <p>
             {% if membership %}
-            This is your private space to keep your church membership details current,
-            follow your family and ministry life, and talk directly with the church
-            administration.
+            Your membership, private messages and church updates in one place.
             {% else %}
-            Keep your personal details current and talk privately with the church
-            administration. You can join the church membership whenever you are ready.
+            Keep your details current and talk privately with the church administration.
             {% endif %}
         </p>
         <div class="account-hero-actions">
@@ -28,34 +25,14 @@
             </a>
         </div>
     </div>
-    <div class="account-hero-mark" aria-hidden="true">
+    <div class="account-hero-mark">
         {% if member_avatar_url %}
-        <img src="{{ member_avatar_url }}" alt="" class="account-hero-avatar">
+        <img src="{{ member_avatar_url }}" alt="{{ member_display_name }}" class="account-hero-avatar">
         {% else %}
-        <span class="account-hero-avatar account-hero-avatar--initials">{{ member_initials|default:'S' }}</span>
+        <span class="account-hero-avatar account-hero-avatar--initials" aria-hidden="true">{{ member_initials|default:'S' }}</span>
         {% endif %}
-        <span class="account-hero-status">{{ account_type }}</span>
     </div>
 </section>
-
-<div class="account-stats" aria-label="Account overview">
-    <a class="account-stat" href="{% url 'members:account_messages' %}">
-        <span class="account-stat-value">{{ unread_messages }}</span>
-        <span class="account-stat-label">Unread messages</span>
-    </a>
-    <a class="account-stat" href="{% url 'members:account_notifications' %}">
-        <span class="account-stat-value">{{ unread_notifications }}</span>
-        <span class="account-stat-label">New notifications</span>
-    </a>
-    <a class="account-stat" href="{% url 'members:account_children' %}">
-        <span class="account-stat-value">{{ children|length }}</span>
-        <span class="account-stat-label">Children</span>
-    </a>
-    <a class="account-stat" href="{% url 'members:account_activities' %}">
-        <span class="account-stat-value">{{ membership_snapshot.current_ministries|length }}</span>
-        <span class="account-stat-label">Current ministries</span>
-    </a>
-</div>
 
 <div class="account-grid">
     <div class="account-col account-col--wide">
@@ -63,102 +40,6 @@
     </div>
     <div class="account-col">
         {% include 'members/account/_profile_card.html' %}
-    </div>
-</div>
-
-<div class="account-grid">
-    <div class="account-col account-col--wide">
-        <section class="account-card">
-            <header class="account-card-head">
-                <div>
-                    <h2>Private messages</h2>
-                    <p class="account-muted">One conversation with the church administration.</p>
-                </div>
-                <a class="account-text-link" href="{% url 'members:account_messages' %}">Open inbox</a>
-            </header>
-            {% if recent_messages %}
-            <ul class="account-mini-thread">
-                {% for message in recent_messages %}
-                <li class="{% if message.is_from_admin %}is-admin{% else %}is-own{% endif %}">
-                    <span class="account-mini-author">{% if message.is_from_admin %}Church administration{% else %}You{% endif %}</span>
-                    <span class="account-mini-body">{{ message.message|truncatechars:110 }}</span>
-                    <time>{{ message.created_at|date:"d M Y, H:i" }}</time>
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="account-empty">You have not started a conversation yet. Share a prayer request, testimony, question or concern privately.</p>
-            {% endif %}
-            <a class="btn btn-gold account-card-cta" href="{% url 'members:account_messages' %}">Write a private message</a>
-        </section>
-    </div>
-    <div class="account-col">
-        <section class="account-card">
-            <header class="account-card-head">
-                <div>
-                    <h2>Notifications</h2>
-                    <p class="account-muted">Membership decisions and replies.</p>
-                </div>
-                <a class="account-text-link" href="{% url 'members:account_notifications' %}">See all</a>
-            </header>
-            {% if notification_preview %}
-            <ul class="account-notif-list">
-                {% for notification in notification_preview %}
-                <li>
-                    <a href="{% url 'members:account_notification_open' notification.pk %}" class="account-notif-link">
-                        <span class="account-notif-dot tone-{{ notification.tone|default:'info' }}"></span>
-                        <span class="account-notif-copy">
-                            <strong>{{ notification.title }}</strong>
-                            <small>{{ notification.body|truncatechars:95 }}</small>
-                        </span>
-                        <time>{{ notification.created_at|date:"d M" }}</time>
-                    </a>
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="account-empty">No new notifications. You are all caught up.</p>
-            {% endif %}
-        </section>
-    </div>
-</div>
-
-<div class="account-grid">
-    <div class="account-col">
-        <section class="account-card">
-            <header class="account-card-head">
-                <div>
-                    <h2>Children</h2>
-                    <p class="account-muted">Keep your family details current.</p>
-                </div>
-                <a class="account-text-link" href="{% url 'members:account_children' %}">Manage</a>
-            </header>
-            {% if membership.children_names %}
-            <p class="account-copy">{{ membership.children_names|linebreaksbr }}</p>
-            {% else %}
-            <p class="account-empty">No children added yet.</p>
-            {% endif %}
-        </section>
-    </div>
-    <div class="account-col">
-        <section class="account-card">
-            <header class="account-card-head">
-                <div>
-                    <h2>Activities</h2>
-                    <p class="account-muted">Ministries, groups and events.</p>
-                </div>
-                <a class="account-text-link" href="{% url 'members:account_activities' %}">View</a>
-            </header>
-            {% if membership_snapshot.current_ministries %}
-            <div class="account-chip-row">
-                {% for ministry in membership_snapshot.current_ministries %}
-                <span class="account-chip">{{ ministry.name }}</span>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p class="account-empty">No current ministries recorded.</p>
-            {% endif %}
-        </section>
     </div>
 </div>
 {% endblock %}

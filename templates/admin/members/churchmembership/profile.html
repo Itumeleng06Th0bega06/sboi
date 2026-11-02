@@ -1,0 +1,203 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'admin/css/church_membership.css' %}?v=11">
+{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block breadcrumbs %}
+    <ol class="breadcrumbs">
+        <li><a href="{% url 'admin:index' %}">{% translate 'Home' %}</a></li>
+        <li><a href="{% url 'admin_section' opts.app_label %}">{% translate 'Members' %}</a></li>
+        <li aria-current="page">{{ membership.full_name }}</li>
+    </ol>
+{% endblock %}
+
+{% block content %}
+<section class="cm-page cm-profile-page" aria-labelledby="cm-profile-name">
+    <div class="cm-page-heading">
+        <div>
+            <p class="cm-profile-eyebrow">{% translate 'Church membership profile' %}</p>
+            <h1 id="cm-profile-name">{{ membership.full_name|default:'Unnamed member' }}</h1>
+            <p>
+                {{ profile.member_id|default:'ID not assigned' }}
+                {% if profile.membership_type %} · {{ profile.membership_type }}{% endif %}
+            </p>
+        </div>
+        <div class="cm-heading-actions">
+            <a class="cm-secondary-button" href="{{ dashboard_url }}">
+                {% translate 'Back to directory' %}
+            </a>
+            {% if can_change %}
+            <a class="cm-primary-button" href="{{ profile.edit_url }}">
+                {% translate 'Edit member' %}
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="cm-profile-layout">
+        <section class="cm-card cm-profile-summary-card cm-profile-summary">
+            <span class="cm-profile-avatar">{{ profile.initials|default:'M' }}</span>
+            <div class="cm-profile-summary-copy">
+                <h2>{{ membership.full_name|default:'Unnamed member' }}</h2>
+                <p>{{ profile.email|default:'No email address' }} · {{ profile.phone|default:'No phone number' }}</p>
+                <span class="cm-status-badge cm-status-{{ membership.status|slugify }}">
+                    {{ membership.get_status_display }}
+                </span>
+            </div>
+        </section>
+
+        <div class="cm-profile-main">
+            <section class="cm-card cm-profile-section">
+                <h2>{% translate 'Member details' %}</h2>
+                <dl class="cm-detail-list">
+                    <div><dt>{% translate 'Full name' %}</dt><dd>{{ profile.full_name|default:'—' }}</dd></div>
+                    <div><dt>{% translate 'Email' %}</dt><dd>{{ profile.email|default:'—' }}</dd></div>
+                    <div><dt>{% translate 'Phone' %}</dt><dd>{{ profile.phone|default:'—' }}</dd></div>
+                    <div><dt>{% translate 'Member ID' %}</dt><dd>{{ profile.member_id|default:'—' }}</dd></div>
+                    <div><dt>{% translate 'Membership type' %}</dt><dd>{{ profile.membership_type|default:'—' }}</dd></div>
+                    <div><dt>{% translate 'Status' %}</dt><dd>{{ profile.status|default:'—' }}</dd></div>
+                    <div><dt>{% translate 'Date joined' %}</dt><dd>{{ profile.date_joined|date:'d M Y'|default:'—' }}</dd></div>
+                </dl>
+            </section>
+
+            <section class="cm-card cm-profile-section">
+                <h2>{% translate 'Personal information' %}</h2>
+                <dl class="cm-detail-list">
+                    {% if profile.date_of_birth %}<div><dt>{% translate 'Date of birth' %}</dt><dd>{{ profile.date_of_birth|date:'d M Y' }}</dd></div>{% endif %}
+                    {% if profile.gender %}<div><dt>{% translate 'Gender' %}</dt><dd>{{ profile.gender }}</dd></div>{% endif %}
+                    {% if profile.marital_status %}<div><dt>{% translate 'Marital status' %}</dt><dd>{{ profile.marital_status }}</dd></div>{% endif %}
+                    {% if profile.address %}<div><dt>{% translate 'Address' %}</dt><dd>{{ profile.address }}</dd></div>{% endif %}
+                    {% if profile.previous_church %}<div><dt>{% translate 'Previous church' %}</dt><dd>{{ profile.previous_church }}</dd></div>{% endif %}
+                    {% if profile.baptism_status %}<div><dt>{% translate 'Baptism status' %}</dt><dd>{{ profile.baptism_status }}</dd></div>{% endif %}
+                    {% if profile.baptism_date %}<div><dt>{% translate 'Baptism date' %}</dt><dd>{{ profile.baptism_date|date:'d M Y' }}</dd></div>{% endif %}
+                    {% if profile.interests %}<div><dt>{% translate 'Interests' %}</dt><dd>{{ profile.interests|join:', ' }}</dd></div>{% endif %}
+                </dl>
+            </section>
+
+            {% if profile.spouse_name or profile.children %}
+            <section class="cm-card cm-profile-section">
+                <h2>{% translate 'Family' %}</h2>
+                <dl class="cm-detail-list">
+                    {% if profile.spouse_name %}<div><dt>{% translate 'Spouse' %}</dt><dd>{{ profile.spouse_name }}</dd></div>{% endif %}
+                    {% if profile.children %}<div><dt>{% translate 'Children' %}</dt><dd>{{ profile.children|join:', ' }}</dd></div>{% endif %}
+                </dl>
+            </section>
+            {% endif %}
+
+            <section class="cm-card cm-profile-section">
+                <h2>{% translate 'Church life' %}</h2>
+                {% if profile.group_names %}
+                <div class="cm-group-list">
+                    {% for group_name in profile.group_names %}<span class="cm-type-badge">{{ group_name }}</span>{% endfor %}
+                </div>
+                {% else %}
+                <p class="cm-muted-text">{% translate 'No groups or ministries recorded.' %}</p>
+                {% endif %}
+                {% if profile.skills %}<h3 class="cm-subheading">{% translate 'Skills and talents' %}</h3><p>{{ profile.skills }}</p>{% endif %}
+                {% if profile.availability %}<h3 class="cm-subheading">{% translate 'Availability' %}</h3><p>{{ profile.availability }}</p>{% endif %}
+                {% if profile.notes %}<h3 class="cm-subheading">{% translate 'Notes' %}</h3><p>{{ profile.notes }}</p>{% endif %}
+            </section>
+
+            {% if thread %}
+            <section class="cm-card cm-profile-section">
+                <h2>{% translate 'Recent conversation' %}</h2>
+                <ul class="cm-thread">
+                    {% for item in thread %}
+                    <li class="{% if item.is_from_admin %}is-admin{% else %}is-member{% endif %}">
+                        <span class="cm-thread-meta">
+                            {% if item.is_from_admin %}{% translate 'Church administration' %}{% else %}{{ membership.full_name }}{% endif %}
+                            · {{ item.created_at|date:'d M Y, H:i' }}
+                        </span>
+                        <p>{{ item.message|linebreaksbr }}</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
+        </div>
+
+        <aside class="cm-profile-side">
+            {% if pending_change or membership.status != 'active' %}
+            <section class="cm-card cm-profile-section">
+                <h2>{% translate 'Membership decision' %}</h2>
+                {% if pending_change %}
+                <p class="cm-profile-note">
+                    {% blocktrans with kind=pending_change.get_kind_display submitted=pending_change.created_at|date:"d M Y, H:i" %}
+                    Pending {{ kind }} submitted {{ submitted }}.
+                    {% endblocktrans %}
+                </p>
+                {% if summary_lines %}
+                <ul class="cm-review-summary">
+                    {% for line in summary_lines %}<li>{{ line }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% elif membership.status == 'pending' %}
+                <p class="cm-profile-note">{% translate 'This membership is waiting for approval.' %}</p>
+                {% else %}
+                <p class="cm-profile-note">{% translate 'Approve this profile to make the member active.' %}</p>
+                {% endif %}
+
+                {% if can_change %}
+                <form method="post" class="cm-profile-form">
+                    {% csrf_token %}
+                    <label for="{{ review_form.admin_note.id_for_label }}">{{ review_form.admin_note.label }}</label>
+                    {{ review_form.admin_note }}
+                    <div class="cm-profile-form-actions">
+                        <button type="submit" name="action" value="approve" class="cm-primary-button">
+                            {% translate 'Approve membership' %}
+                        </button>
+                        <button type="submit" name="action" value="reject" class="cm-secondary-button cm-danger-button">
+                            {% translate 'Not approved' %}
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+            </section>
+            {% endif %}
+
+            {% if can_change %}
+            <section class="cm-card cm-profile-section">
+                <h2>{% translate 'Change status' %}</h2>
+                <form method="post" class="cm-profile-form">
+                    {% csrf_token %}
+                    <label for="{{ status_form.status.id_for_label }}">{{ status_form.status.label }}</label>
+                    <select name="status" id="{{ status_form.status.id_for_label }}" class="cm-status-select">
+                        {% for option in status_options %}
+                        <option value="{{ option.value }}"{% if membership.status == option.value %} selected{% endif %}>{{ option.label }}</option>
+                        {% endfor %}
+                    </select>
+                    {{ status_form.status.errors }}
+                    <div class="cm-profile-form-actions">
+                        <button type="submit" name="action" value="status" class="cm-secondary-button">
+                            {% translate 'Update status' %}
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="cm-card cm-profile-section">
+                <h2>{% translate 'Message the member' %}</h2>
+                <p class="cm-profile-note">
+                    {% translate 'This comment goes straight to the member’s private account inbox and notification bell.' %}
+                </p>
+                <form method="post" class="cm-profile-form">
+                    {% csrf_token %}
+                    {{ message_form.message }}
+                    {{ message_form.message.errors }}
+                    <div class="cm-profile-form-actions">
+                        <button type="submit" name="action" value="message" class="cm-primary-button">
+                            {% translate 'Send message' %}
+                        </button>
+                    </div>
+                </form>
+            </section>
+            {% endif %}
+        </aside>
+    </div>
+</section>
+{% endblock %}

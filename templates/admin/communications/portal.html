@@ -27,16 +27,6 @@
             <h1>{% translate 'Admin Communications' %}</h1>
             <p class="sboi-comms__lead">{% translate 'Private conversations for authorised church administrators and staff.' %}</p>
         </div>
-        <div class="sboi-comms__topbar-actions">
-            <button type="button" class="sboi-comms-button" data-comms-dialog-open="group">
-                {% admin_icon 'plus' %}
-                <span>{% translate 'New group' %}</span>
-            </button>
-            <button type="button" class="sboi-comms-button sboi-comms-button--quiet" data-comms-dialog-open="direct">
-                {% admin_icon 'message' %}
-                <span>{% translate 'New direct message' %}</span>
-            </button>
-        </div>
     </header>
 
     <div class="comms-shell" data-comms-shell>
@@ -52,9 +42,6 @@
                         {% endif %}
                     </p>
                 </div>
-                <button type="button" class="comms-iconbtn" data-comms-dialog-open="group" title="{% translate 'New group' %}" aria-label="{% translate 'New group' %}">
-                    {% admin_icon 'plus' %}
-                </button>
             </div>
 
             <form class="comms-search" method="get" action="{% url 'communications:inbox' %}" data-comms-list-search>
@@ -74,16 +61,10 @@
                 <div class="comms-empty-state">
                     <span class="comms-empty-state__icon">{% admin_icon 'message' %}</span>
                     <h2>{% translate 'Select a conversation' %}</h2>
-                    <p>{% translate 'Choose a group or direct message from the list, or start a new conversation with a staff member.' %}</p>
-                    <div class="comms-empty-state__actions">
-                        <button type="button" class="sboi-comms-button" data-comms-dialog-open="group">{% translate 'Create a group' %}</button>
-                        <button type="button" class="sboi-comms-button sboi-comms-button--quiet" data-comms-dialog-open="direct">{% translate 'Send a direct message' %}</button>
-                    </div>
+                    <p>{% translate 'Choose a group or direct message from the list to read and reply.' %}</p>
                 </div>
             {% endif %}
         </div>
     </div>
-
-    {% include "admin/communications/_dialogs.html" %}
 </div>
 {% endblock %}

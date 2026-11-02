@@ -576,8 +576,9 @@ def sync_membership(membership, notify_member=False):
             title='Membership applications awaiting approval',
             body=f'{membership.full_name} submitted church membership details.',
             url=_safe_reverse(
-                'admin:members_churchmembership_dashboard',
-            ) + f'?member={membership.pk}',
+                'admin:members_churchmembership_profile',
+                args=[membership.pk],
+            ),
             icon='id-card',
             tone=Notification.TONE_ATTENTION,
             permission='members.manage_membership',
@@ -604,8 +605,9 @@ def sync_membership(membership, notify_member=False):
             title='New church memberships (7 days)',
             body=f'{membership.full_name} joined the church membership records.',
             url=_safe_reverse(
-                'admin:members_churchmembership_dashboard',
-            ) + f'?member={membership.pk}',
+                'admin:members_churchmembership_profile',
+                args=[membership.pk],
+            ),
             icon='id-card',
             tone=Notification.TONE_INFO,
             permission='members.manage_membership',

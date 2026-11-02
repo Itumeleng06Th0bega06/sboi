@@ -101,7 +101,40 @@ def admin_section(request, app_label):
         'section_name': section['name'],
         'dashboard_url': reverse('admin:index'),
     })
+
+    if app_label == 'members':
+        context.update(_members_section_context(request))
     return TemplateResponse(request, 'admin/section_index.html', context)
+
+
+def _members_section_context(request):
+    """Inline the church membership dashboard on the Members section page.
+
+    The section used to show two tiles ("Church memberships" and "Membership
+    change requests") that only linked to other pages. Administrators work in
+    the directory itself, so the section page now renders it directly and the
+    two tiles are dropped from the template. Pending applications and updates
+    are surfaced by the notification bell instead of a separate tile.
+    """
+    from members import dashboard as membership_dashboard
+    from members.models import ChurchMembership
+
+    model_admin = admin.site._registry.get(ChurchMembership)
+    if model_admin is None or not model_admin.has_view_permission(request):
+        # No access to the membership records: keep the normal tile listing,
+        # which shows the locked section rather than leaking the directory.
+        return {}
+
+    context = membership_dashboard.build_dashboard_context(
+        request,
+        list_url=reverse('admin_section', args=['members']),
+    )
+    context.update({
+        'can_add': model_admin.has_add_permission(request),
+        'can_change': model_admin.has_change_permission(request),
+        'members_dashboard': True,
+    })
+    return context
 
 
 def admin_notifications_api(request):

@@ -135,6 +135,11 @@ class PortalAccessTests(CommunicationsBase):
         # context (account menu, notification bell, logout) must be present.
         self.assertTrue(response.context['has_permission'])
         self.assertIn('admin_dashboard', response.context)
+        # New-conversation buttons were removed; staff use existing threads.
+        self.assertNotContains(response, 'Create a group')
+        self.assertNotContains(response, 'Send a direct message')
+        self.assertNotContains(response, 'New direct message')
+        self.assertNotContains(response, 'New group')
 
     def test_superuser_passes_without_explicit_permission_row(self):
         superuser = self.make_user('root', allowed=False, superuser=True)

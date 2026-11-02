@@ -1,4 +1,5 @@
 from django.contrib.auth.models import Permission, User
+from django.core.exceptions import PermissionDenied
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
@@ -781,19 +782,21 @@ class MembershipDashboardTests(TestCase):
         second = self.client.get(reverse(self.dashboard), {'page': 2})
         self.assertEqual(len(second.context['members']), 5)
 
-    def test_selected_member_profile_uses_real_data(self):
+    def test_profile_page_uses_real_data(self):
         self._superuser()
         member = self._member(
             'profiled', phone='0821234567', membership_category='regular',
             gender='female', address='1 Main Road',
         )
-        response = self.client.get(reverse(self.dashboard), {'member': member.pk})
+        response = self.client.get(
+            reverse('admin:members_churchmembership_profile', args=[member.pk]),
+        )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'profiled')
         self.assertContains(response, '0821234567')
         self.assertContains(response, '1 Main Road')
-        self.assertEqual(response.context['selected_member']['id'], member.pk)
-        self.assertEqual(response.context['selected_member']['gender'], 'Female')
+        self.assertEqual(response.context['profile']['id'], member.pk)
+        self.assertEqual(response.context['profile']['gender'], 'Female')
 
     def test_profile_shows_family_details(self):
         self._superuser()
@@ -802,7 +805,9 @@ class MembershipDashboardTests(TestCase):
             spouse_name='Naledi Mokoena',
             children_names='Lerato Mokoena\nKagiso Mokoena',
         )
-        response = self.client.get(reverse(self.dashboard), {'member': member.pk})
+        response = self.client.get(
+            reverse('admin:members_churchmembership_profile', args=[member.pk]),
+        )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Married')
         self.assertContains(response, 'Naledi Mokoena')
@@ -811,10 +816,123 @@ class MembershipDashboardTests(TestCase):
     def test_blank_profile_renders_without_errors(self):
         self._superuser()
         member = self._member('blankdash')
-        response = self.client.get(reverse(self.dashboard), {'member': member.pk})
+        response = self.client.get(
+            reverse('admin:members_churchmembership_profile', args=[member.pk]),
+        )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['selected_member']['gender'], '')
+        self.assertEqual(response.context['profile']['gender'], '')
         self.assertContains(response, 'blankdash')
+
+    def test_approve_pending_profile_activates_membership(self):
+        self._superuser()
+        member = self._member('pendingprofile', status='pending')
+        response = self.client.post(
+            reverse('admin:members_churchmembership_profile', args=[member.pk]),
+            {'action': 'approve', 'admin_note': 'Welcome aboard.'},
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        member.refresh_from_db()
+        self.assertEqual(member.status, 'active')
+        self.assertContains(response, 'approved')
+        self.assertTrue(
+            Notification.objects.filter(
+                recipient=member.user,
+                source_type='membership_member',
+                source_id=member.pk,
+            ).exists()
+        )
+
+    def test_approve_pending_change_request_records_the_decision(self):
+        admin = self._superuser()
+        member = self._member('changeauthor', status='pending')
+        change = services.record_membership_change(
+            member, member.user,
+            MembershipChangeRequest.KIND_APPLICATION,
+            summary='Submitted from the member portal.',
+        )
+        response = self.client.post(
+            reverse('admin:members_churchmembership_profile', args=[member.pk]),
+            {'action': 'approve', 'admin_note': 'Details verified.'},
+        )
+        self.assertEqual(response.status_code, 302)
+        change.refresh_from_db()
+        member.refresh_from_db()
+        self.assertEqual(change.status, MembershipChangeRequest.STATUS_APPROVED)
+        self.assertEqual(change.reviewed_by, admin)
+        self.assertEqual(change.admin_note, 'Details verified.')
+        self.assertEqual(member.status, 'active')
+
+    def test_direct_status_change_updates_the_member(self):
+        self._superuser()
+        member = self._member('statusguy')
+        response = self.client.post(
+            reverse('admin:members_churchmembership_profile', args=[member.pk]),
+            {'action': 'status', 'status': 'inactive'},
+        )
+        self.assertEqual(response.status_code, 302)
+        member.refresh_from_db()
+        self.assertEqual(member.status, 'inactive')
+        self.assertTrue(
+            Notification.objects.filter(
+                recipient=member.user,
+                source_type='membership_member',
+                source_id=member.pk,
+                title='Membership status updated',
+            ).exists()
+        )
+
+    def test_profile_sends_a_private_message_to_the_member(self):
+        self._superuser()
+        member = self._member('messaged')
+        response = self.client.post(
+            reverse('admin:members_churchmembership_profile', args=[member.pk]),
+            {'action': 'message', 'message': 'Please confirm your address.'},
+        )
+        self.assertEqual(response.status_code, 302)
+        message = ContactMessage.objects.get(
+            user=member.user, is_from_admin=True,
+        )
+        self.assertEqual(message.message, 'Please confirm your address.')
+        self.assertTrue(
+            Notification.objects.filter(
+                recipient=member.user,
+                source_type='contact_reply',
+                source_id=message.pk,
+            ).exists()
+        )
+
+    def test_old_member_query_redirects_to_profile(self):
+        self._superuser()
+        member = self._member('oldlink')
+        response = self.client.get(
+            reverse(self.dashboard), {'member': member.pk},
+        )
+        self.assertRedirects(
+            response,
+            reverse('admin:members_churchmembership_profile', args=[member.pk]),
+        )
+
+    def test_section_page_inlines_the_directory(self):
+        self._superuser()
+        self._member('sectionmember')
+        response = self.client.get(reverse('admin_section', args=['members']))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['members_dashboard'])
+        self.assertContains(response, 'sectionmember')
+        self.assertNotContains(response, 'Membership change requests')
+
+    def test_section_page_requires_membership_permission(self):
+        user = User.objects.create_user(
+            'noaccess', 'noaccess@example.com', STRONG, is_staff=True,
+        )
+        self.client.force_login(user)
+        self._member('privatesectionmember')
+        response = self.client.get(reverse('admin_section', args=['members']))
+        self.assertEqual(response.status_code, 403)
+        self.assertNotContains(
+            response, 'privatesectionmember', status_code=403,
+        )
 
     def test_add_button_with_manage_permission(self):
         self._superuser()
@@ -831,12 +949,16 @@ class MembershipDashboardTests(TestCase):
         )
         self.client.force_login(user)
         member = self._member('managed')
-        response = self.client.get(reverse(self.dashboard), {'member': member.pk})
+        response = self.client.get(reverse(self.dashboard))
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context['can_add'])
         self.assertTrue(response.context['can_change'])
         self.assertContains(response, 'Add New Member')
-        self.assertContains(response, 'Edit member')
+        profile = self.client.get(
+            reverse('admin:members_churchmembership_profile', args=[member.pk]),
+        )
+        self.assertEqual(profile.status_code, 200)
+        self.assertContains(profile, 'Edit member')
 
 
 class AccountPortalTests(TestCase):
@@ -862,9 +984,18 @@ class AccountPortalTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn(reverse('members:login'), response['Location'])
 
-    def test_account_sidebar_sign_out_uses_post(self):
+    def test_login_redirects_to_the_profile(self):
+        self.client.logout()
+        response = self.client.post(
+            reverse('members:login'),
+            {'username': self.member.username, 'password': STRONG},
+        )
+        self.assertRedirects(response, reverse('members:account'))
+
+    def test_account_page_has_no_sidebar_and_sign_out_uses_post(self):
         response = self.client.get(reverse('members:account'))
-        self.assertContains(response, 'class="account-nav-form"')
+        self.assertNotContains(response, 'account-sidebar')
+        self.assertContains(response, 'class="nav-account-logout"')
         self.assertNotContains(
             response, f'<a href="{reverse("members:logout")}"',
         )
@@ -1118,3 +1249,151 @@ class AccountPortalTests(TestCase):
         response = self.client.get(reverse('members:account_notifications'))
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'Private notice for someone else')
+
+    def test_ajax_navigation_returns_only_the_account_section(self):
+        response = self.client.get(
+            reverse('members:account_children'),
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'data-account-section')
+        self.assertContains(response, 'data-account-title="Children"')
+        self.assertContains(response, 'Lerato')
+        self.assertNotContains(response, '<html')
+        self.assertNotContains(response, 'account-sidebar')
+
+    def test_counts_endpoint_keeps_badges_and_bell_in_sync(self):
+        ContactMessage.objects.create(
+            user=self.member,
+            sender=User.objects.create_user(
+                'replyadmin', 'replyadmin@example.com', STRONG,
+            ),
+            name='Church Office',
+            email='office@example.com',
+            message='A private reply.',
+            is_from_admin=True,
+            is_read=True,
+            read_by_member=False,
+        )
+        Notification.objects.create(
+            recipient=self.member,
+            audience=Notification.AUDIENCE_MEMBER,
+            category='membership',
+            source_key='unread-count-test',
+            title='Unread notice',
+            body='Please review this.',
+        )
+        response = self.client.get(reverse('members:account_counts'))
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload['ok'])
+        self.assertEqual(payload['unread_messages'], 1)
+        self.assertGreaterEqual(payload['unread_notifications'], 1)
+
+    def test_child_ajax_returns_a_replacement_fragment(self):
+        response = self.client.post(
+            reverse('members:account_child_add'),
+            {'name': 'Neo'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload['ok'])
+        self.assertIn('Neo', payload['html'])
+        self.assertIn('account-child-list', payload['html'])
+        self.membership.refresh_from_db()
+        self.assertIn('Neo', self.membership.children_names)
+
+    def test_settings_ajax_returns_settings_section(self):
+        response = self.client.post(
+            reverse('members:account_settings'),
+            {'save_preferences': '1'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload['ok'])
+        self.assertIn('data-account-section', payload['html'])
+        self.assertIn('Change password', payload['html'])
+        self.assertNotIn('<html', payload['html'])
+
+    def test_notification_open_is_owner_scoped_and_returns_target(self):
+        notification = Notification.objects.create(
+            recipient=self.member,
+            audience=Notification.AUDIENCE_MEMBER,
+            category='membership',
+            source_key='open-scope-test',
+            title='Membership details approved',
+            body='Your details were approved.',
+            url=reverse('members:account') + '#membership',
+        )
+        response = self.client.get(
+            reverse('members:account_notification_open', args=[notification.pk]),
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['ok'])
+        self.assertEqual(
+            response.json()['url'], reverse('members:account') + '#membership',
+        )
+
+        other = User.objects.create_user('otherreader', 'otherreader@example.com', STRONG)
+        self.client.force_login(other)
+        denied = self.client.get(
+            reverse('members:account_notification_open', args=[notification.pk]),
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(denied.status_code, 404)
+
+    def test_member_cannot_review_their_own_request(self):
+        change = MembershipChangeRequest.objects.create(
+            membership=self.membership,
+            submitted_by=self.member,
+            kind=MembershipChangeRequest.KIND_UPDATE,
+            summary='Address changed',
+        )
+        with self.assertRaises(PermissionDenied):
+            services.apply_membership_decision(
+                change.pk, self.member, approve=True,
+            )
+        change.refresh_from_db()
+        self.assertEqual(change.status, MembershipChangeRequest.STATUS_PENDING)
+
+    def test_admin_edit_updates_profile_and_notifies_once(self):
+        admin = User.objects.create_superuser(
+            'recordadmin', 'recordadmin@example.com', STRONG,
+        )
+        self.client.force_login(admin)
+        payload = {
+            'username': 'accountmember',
+            'email': 'account@example.com',
+            'first_name': 'Account',
+            'last_name': 'Member',
+            'phone': '0837654321',
+            'status': 'active',
+            'membership_category': 'regular',
+            '_save': 'Save',
+        }
+        url = reverse(
+            'admin:members_churchmembership_change',
+            args=[self.membership.pk],
+        )
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, 302)
+        self.membership.refresh_from_db()
+        self.assertEqual(self.membership.phone, '0837654321')
+        notices = Notification.objects.filter(
+            recipient=self.member,
+            source_type='membership_admin_update',
+            source_id=self.membership.pk,
+        )
+        self.assertEqual(notices.count(), 1)
+        self.assertIn('updated', notices.get().title.lower())
+
+        # Re-saving the same values must not spam a second notice.
+        self.client.post(url, payload)
+        self.assertEqual(notices.count(), 1)
+
+        self.client.force_login(self.member)
+        response = self.client.get(reverse('members:account'))
+        self.assertContains(response, '0837654321')

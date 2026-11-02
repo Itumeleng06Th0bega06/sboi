@@ -7,12 +7,6 @@
       <p>{% trans 'Manage church members, view details and keep track of their information.' %}</p>
     </div>
     <div class="cm-heading-actions">
-      {% if perms.contact.manage_contact_messages %}
-      <a class="cm-secondary-button" href="{% url 'admin:contact_contactmessage_compose' %}">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H5.17L4 17.17V4Zm0 0 8 7 8-7"/></svg>
-        <span>{% trans 'Message a member' %}</span>
-      </a>
-      {% endif %}
       {% if can_add %}
       <a class="cm-primary-button" href="{{ add_member_url }}">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
@@ -41,38 +35,45 @@
     </article>
   </div>
 
-  <form class="cm-card cm-filters" method="get" action="{{ membership_list_url }}">
-    <label class="cm-search-field">
-      <span class="cm-visually-hidden">{% trans 'Search members' %}</span>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-      <input type="search" name="q" value="{{ search_query|default:'' }}" placeholder="{% trans 'Search name, email, phone or member ID…' %}">
-    </label>
-    <label class="cm-filter-field">
-      <span class="cm-visually-hidden">{% trans 'Membership type' %}</span>
-      <select name="type">
-        <option value="">{% trans 'All membership types' %}</option>
-        {% for option in membership_type_options %}<option value="{{ option.value }}" {% if selected_type == option.value %}selected{% endif %}>{{ option.label }}</option>{% endfor %}
-      </select>
-    </label>
-    <label class="cm-filter-field">
-      <span class="cm-visually-hidden">{% trans 'Group or ministry' %}</span>
-      <select name="group">
-        <option value="">{% trans 'All groups' %}</option>
-        {% for option in group_options %}<option value="{{ option.value }}" {% if selected_group == option.value|stringformat:'s' %}selected{% endif %}>{{ option.label }}</option>{% endfor %}
-      </select>
-    </label>
-    <label class="cm-filter-field">
-      <span class="cm-visually-hidden">{% trans 'Membership status' %}</span>
-      <select name="status">
-        <option value="">{% trans 'All statuses' %}</option>
-        {% for option in status_options %}<option value="{{ option.value }}" {% if selected_status == option.value %}selected{% endif %}>{{ option.label }}</option>{% endfor %}
-      </select>
-    </label>
-    <div class="cm-filter-actions">
-      <button class="cm-secondary-button" type="submit">{% trans 'Apply' %}</button>
-      <a class="cm-text-link" href="{{ membership_list_url }}">{% trans 'Clear' %}</a>
-    </div>
-  </form>
+  <details class="cm-filter-drawer"{% if search_query or selected_type or selected_group or selected_status %} open{% endif %}>
+    <summary class="cm-filter-summary">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+      <span>{% trans 'Search and filters' %}</span>
+      <span class="cm-filter-caret" aria-hidden="true">▾</span>
+    </summary>
+    <form class="cm-card cm-filters" method="get" action="{{ membership_list_url }}">
+      <label class="cm-search-field">
+        <span class="cm-visually-hidden">{% trans 'Search members' %}</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input type="search" name="q" value="{{ search_query|default:'' }}" placeholder="{% trans 'Search name, email, phone or member ID…' %}">
+      </label>
+      <label class="cm-filter-field">
+        <span class="cm-visually-hidden">{% trans 'Membership type' %}</span>
+        <select name="type">
+          <option value="">{% trans 'All membership types' %}</option>
+          {% for option in membership_type_options %}<option value="{{ option.value }}" {% if selected_type == option.value %}selected{% endif %}>{{ option.label }}</option>{% endfor %}
+        </select>
+      </label>
+      <label class="cm-filter-field">
+        <span class="cm-visually-hidden">{% trans 'Group or ministry' %}</span>
+        <select name="group">
+          <option value="">{% trans 'All groups' %}</option>
+          {% for option in group_options %}<option value="{{ option.value }}" {% if selected_group == option.value|stringformat:'s' %}selected{% endif %}>{{ option.label }}</option>{% endfor %}
+        </select>
+      </label>
+      <label class="cm-filter-field">
+        <span class="cm-visually-hidden">{% trans 'Membership status' %}</span>
+        <select name="status">
+          <option value="">{% trans 'All statuses' %}</option>
+          {% for option in status_options %}<option value="{{ option.value }}" {% if selected_status == option.value %}selected{% endif %}>{{ option.label }}</option>{% endfor %}
+        </select>
+      </label>
+      <div class="cm-filter-actions">
+        <button class="cm-secondary-button" type="submit">{% trans 'Apply' %}</button>
+        <a class="cm-text-link" href="{{ membership_list_url }}">{% trans 'Clear' %}</a>
+      </div>
+    </form>
+  </details>
 
   <div class="cm-workspace">
     <section class="cm-card cm-directory" aria-labelledby="cm-members-title">
@@ -84,9 +85,9 @@
           <thead><tr><th scope="col" class="cm-col-member">{% trans 'Member' %}</th><th scope="col" class="cm-col-contact">{% trans 'Contact' %}</th><th scope="col" class="cm-col-type">{% trans 'Type' %}</th><th scope="col" class="cm-col-group">{% trans 'Group' %}</th><th scope="col" class="cm-col-status">{% trans 'Status' %}</th><th scope="col" class="cm-col-actions"><span class="cm-visually-hidden">{% trans 'Actions' %}</span></th></tr></thead>
           <tbody>
           {% for member in members %}
-            <tr {% if selected_member and selected_member.id == member.id %}class="is-selected"{% endif %}>
+            <tr>
               <td class="cm-col-member">
-                <a class="cm-member-cell" href="{{ membership_list_url }}?member={{ member.id }}&amp;q={{ search_query|urlencode }}&amp;type={{ selected_type|urlencode }}&amp;group={{ selected_group|urlencode }}&amp;status={{ selected_status|urlencode }}" aria-label="View {{ member.full_name }}">
+                <a class="cm-member-cell" href="{{ member.profile_url }}" aria-label="View {{ member.full_name }}">
                   <span class="cm-avatar">{{ member.initials|default:'M' }}</span>
                   <span class="cm-member-name-wrap"><strong>{{ member.full_name|default:'Unnamed member' }}</strong><small>{{ member.member_id|default:'ID not assigned' }}</small></span>
                 </a>
@@ -119,84 +120,5 @@
         </div>
       {% endif %}
     </section>
-
-    <aside class="cm-card cm-profile" aria-labelledby="cm-profile-title">
-      {% if selected_member %}
-        <div class="cm-profile-heading">
-          <span class="cm-profile-avatar">{{ selected_member.initials|default:'M' }}</span>
-          <div class="cm-profile-identity"><h2 id="cm-profile-title">{{ selected_member.full_name|default:'Unnamed member' }}</h2><p>{{ selected_member.member_id|default:'ID not assigned' }}</p><span class="cm-status-badge cm-status-{{ selected_member.status|default:'unknown'|slugify }}">{{ selected_member.status|default:'Not specified' }}</span></div>
-        </div>
-        <div class="cm-profile-tabs" role="tablist" aria-label="{% trans 'Member details' %}">
-          <button type="button" class="cm-tab is-active" role="tab" aria-selected="true" data-cm-tab="overview">{% trans 'Overview' %}</button>
-          <button type="button" class="cm-tab" role="tab" aria-selected="false" tabindex="-1" data-cm-tab="personal">{% trans 'Personal Info' %}</button>
-          <button type="button" class="cm-tab" role="tab" aria-selected="false" tabindex="-1" data-cm-tab="membership">{% trans 'Membership' %}</button>
-          <button type="button" class="cm-tab" role="tab" aria-selected="false" tabindex="-1" data-cm-tab="groups">{% trans 'Groups' %}</button>
-        </div>
-        <div class="cm-profile-content">
-          <section class="cm-tab-panel is-active" role="tabpanel" data-cm-panel="overview">
-            <h3>{% trans 'Member Details' %}</h3>
-            <dl class="cm-detail-list">
-              <div><dt>{% trans 'Full name' %}</dt><dd>{{ selected_member.full_name|default:'—' }}</dd></div>
-              <div><dt>{% trans 'Email' %}</dt><dd>{{ selected_member.email|default:'—' }}</dd></div>
-              <div><dt>{% trans 'Phone' %}</dt><dd>{{ selected_member.phone|default:'—' }}</dd></div>
-              <div><dt>{% trans 'Date joined' %}</dt><dd>{{ selected_member.date_joined|date:'d M Y'|default:'—' }}</dd></div>
-              <div><dt>{% trans 'Membership type' %}</dt><dd>{{ selected_member.membership_type|default:'—' }}</dd></div>
-              <div><dt>{% trans 'Status' %}</dt><dd>{{ selected_member.status|default:'—' }}</dd></div>
-            </dl>
-            <h3 class="cm-subheading">{% trans 'Additional Information' %}</h3>
-            <dl class="cm-detail-list">
-              {% if selected_member.date_of_birth %}<div><dt>{% trans 'Date of birth' %}</dt><dd>{{ selected_member.date_of_birth|date:'d M Y' }}</dd></div>{% endif %}
-              {% if selected_member.marital_status %}<div><dt>{% trans 'Marital status' %}</dt><dd>{{ selected_member.marital_status }}</dd></div>{% endif %}
-              {% if selected_member.spouse_name %}<div><dt>{% trans 'Spouse' %}</dt><dd>{{ selected_member.spouse_name }}</dd></div>{% endif %}
-              {% if selected_member.children %}<div><dt>{% trans 'Children' %}</dt><dd>{{ selected_member.children|join:', ' }}</dd></div>{% endif %}
-              {% if selected_member.address %}<div><dt>{% trans 'Address' %}</dt><dd>{{ selected_member.address }}</dd></div>{% endif %}
-              {% if selected_member.baptism_date %}<div><dt>{% trans 'Baptism date' %}</dt><dd>{{ selected_member.baptism_date|date:'d M Y' }}</dd></div>{% endif %}
-              {% if selected_member.baptism_status %}<div><dt>{% trans 'Baptism status' %}</dt><dd>{{ selected_member.baptism_status }}</dd></div>{% endif %}
-              {% if selected_member.notes %}<div><dt>{% trans 'Notes' %}</dt><dd>{{ selected_member.notes }}</dd></div>{% endif %}
-            </dl>
-          </section>
-          <section class="cm-tab-panel" role="tabpanel" data-cm-panel="personal" hidden>
-            <h3>{% trans 'Personal Information' %}</h3><dl class="cm-detail-list">
-              <div><dt>{% trans 'Email' %}</dt><dd>{{ selected_member.email|default:'—' }}</dd></div><div><dt>{% trans 'Phone' %}</dt><dd>{{ selected_member.phone|default:'—' }}</dd></div>
-              {% if selected_member.date_of_birth %}<div><dt>{% trans 'Date of birth' %}</dt><dd>{{ selected_member.date_of_birth|date:'d M Y' }}</dd></div>{% endif %}
-              {% if selected_member.gender %}<div><dt>{% trans 'Gender' %}</dt><dd>{{ selected_member.gender }}</dd></div>{% endif %}
-              {% if selected_member.marital_status %}<div><dt>{% trans 'Marital status' %}</dt><dd>{{ selected_member.marital_status }}</dd></div>{% endif %}
-              {% if selected_member.address %}<div><dt>{% trans 'Address' %}</dt><dd>{{ selected_member.address }}</dd></div>{% endif %}
-            </dl>
-            {% if selected_member.spouse_name or selected_member.children %}
-            <h3 class="cm-subheading">{% trans 'Family' %}</h3>
-            <dl class="cm-detail-list">
-              {% if selected_member.spouse_name %}<div><dt>{% trans 'Spouse' %}</dt><dd>{{ selected_member.spouse_name }}</dd></div>{% endif %}
-              {% if selected_member.children %}<div><dt>{% trans 'Children' %}</dt><dd>{{ selected_member.children|join:', ' }}</dd></div>{% endif %}
-            </dl>
-            {% endif %}
-          </section>
-          <section class="cm-tab-panel" role="tabpanel" data-cm-panel="membership" hidden>
-            <h3>{% trans 'Membership Information' %}</h3><dl class="cm-detail-list">
-              <div><dt>{% trans 'Member ID' %}</dt><dd>{{ selected_member.member_id|default:'—' }}</dd></div><div><dt>{% trans 'Type' %}</dt><dd>{{ selected_member.membership_type|default:'—' }}</dd></div>
-              <div><dt>{% trans 'Status' %}</dt><dd>{{ selected_member.status|default:'—' }}</dd></div><div><dt>{% trans 'Date joined' %}</dt><dd>{{ selected_member.date_joined|date:'d M Y'|default:'—' }}</dd></div>
-              {% if selected_member.previous_church %}<div><dt>{% trans 'Previous church' %}</dt><dd>{{ selected_member.previous_church }}</dd></div>{% endif %}
-              {% if selected_member.interests %}<div><dt>{% trans 'Interests' %}</dt><dd>{{ selected_member.interests|join:', ' }}</dd></div>{% endif %}
-              {% if selected_member.activities %}<div><dt>{% trans 'Activities' %}</dt><dd>{{ selected_member.activities|join:', ' }}</dd></div>{% endif %}
-            </dl>
-          </section>
-          <section class="cm-tab-panel" role="tabpanel" data-cm-panel="groups" hidden>
-            <h3>{% trans 'Groups &amp; Ministries' %}</h3>
-            {% if selected_member.group_names %}<div class="cm-group-list">{% for group_name in selected_member.group_names %}<span class="cm-type-badge">{{ group_name }}</span>{% endfor %}</div>{% else %}<p class="cm-muted-text">{% trans 'No groups or ministries recorded.' %}</p>{% endif %}
-            {% if selected_member.skills %}<h3 class="cm-subheading">{% trans 'Skills and Talents' %}</h3><p>{{ selected_member.skills }}</p>{% endif %}
-            {% if selected_member.availability %}<h3 class="cm-subheading">{% trans 'Availability' %}</h3><p>{{ selected_member.availability }}</p>{% endif %}
-          </section>
-        </div>
-        <div class="cm-profile-actions">
-          {% if perms.contact.manage_contact_messages %}
-          <a class="cm-secondary-button cm-button-full" href="{% url 'admin:contact_contactmessage_compose' %}?member={{ selected_member.id }}">{% trans 'Send message' %}</a>
-          {% endif %}
-          {% if can_change %}<a class="cm-primary-button cm-button-full" href="{{ selected_member.edit_url }}">{% trans 'Edit Member' %}</a>{% endif %}
-          <a class="cm-secondary-button cm-button-full" href="{{ directory_url }}">{% trans 'Manage records' %}</a>
-        </div>
-      {% else %}
-        <div class="cm-profile-empty"><span class="cm-profile-empty-icon" aria-hidden="true">⌕</span><h2 id="cm-profile-title">{% trans 'Member profile' %}</h2><p>{% trans 'Select a member from the directory to view their details.' %}</p></div>
-      {% endif %}
-    </aside>
   </div>
 </section>

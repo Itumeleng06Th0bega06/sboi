@@ -3,7 +3,7 @@
 
 {% block extrastyle %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'admin/css/church_membership.css' %}?v=7">
+    <link rel="stylesheet" href="{% static 'admin/css/church_membership.css' %}?v=11">
 {% endblock %}
 
 {% block content_title %}{% endblock %}
@@ -18,9 +18,4 @@
 
 {% block content %}
     {% include "admin/members/churchmembership/_church_membership.html" %}
-{% endblock %}
-
-{% block extrahead %}
-    {{ block.super }}
-    <script src="{% static 'admin/js/church_membership.js' %}?v=2" defer></script>
 {% endblock %}

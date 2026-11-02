@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=70">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=73">
   <link rel="stylesheet" href="{% static 'css/notifications.css' %}?v=1">
   {% block extra_head %}{% endblock %}
 </head>
@@ -161,6 +161,7 @@
         {% block content %}{% endblock %}
     </main>
 
+    {% if request.resolver_match.namespace == 'home' %}
     <footer class="site-footer">
         <div class="container footer-grid">
             <div class="footer-col">
@@ -205,6 +206,7 @@
             <p>&copy; 2026 {{ site_profile.church_name|default:'Shekinah Blaze Outreach International' }}. Governed by Heaven, Established on Earth.</p>
         </div>
     </footer>
+    {% endif %}
 
     <div class="lightbox" id="lightbox" aria-hidden="true">
         <button class="lightbox-close" id="lightboxClose" aria-label="Close">&times;</button>
@@ -218,7 +220,7 @@
 
     <script src="{% static 'js/script.js' %}?v=11"></script>
     <script src="{% static 'js/ajax-forms.js' %}"></script>
-    <script src="{% static 'js/notifications.js' %}?v=1"></script>
+    <script src="{% static 'js/notifications.js' %}?v=2"></script>
     {% block extra_scripts %}{% endblock %}
     {# Ensures the CSRF cookie exists for bell actions on pages without a form. #}
     <div hidden aria-hidden="true">{% csrf_token %}</div>

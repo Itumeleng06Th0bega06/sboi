@@ -17,6 +17,7 @@ import urllib.request
 from datetime import timedelta
 
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
 from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
@@ -24,6 +25,7 @@ from django.utils import timezone
 from notifications.models import Notification, NotificationState
 
 from .models import (
+    MEMBERSHIP_STATUS_CHOICES,
     ChurchMembership,
     MembershipChangeRequest,
 )
@@ -96,6 +98,57 @@ def notify_member_reply(message, title='New reply from church administration'):
         notification.whatsapp_status = status
         notification.save(update_fields=['whatsapp_status'])
     return notification, created
+
+
+def send_admin_message(membership, admin, body, subject=''):
+    """Send a private message from an administrator to a member.
+
+    The profile page uses this instead of opening the separate compose form.
+    It writes to the same ``ContactMessage`` conversation the member already
+    reads in their account, then raises the usual in-app/email/WhatsApp
+    notifications. A short duplicate window keeps a double-click or a browser
+    retry from sending the same text twice.
+    """
+    from contact.models import ContactMessage
+
+    body = (body or '').strip()
+    if membership is None or membership.user_id is None:
+        raise ValueError('A member account is required to send a message.')
+    if not body:
+        raise ValueError('Please type a message before sending.')
+
+    duplicate = (
+        ContactMessage.objects
+        .filter(
+            user_id=membership.user_id,
+            sender=admin,
+            is_from_admin=True,
+            message=body,
+            created_at__gte=timezone.now() - timedelta(seconds=30),
+        )
+        .order_by('-created_at')
+        .first()
+    )
+    if duplicate is not None:
+        return duplicate, False
+
+    message = ContactMessage.objects.create(
+        user_id=membership.user_id,
+        sender=admin,
+        name=membership.full_name or membership.user.get_username(),
+        email=membership.email or '',
+        phone=membership.phone or '',
+        subject=(subject or '').strip(),
+        message=body,
+        is_from_admin=True,
+        is_read=True,
+        read_by_member=False,
+    )
+    notify_member_reply(
+        message,
+        title='New message from church administration',
+    )
+    return message, True
 
 
 def _whatsapp_target(membership):
@@ -184,6 +237,10 @@ def mark_message_notifications_read(user):
 def _admin_change_url(change):
     return (
         _safe_reverse(
+            'admin:members_churchmembership_profile',
+            args=[change.membership_id],
+        )
+        or _safe_reverse(
             'admin:members_membershipchangerequest_change',
             args=[change.pk],
         )
@@ -288,6 +345,120 @@ def _notify_member_decision(change):
     return notification
 
 
+def notify_member_admin_update(membership, changed_fields):
+    """Tell a member when an administrator edits their record directly.
+
+    Member-submitted updates already produce review notifications. This path is
+    for the admin change form, where a pastor or office administrator saves a
+    correction immediately. Older open rows for the same record are resolved so
+    the member never has to interpret two competing "details changed" notices.
+    """
+    if membership.user_id is None:
+        return None
+    changed = sorted({field for field in (changed_fields or []) if field})
+    if not changed:
+        return None
+
+    labels = {
+        'username': 'account username',
+        'email': 'email address',
+        'first_name': 'first name',
+        'last_name': 'last name',
+        'phone': 'phone number',
+        'alt_phone': 'alternate phone number',
+        'date_of_birth': 'date of birth',
+        'gender': 'gender',
+        'marital_status': 'marital status',
+        'address': 'address',
+        'city': 'city',
+        'province': 'province',
+        'emergency_contact_name': 'emergency contact',
+        'emergency_contact_phone': 'emergency contact phone',
+        'spouse_name': 'spouse details',
+        'children_names': 'children',
+        'membership_category': 'membership category',
+        'date_joined_church': 'join date',
+        'baptism_status': 'baptism status',
+        'baptism_date': 'baptism date',
+        'previous_church': 'previous church',
+        'transferring_from_church': 'transferring church',
+        'preferred_language': 'preferred language',
+        'campus_branch': 'campus or branch',
+        'interests': 'interests',
+        'interests_other': 'interests',
+        'spiritual_growth_goals': 'spiritual growth goals',
+        'wants_bible_study': 'Bible study preference',
+        'wants_contact': 'contact preference',
+        'guidance_support': 'guidance support',
+        'currently_involved': 'current activities',
+        'current_ministries': 'current ministries',
+        'current_activities': 'current activities',
+        'small_group_name': 'small group',
+        'volunteers_currently': 'volunteer activities',
+        'volunteer_ministries': 'volunteer ministries',
+        'volunteer_details': 'volunteer details',
+        'wants_to_join': 'ministries you want to join',
+        'wants_to_volunteer': 'volunteer preferences',
+        'skills': 'skills',
+        'talents': 'talents',
+        'service_areas': 'service areas',
+        'preferred_times': 'availability',
+        'additional_info': 'additional information',
+        'notes': 'membership notes',
+        'prayer_request': 'prayer request',
+        'pastoral_support_requested': 'pastoral support',
+        'whatsapp_consent': 'WhatsApp preference',
+    }
+    readable = [labels.get(field, field.replace('_', ' ')) for field in changed]
+    if len(readable) > 4:
+        detail = ', '.join(readable[:4]) + f' and {len(readable) - 4} more'
+    else:
+        detail = ', '.join(readable)
+
+    now = timezone.now()
+    Notification.objects.filter(
+        recipient=membership.user,
+        audience=Notification.AUDIENCE_MEMBER,
+        source_type='membership_admin_update',
+        source_id=membership.pk,
+        status__in=Notification.OPEN_STATUSES,
+    ).update(
+        status=Notification.STATUS_RESOLVED,
+        resolved_at=now,
+        updated_at=now,
+    )
+    source_key = (
+        f'membership_admin_update:{membership.pk}:'
+        f'{int(now.timestamp() * 1000000)}'
+    )
+    notification, _ = Notification.objects.update_or_create(
+        source_key=source_key,
+        defaults={
+            'recipient': membership.user,
+            'audience': Notification.AUDIENCE_MEMBER,
+            'category': 'membership',
+            'source_type': 'membership_admin_update',
+            'source_id': membership.pk,
+            'title': 'Your church details were updated',
+            'body': (
+                'The church office updated your membership record: '
+                f'{detail}. Please review your profile to confirm the details.'
+            ),
+            'url': reverse('members:account') + '#membership',
+            'icon': 'id-card',
+            'tone': Notification.TONE_INFO,
+            'permission': '',
+            'status': Notification.STATUS_ACTIVE,
+            'requires_action': False,
+            'created_at': now,
+            'expires_at': None,
+            'resolved_at': None,
+            'completed_at': None,
+        },
+    )
+    return notification
+
+
 def send_member_email(user, subject, body):
     """Optional plain-text notice.
 
@@ -371,6 +542,11 @@ def apply_membership_decision(change_id, admin, approve, note=''):
         return change, None, False
 
     membership = change.membership
+    if membership.user_id == getattr(admin, 'pk', None):
+        raise PermissionDenied(
+            'You cannot review your own membership request. '
+            'Ask another administrator to review it.'
+        )
     change.status = (
         MembershipChangeRequest.STATUS_APPROVED
         if approve else MembershipChangeRequest.STATUS_REJECTED
@@ -439,6 +615,48 @@ def apply_membership_decision(change_id, admin, approve, note=''):
 
     send_membership_whatsapp(change, title, body)
     return change, notification, notification is not None
+
+
+@transaction.atomic
+def set_membership_status(membership, admin, status, note=''):
+    """Change an approval status directly from the member profile page.
+
+    A pending application/update is still routed through
+    :func:`apply_membership_decision`, so the review history and the member's
+    decision notice stay consistent. Any other status (for example moving an
+    active member to inactive) is a direct record change; the shared membership
+    signal then tells the member that their status changed.
+    """
+    if status not in dict(MEMBERSHIP_STATUS_CHOICES):
+        raise ValueError('Unknown membership status.')
+    if membership.user_id == getattr(admin, 'pk', None):
+        raise PermissionDenied(
+            'You cannot change your own membership status. '
+            'Ask another administrator to do it.'
+        )
+
+    pending = (
+        MembershipChangeRequest.objects
+        .select_for_update()
+        .filter(
+            membership=membership,
+            status=MembershipChangeRequest.STATUS_PENDING,
+        )
+        .first()
+    )
+    if pending is not None and status in ('active', 'rejected'):
+        change, _notification, _created = apply_membership_decision(
+            pending.pk,
+            admin,
+            approve=status == 'active',
+            note=note,
+        )
+        return membership, change
+
+    if membership.status != status:
+        membership.status = status
+        membership.save(update_fields=['status', 'updated_at'])
+    return membership, pending
 
 
 def send_membership_whatsapp(change, title, body):

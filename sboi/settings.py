@@ -165,7 +165,7 @@ STORAGES = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = 'members:login'
-LOGIN_REDIRECT_URL = 'blackboard:blackboard'
+LOGIN_REDIRECT_URL = 'members:account'
 LOGOUT_REDIRECT_URL = 'home:home'
 
 # Outgoing email. Development prints messages to the runserver console; the

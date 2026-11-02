@@ -1,4 +1,4 @@
-{% extends 'members/account/base_account.html' %}
+{% extends account_base|default:'members/account/base_account.html' %}
 
 {% block title %}Notifications · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
 
@@ -11,7 +11,7 @@
     </div>
     <div class="account-hero-actions">
         {% if unread_notifications %}
-        <form method="post" action="{% url 'members:account_notification_read' %}" data-account-notification-read>
+        <form method="post" action="{% url 'members:account_notification_read' %}" data-account-notification-read data-account-section-form>
             {% csrf_token %}
             <button type="submit" class="btn btn-ghost">Mark all as read</button>
         </form>
@@ -31,7 +31,7 @@
     <ul class="account-notification-list">
         {% for notification in notifications %}
         <li class="account-notification{% if notification.unread %} is-unread{% endif %}">
-            <a href="{% url 'members:account_notification_open' notification.id %}" class="account-notification-link">
+            <a href="{% url 'members:account_notification_open' notification.id %}" class="account-notification-link" data-account-notification-open>
                 <span class="account-notification-dot tone-{{ notification.tone|default:'info' }}"></span>
                 <span class="account-notification-copy">
                     <strong>{{ notification.title }}</strong>
@@ -46,7 +46,7 @@
         {% endfor %}
     </ul>
     {% else %}
-    <p class="account-empty">No notifications yet. Membership decisions and replies will appear here.</p>
+    <p class="account-empty">No active notifications. Membership decisions and replies will appear here when they need your attention.</p>
     {% endif %}
 </section>
 {% endblock %}

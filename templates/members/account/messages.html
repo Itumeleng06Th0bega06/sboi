@@ -1,4 +1,4 @@
-{% extends 'members/account/base_account.html' %}
+{% extends account_base|default:'members/account/base_account.html' %}
 {% load static %}
 
 {% block title %}Messages · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
@@ -56,20 +56,4 @@
         {% for error in message_form.attachment.errors %}<p class="account-error">{{ error }}</p>{% endfor %}
     </form>
 </section>
-{% endblock %}
-
-{% block account_scripts %}
-<script>
-(function () {
-    var form = document.querySelector('[data-account-message-form]');
-    if (!form) return;
-    var input = form.querySelector('input[type="file"]');
-    var name = form.querySelector('[data-account-attachment-name]');
-    if (input && name) {
-        input.addEventListener('change', function () {
-            name.textContent = input.files && input.files[0] ? input.files[0].name : '';
-        });
-    }
-})();
-</script>
 {% endblock %}

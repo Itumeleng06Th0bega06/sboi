@@ -3,6 +3,11 @@
 
 {% block bodyclass %}{{ block.super }} sboi-dashboard app-{{ section_label }}{% endblock %}
 
+{% block extrastyle %}
+    {{ block.super }}
+    {% if members_dashboard %}<link rel="stylesheet" href="{% static 'admin/css/church_membership.css' %}?v=11">{% endif %}
+{% endblock %}
+
 {% block content_title %}{% endblock %}
 {% block nav-breadcrumbs %}{% endblock %}
 

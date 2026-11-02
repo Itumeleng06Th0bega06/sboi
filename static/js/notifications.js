@@ -149,4 +149,10 @@
         });
         setInterval(function () { refresh(root); }, 60000);
     });
+
+    // The account page updates read state without reloading. Ask the bell to
+    // refresh its list and badge so both surfaces stay in sync.
+    document.addEventListener('sboi:notifications-updated', function () {
+        document.querySelectorAll('[data-sboi-public-bell]').forEach(refresh);
+    });
 })();

@@ -6,7 +6,22 @@
   Django's app index (app_index.html), so the two navigation paths always look
   and behave the same. Expects `section` (an app entry from app_list) and
   `section_label` (its app label).
+
+  The Members section is special: instead of tiles linking to the directory and
+  the review queue, the section page renders the Church Membership dashboard
+  itself. `members_dashboard` is set by `sboi.views.admin_section`.
 {% endcomment %}
+{% if members_dashboard %}
+<div id="content-main" class="sboi-dash sboi-dash--members">
+    <nav class="sboi-backbar" aria-label="{% translate 'Breadcrumb' %}">
+        <a class="sboi-backtab" href="{% url 'admin:index' %}">
+            {% admin_icon 'arrow-left' %}
+            <span>{% translate 'Dashboard' %}</span>
+        </a>
+    </nav>
+    {% include "admin/members/churchmembership/_church_membership.html" %}
+</div>
+{% else %}
 <div id="content-main" class="sboi-dash">
     <nav class="sboi-backbar" aria-label="{% translate 'Breadcrumb' %}">
         <a class="sboi-backtab" href="{% url 'admin:index' %}">
@@ -50,3 +65,4 @@
         {% endfor %}
     </div>
 </div>
+{% endif %}

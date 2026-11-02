@@ -15,6 +15,7 @@ from sboi.admin_permissions import AreaPermissionMixin
 from . import dashboard, services
 from .forms import ChurchMembershipFieldsMixin
 from .models import (
+    MEMBERSHIP_STATUS_CHOICES,
     MINISTRY_CHOICES,
     ChurchMembership,
     MembershipChangeRequest,
@@ -274,6 +275,22 @@ class ChurchMembershipAdmin(AreaPermissionMixin, admin.ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('user')
 
+    def save_related(self, request, form, formsets, change):
+        """Notify the member when an administrator edits their record.
+
+        A status transition already produces its own member notice from the
+        shared membership signal. For every other real change we add one
+        consolidated "details updated" row, after the model and its ministry
+        rows have been saved, so the member portal and their bell agree.
+        """
+        super().save_related(request, form, formsets, change)
+        if not change:
+            return
+        changed = set(form.changed_data) - {'status'}
+        if not changed:
+            return
+        services.notify_member_admin_update(form.instance, changed)
+
     @admin.display(description='Member', ordering='user__first_name')
     def full_name(self, obj):
         return obj.full_name
@@ -291,6 +308,11 @@ class ChurchMembershipAdmin(AreaPermissionMixin, admin.ModelAdmin):
                 self.admin_site.admin_view(self.dashboard_view),
                 name='members_churchmembership_dashboard',
             ),
+            path(
+                '<int:pk>/profile/',
+                self.admin_site.admin_view(self.profile_view),
+                name='members_churchmembership_profile',
+            ),
         ]
         return custom + super().get_urls()
 
@@ -307,9 +329,26 @@ class ChurchMembershipAdmin(AreaPermissionMixin, admin.ModelAdmin):
         return super().changelist_view(request, extra_context=extra_context)
 
     def dashboard_view(self, request):
-        """The custom Church Membership dashboard (stats, directory, profile)."""
+        """The custom Church Membership dashboard (stats and directory)."""
         if not self.has_view_permission(request):
             raise PermissionDenied
+
+        # Old links (bookmarks, earlier bell rows) used ?member=<pk> to open the
+        # profile panel that this page no longer embeds. Forward them to the
+        # dedicated profile page so those links keep working.
+        member_id = request.GET.get('member')
+        if member_id:
+            try:
+                member_id = int(member_id)
+            except (TypeError, ValueError):
+                member_id = None
+            if member_id is not None:
+                exists = ChurchMembership.objects.filter(pk=member_id).exists()
+                if exists:
+                    return redirect(
+                        'admin:members_churchmembership_profile',
+                        pk=member_id,
+                    )
 
         context = dashboard.build_dashboard_context(request)
         context.update(self.admin_site.each_context(request))
@@ -323,6 +362,150 @@ class ChurchMembershipAdmin(AreaPermissionMixin, admin.ModelAdmin):
         return render(
             request,
             'admin/members/churchmembership/dashboard.html',
+            context,
+        )
+
+    def profile_view(self, request, pk):
+        """A dedicated page for one member: details, status and messages.
+
+        The dashboard no longer embeds a sliding profile panel. Opening a
+        member takes the administrator here, where the profile is read top to
+        bottom and the two actions live side by side: change/approve the
+        membership status, or send a private comment to the member.
+        """
+        if not self.has_view_permission(request):
+            raise PermissionDenied
+
+        membership = get_object_or_404(
+            ChurchMembership.objects
+            .select_related('user')
+            .prefetch_related('interests', 'ministries'),
+            pk=pk,
+        )
+        can_change = self.has_change_permission(request, membership)
+        pending_change = services.pending_change_for(membership)
+        review_form = MembershipReviewForm()
+        status_form = MembershipProfileStatusForm(
+            initial={'status': membership.status},
+        )
+        message_form = MembershipProfileMessageForm()
+
+        if request.method == 'POST':
+            action = request.POST.get('action')
+            if action in ('approve', 'reject'):
+                if not can_change:
+                    raise PermissionDenied
+                review_form = MembershipReviewForm(request.POST)
+                if review_form.is_valid():
+                    note = review_form.cleaned_data.get('admin_note', '')
+                    if pending_change is not None:
+                        services.apply_membership_decision(
+                            pending_change.pk,
+                            request.user,
+                            approve=action == 'approve',
+                            note=note,
+                        )
+                    else:
+                        services.set_membership_status(
+                            membership,
+                            request.user,
+                            'active' if action == 'approve' else 'rejected',
+                            note=note,
+                        )
+                    what = 'approved' if action == 'approve' else 'rejected'
+                    self.message_user(
+                        request,
+                        f'{membership.full_name}\'s membership was {what}. '
+                        'The member has been notified.',
+                        messages.SUCCESS,
+                    )
+                    return redirect(
+                        'admin:members_churchmembership_profile',
+                        pk=membership.pk,
+                    )
+            elif action == 'status':
+                if not can_change:
+                    raise PermissionDenied
+                status_form = MembershipProfileStatusForm(request.POST)
+                if status_form.is_valid():
+                    new_status = status_form.cleaned_data['status']
+                    if new_status == membership.status:
+                        self.message_user(
+                            request,
+                            'That is already the current status.',
+                            messages.INFO,
+                        )
+                    else:
+                        services.set_membership_status(
+                            membership, request.user, new_status,
+                        )
+                        self.message_user(
+                            request,
+                            'Membership status updated and the member '
+                            'notified.',
+                            messages.SUCCESS,
+                        )
+                    return redirect(
+                        'admin:members_churchmembership_profile',
+                        pk=membership.pk,
+                    )
+            elif action == 'message':
+                if not can_change:
+                    raise PermissionDenied
+                message_form = MembershipProfileMessageForm(request.POST)
+                if message_form.is_valid():
+                    _message, created = services.send_admin_message(
+                        membership,
+                        request.user,
+                        message_form.cleaned_data['message'],
+                    )
+                    if created:
+                        self.message_user(
+                            request,
+                            'Message sent to the member\'s private inbox.',
+                            messages.SUCCESS,
+                        )
+                    else:
+                        self.message_user(
+                            request,
+                            'That message was already sent a moment ago.',
+                            messages.INFO,
+                        )
+                    return redirect(
+                        'admin:members_churchmembership_profile',
+                        pk=membership.pk,
+                    )
+
+        thread = list(services.member_thread(membership.user))[-6:]
+        profile = dashboard.member_detail(membership)
+        profile['date_joined'] = (
+            membership.date_joined_church or membership.created_at
+        )
+        context = {
+            **self.admin_site.each_context(request),
+            'title': f'Membership profile — {membership.full_name}',
+            'opts': self.model._meta,
+            'app_label': self.model._meta.app_label,
+            'membership': membership,
+            'profile': profile,
+            'pending_change': pending_change,
+            'summary_lines': [
+                line for line in (pending_change.summary or '').splitlines()
+                if line
+            ] if pending_change else [],
+            'review_form': review_form,
+            'status_form': status_form,
+            'status_options': dashboard.status_options(),
+            'message_form': message_form,
+            'thread': thread,
+            'can_change': can_change,
+            'dashboard_url': reverse(
+                'admin:members_churchmembership_dashboard',
+            ),
+        }
+        return render(
+            request,
+            'admin/members/churchmembership/profile.html',
             context,
         )
 
@@ -367,6 +550,35 @@ class MembershipReviewForm(forms.Form):
             'placeholder': 'Explain the decision or ask for any correction…',
         }),
     )
+
+
+class MembershipProfileStatusForm(forms.Form):
+    status = forms.ChoiceField(
+        label='Membership status',
+        choices=MEMBERSHIP_STATUS_CHOICES,
+    )
+
+
+class MembershipProfileMessageForm(forms.Form):
+    message = forms.CharField(
+        label='Message to the member',
+        max_length=5000,
+        widget=forms.Textarea(attrs={
+            'rows': 5,
+            'placeholder': (
+                'Write a private comment to this member. It appears in their '
+                'account inbox and notification bell.'
+            ),
+        }),
+    )
+
+    def clean_message(self):
+        message = (self.cleaned_data.get('message') or '').strip()
+        if not message:
+            raise forms.ValidationError(
+                'Please type a message before sending.',
+            )
+        return message
 
 
 @admin.register(MembershipChangeRequest)

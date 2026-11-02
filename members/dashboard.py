@@ -24,6 +24,7 @@ from .models import (
 PAGE_SIZE = 10
 
 DASHBOARD_URL_NAME = 'admin:members_churchmembership_dashboard'
+PROFILE_URL_NAME = 'admin:members_churchmembership_profile'
 CHANGELIST_URL_NAME = 'admin:members_churchmembership_changelist'
 ADD_URL_NAME = 'admin:members_churchmembership_add'
 CHANGE_URL_NAME = 'admin:members_churchmembership_change'
@@ -69,9 +70,8 @@ def member_summary(membership):
         'membership_type': _membership_type(membership),
         'group_names': group_names(membership),
         'status': membership.get_status_display(),
-        'profile_url': '{}?member={}'.format(
-            reverse(DASHBOARD_URL_NAME), membership.pk,
-        ),
+        'status_value': membership.status,
+        'profile_url': reverse(PROFILE_URL_NAME, args=[membership.pk]),
         'edit_url': reverse(CHANGE_URL_NAME, args=[membership.pk]),
     }
 
@@ -186,38 +186,17 @@ def filtered_members(request):
     return queryset.order_by('-created_at')
 
 
-def selected_member(request):
-    """Resolve ``?member=<pk>`` to a profile dict, or ``None`` when absent."""
-    raw = request.GET.get('member')
-    if not raw:
-        return None
-    try:
-        pk = int(raw)
-    except (TypeError, ValueError):
-        return None
-    membership = (
-        ChurchMembership.objects.select_related('user')
-        .prefetch_related('interests', 'ministries')
-        .filter(pk=pk)
-        .first()
-    )
-    if membership is None:
-        return None
-    return member_detail(membership)
-
-
-def build_dashboard_context(request):
+def build_dashboard_context(request, list_url=None):
     """The complete context for the church membership dashboard template."""
     page_obj = Paginator(filtered_members(request), PAGE_SIZE).get_page(
         request.GET.get('page'),
     )
     return {
-        'membership_list_url': reverse(DASHBOARD_URL_NAME),
+        'membership_list_url': list_url or reverse(DASHBOARD_URL_NAME),
         'add_member_url': reverse(ADD_URL_NAME),
         'directory_url': reverse(CHANGELIST_URL_NAME),
         'stats': membership_stats(),
         'members': [member_summary(m) for m in page_obj.object_list],
-        'selected_member': selected_member(request),
         'search_query': request.GET.get('q', ''),
         'selected_type': request.GET.get('type', ''),
         'selected_group': request.GET.get('group', ''),

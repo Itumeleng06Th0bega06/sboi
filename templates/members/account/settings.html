@@ -1,4 +1,4 @@
-{% extends 'members/account/base_account.html' %}
+{% extends account_base|default:'members/account/base_account.html' %}
 
 {% block title %}Settings · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
 
@@ -20,7 +20,7 @@
                     <p class="account-muted">In-app notifications are always on. Email is optional.</p>
                 </div>
             </header>
-            <form method="post" action="{% url 'members:account_settings' %}" class="account-form">
+            <form method="post" action="{% url 'members:account_settings' %}" class="account-form" data-account-section-form>
                 {% csrf_token %}
                 <div class="account-form-grid">
                     {% for field in preference_form %}
@@ -42,7 +42,7 @@
                     <p class="account-muted">Use a strong password you do not reuse elsewhere.</p>
                 </div>
             </header>
-            <form method="post" action="{% url 'members:account_settings' %}" class="account-form">
+            <form method="post" action="{% url 'members:account_settings' %}" class="account-form" data-account-section-form>
                 {% csrf_token %}
                 {% if password_form.non_field_errors %}
                 <div class="account-alert account-alert--error">{{ password_form.non_field_errors }}</div>

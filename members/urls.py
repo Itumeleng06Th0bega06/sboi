@@ -24,6 +24,7 @@ urlpatterns = [
     path('account/notifications/read/', account.account_notification_read, name='account_notification_read'),
     path('account/notifications/<int:pk>/', account.account_notification_open, name='account_notification_open'),
     path('account/settings/', account.account_settings, name='account_settings'),
+    path('account/counts/', account.account_counts, name='account_counts'),
     # Step 1: choose User or Church Member.
     path('register/', views.register, name='register'),
     path('register/user/', views.register_user, name='register_user'),

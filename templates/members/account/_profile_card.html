@@ -16,7 +16,6 @@
         <div>
             <h3>{{ request.user.get_full_name|default:request.user.username }}</h3>
             <p class="account-muted">@{{ request.user.username }}</p>
-            <span class="account-type-badge">{{ account_type }}</span>
         </div>
     </div>
 

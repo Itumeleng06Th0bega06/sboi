@@ -1,4 +1,4 @@
-{% extends 'members/account/base_account.html' %}
+{% extends account_base|default:'members/account/base_account.html' %}
 
 {% block title %}Activities · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
 

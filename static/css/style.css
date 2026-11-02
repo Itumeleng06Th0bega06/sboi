@@ -809,7 +809,12 @@ textarea.input { resize: vertical; }
 .video-preview:hover .video-play svg { transform: scale(1.12); }
 
 /* Auth pages */
-.auth-page { background: radial-gradient(circle at 50% 0%, var(--green-3), var(--green-bg) 70%); }
+.auth-page {
+  position: relative;
+  background:
+    linear-gradient(160deg, rgba(6, 4, 16, 0.84), rgba(6, 4, 16, 0.62)),
+    url("../images/site-bg3.jpg") center / cover no-repeat;
+}
 .auth-wrap { display: flex; justify-content: center; align-items: center; min-height: calc(100vh - 160px); padding: 3rem 0; }
 .auth-card {
   position: relative;
@@ -1591,13 +1596,18 @@ body::before {
      old velvet it needs to be veiled rather than lifted — a dark base shows
      through and keeps text contrast while the scene reads on screen. */
   background-color: #060410;
-  background-image: url("../images/site-bg2.jpg");
+  background-image: url("../images/site-bg3.jpg");
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
   filter: brightness(1.02) saturate(1.05);
   opacity: 0.42;
   pointer-events: none;
+}
+
+/* Main (home) page only: swap in the supplied background image. */
+body.page-home::before {
+  background-image: url("../images/site-bg-main.jpg");
 }
 
 /* Let the backdrop continue behind the alternating sections and the

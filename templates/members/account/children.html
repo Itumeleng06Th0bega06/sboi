@@ -1,4 +1,4 @@
-{% extends 'members/account/base_account.html' %}
+{% extends account_base|default:'members/account/base_account.html' %}
 
 {% block title %}Children · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
 
@@ -11,79 +11,7 @@
     </div>
 </section>
 
-<section class="account-card">
-    <header class="account-card-head">
-        <div>
-            <h2>Your children</h2>
-            <p class="account-muted">One name per child. Only you and the church office can see this list.</p>
-        </div>
-        <span class="account-count">{{ children|length }}</span>
-    </header>
-
-    {% if not membership %}
-    <div class="account-alert account-alert--info">
-        Children are part of your church membership record. Please
-        <button type="button" class="account-inline-link" data-account-open="membershipModalInline">join the church</button>
-        first, then add your children here.
-    </div>
-    {% endif %}
-
-    {% if children %}
-    <ul class="account-child-list">
-        {% for child in children %}
-        <li class="account-child-row">
-            <span class="account-child-index">{{ forloop.counter|stringformat:"02d" }}</span>
-            <div class="account-child-body">
-                <strong>{{ child }}</strong>
-                <details class="account-child-edit">
-                    <summary>Edit name</summary>
-                    <form method="post" action="{% url 'members:account_child_edit' forloop.counter0 %}" class="account-inline-form">
-                        {% csrf_token %}
-                        <label class="sr-only" for="child-edit-{{ forloop.counter0 }}">Child name</label>
-                        <input id="child-edit-{{ forloop.counter0 }}" type="text" name="name" value="{{ child }}" class="input" maxlength="100" required>
-                        <button type="submit" class="btn btn-gold btn-sm">Save</button>
-                    </form>
-                </details>
-            </div>
-            <form method="post" action="{% url 'members:account_child_remove' forloop.counter0 %}" class="account-child-remove" onsubmit="return confirm('Remove {{ child|escapejs }} from your children list?');">
-                {% csrf_token %}
-                <button type="submit" class="account-icon-button" aria-label="Remove {{ child }}" title="Remove {{ child }}">&times;</button>
-            </form>
-        </li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p class="account-empty">No children added yet.</p>
-    {% endif %}
-
-    {% if membership %}
-    <form method="post" action="{% url 'members:account_child_add' %}" class="account-add-child">
-        {% csrf_token %}
-        <div class="account-form-field">
-            <label for="id_name">Child’s name</label>
-            {{ child_form.name }}
-            {% for error in child_form.name.errors %}<p class="account-error">{{ error }}</p>{% endfor %}
-        </div>
-        <button type="submit" class="btn btn-gold">Add child</button>
-    </form>
-    {% endif %}
-</section>
-
-{% if not membership %}
-<div class="account-modal" id="membershipModalInline" hidden>
-    <div class="account-modal-backdrop" data-account-modal-close></div>
-    <div class="account-modal-panel account-modal-panel--wide" role="dialog" aria-modal="true" aria-labelledby="membershipModalInlineTitle">
-        <header class="account-modal-head">
-            <div>
-                <p class="account-eyebrow">Church membership</p>
-                <h2 id="membershipModalInlineTitle">Join the church</h2>
-            </div>
-            <button type="button" class="account-modal-close" data-account-modal-close aria-label="Close">&times;</button>
-        </header>
-        <div class="account-modal-body" data-account-form-target="membership">
-            {% include 'members/account/_membership_form.html' %}
-        </div>
-    </div>
+<div data-account-children>
+    {% include 'members/account/_children_card.html' %}
 </div>
-{% endif %}
 {% endblock %}
