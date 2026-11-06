@@ -4,17 +4,18 @@
 {% block extrastyle %}{{ block.super }}
 <style>
     .review-wrap { max-width: 880px; }
-    .review-card { background: var(--body-bg, #fff); border: 1px solid var(--hairline-color, #ddd); border-radius: 10px; padding: 20px; margin-bottom: 18px; }
+    .review-card { background: var(--body-bg, #fff); border: 1px solid var(--hairline-color, #ddd); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+    .review-card h2 { margin: 0 0 8px; font-size: 16px; }
     .review-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 24px; margin: 0; }
     .review-meta dt { color: var(--body-quiet-color, #666); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
     .review-meta dd { margin: 0 0 6px; font-size: 14px; }
     .review-summary { margin: 0; padding-left: 18px; line-height: 1.7; }
     .review-summary li { margin-bottom: 3px; }
-    .review-note textarea { width: 100%; min-height: 90px; }
-    .review-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .review-note textarea { width: 100%; min-height: 52px; }
+    .review-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
     .review-actions .button { cursor: pointer; }
     .review-actions .reject { background: #9b3232; }
-    .review-note-label { display: block; margin-bottom: 6px; font-weight: 600; }
+    .review-note-label { display: block; margin-bottom: 4px; font-weight: 600; }
     .review-pill { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #eee; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
 </style>
 {% endblock %}
@@ -60,15 +61,6 @@
     <form method="post" class="review-card">
         {% csrf_token %}
         <h2>Decision</h2>
-        <p>
-            {% if change.is_application %}
-            Approving an application makes the member active. Rejecting it records a
-            rejection and the member can update their details and apply again.
-            {% else %}
-            This is a details update. Approving it keeps the member active. Rejecting
-            it does <strong>not</strong> remove an existing active membership.
-            {% endif %}
-        </p>
         <div class="review-note">
             <label class="review-note-label" for="{{ form.admin_note.id_for_label }}">{{ form.admin_note.label }}</label>
             {{ form.admin_note }}

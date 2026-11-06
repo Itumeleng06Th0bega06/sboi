@@ -29,9 +29,13 @@ class SiteSmokeTests(TestCase):
             response = self.client.get(reverse(url))
             self.assertEqual(response.status_code, 200, url)
 
-    def test_blackboard_requires_login(self):
+    def test_blackboard_is_publicly_viewable(self):
         response = self.client.get(reverse('blackboard:blackboard'))
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
+
+    def test_blackboard_nav_link_is_hidden_from_anonymous_users(self):
+        response = self.client.get(reverse('home:home'))
+        self.assertNotContains(response, reverse('blackboard:blackboard'))
 
     def test_subscribe_saves_and_dedupes(self):
         url = reverse('home:subscribe')

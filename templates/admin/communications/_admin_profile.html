@@ -1,0 +1,138 @@
+{% load i18n admin_menu %}
+<section class="cf-profile-page sboi-community__profile" aria-label="{% translate 'Profile' %}">
+    <header class="cf-profile-hero">
+        {% if admin_profile.avatar_url %}
+        <span class="cf-avatar-link">
+            <img src="{{ admin_profile.avatar_url }}" alt="{{ admin_profile.display_name }}" class="cf-avatar cf-avatar--xl cf-avatar-img">
+        </span>
+        {% else %}
+        <span class="cf-avatar-link">
+            <span class="cf-avatar cf-avatar--xl" aria-hidden="true">{{ admin_profile.initials|default:'A' }}</span>
+        </span>
+        {% endif %}
+        <div class="cf-profile-identity">
+            <h1>{{ admin_profile.display_name }}</h1>
+            <p>@{{ request.user.get_username }}</p>
+            <div class="cf-profile-pills">
+                {% if request.user.is_superuser %}
+                <span class="cf-pill cf-pill--quiet">{% translate 'Superuser' %}</span>
+                {% else %}
+                <span class="cf-pill cf-pill--quiet">{% translate 'Communications staff' %}</span>
+                {% endif %}
+                <span class="cf-pill cf-pill--quiet">{{ admin_profile.status_label }}</span>
+                {% if admin_profile.membership %}
+                <span class="cf-pill cf-pill--{{ admin_profile.membership.status }}">{{ admin_profile.membership.get_status_display }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="cf-profile-actions">
+            <a class="cf-btn cf-btn--gold" href="{% url 'admin:auth_user_change' request.user.pk %}">{% translate 'Admin account' %}</a>
+            <a class="cf-btn cf-btn--quiet" href="{% url 'members:member_profile' request.user.get_username %}">{% translate 'Public profile' %}</a>
+        </div>
+    </header>
+
+    <div class="cf-profile-stack">
+        <section class="cf-panel">
+            <header class="cf-panel-head">
+                <div>
+                    <h2>{% translate 'Account details' %}</h2>
+                    <p>{% translate 'The sign-in account behind this staff workspace.' %}</p>
+                </div>
+            </header>
+            <dl class="cf-info-list">
+                <div>
+                    <dt>{% translate 'Display name' %}</dt>
+                    <dd>{{ admin_profile.display_name }}</dd>
+                </div>
+                <div>
+                    <dt>{% translate 'Username' %}</dt>
+                    <dd>@{{ request.user.get_username }}</dd>
+                </div>
+                <div>
+                    <dt>{% translate 'Email' %}</dt>
+                    <dd>{{ request.user.email|default:'—' }}</dd>
+                </div>
+                <div>
+                    <dt>{% translate 'Joined' %}</dt>
+                    <dd>{{ request.user.date_joined|date:"j M Y" }}</dd>
+                </div>
+                <div>
+                    <dt>{% translate 'Last login' %}</dt>
+                    <dd>{{ request.user.last_login|date:"j M Y, H:i"|default:'—' }}</dd>
+                </div>
+                <div>
+                    <dt>{% translate 'Account status' %}</dt>
+                    <dd>{% if request.user.is_active %}{% translate 'Active' %}{% else %}{% translate 'Inactive' %}{% endif %}</dd>
+                </div>
+            </dl>
+        </section>
+
+        <section class="cf-panel">
+            <header class="cf-panel-head">
+                <div>
+                    <h2>{% translate 'Communication access' %}</h2>
+                    <p>{% translate 'What this account can read and moderate.' %}</p>
+                </div>
+            </header>
+            <div class="cf-setting-links">
+                <a href="{% url 'communications:inbox' %}?view=chat">
+                    <span>
+                        <strong>{% translate 'Church-office inbox' %}</strong>
+                        <small>{% translate 'Read and reply to member conversations' %}</small>
+                    </span>
+                    <span aria-hidden="true">›</span>
+                </a>
+                {% if can_moderate_dms %}
+                <a href="{% url 'communications:inbox' %}?view=chat">
+                    <span>
+                        <strong>{% translate 'Member-to-member moderation' %}</strong>
+                        <small>{% translate 'Superuser access to private member conversations' %}</small>
+                    </span>
+                    <span aria-hidden="true">›</span>
+                </a>
+                {% endif %}
+                <a href="{% url 'communications:inbox' %}?view=feed">
+                    <span>
+                        <strong>{% translate 'Community feed' %}</strong>
+                        <small>{% translate 'Publish updates and remove posts or comments' %}</small>
+                    </span>
+                    <span aria-hidden="true">›</span>
+                </a>
+                <a href="{% url 'admin:contact_contactmessage_changelist' %}">
+                    <span>
+                        <strong>{% translate 'Contact messages' %}</strong>
+                        <small>{% translate 'Visit the full contact-message admin' %}</small>
+                    </span>
+                    <span aria-hidden="true">›</span>
+                </a>
+            </div>
+        </section>
+
+        <section class="cf-panel">
+            <header class="cf-panel-head">
+                <div>
+                    <h2>{% translate 'Community overview' %}</h2>
+                    <p>{% translate 'A quick look at the people you are serving here.' %}</p>
+                </div>
+            </header>
+            <dl class="cf-info-list">
+                <div>
+                    <dt>{% translate 'Members' %}</dt>
+                    <dd>{{ member_total }}</dd>
+                </div>
+                <div>
+                    <dt>{% translate 'Staff accounts' %}</dt>
+                    <dd>{{ staff_total }}</dd>
+                </div>
+                <div>
+                    <dt>{% translate 'Unread staff messages' %}</dt>
+                    <dd>{{ total_unread }}</dd>
+                </div>
+                <div>
+                    <dt>{% translate 'Unread church-office messages' %}</dt>
+                    <dd>{{ office_unread_total }}</dd>
+                </div>
+            </dl>
+        </section>
+    </div>
+</section>

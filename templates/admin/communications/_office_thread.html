@@ -1,0 +1,118 @@
+{% load i18n admin_menu %}
+<section class="comms-chat sboi-office" data-comms-chat>
+    <header class="comms-chat__head sboi-office__head">
+        <a class="comms-iconbtn sboi-office__back" href="{% url 'communications:inbox' %}?view=chat" aria-label="{% translate 'Back to conversations' %}">
+            {% admin_icon 'arrow-left' %}
+        </a>
+        {% if office_member.member_profile.avatar %}
+        <img src="{{ office_member.member_profile.avatar.url }}" alt="" class="comms-avatar comms-avatar--img">
+        {% else %}
+        <span class="comms-avatar" aria-hidden="true">{{ office_member.get_full_name|default:office_member.get_username|first|upper }}</span>
+        {% endif %}
+        <div class="comms-chat__identity">
+            <h2>{{ office_member.get_full_name|default:office_member.get_username }}</h2>
+            <p>
+                {% translate 'Church office conversation' %}
+                {% if office_member.church_membership %}
+                    &middot; {{ office_member.church_membership.get_status_display }}
+                {% endif %}
+            </p>
+        </div>
+        <div class="comms-chat__actions">
+            <a class="sboi-comms-button sboi-comms-button--quiet sboi-comms-button--small"
+               href="{% url 'admin:auth_user_change' office_member.pk %}">
+                {% translate 'Account' %}
+            </a>
+            {% if office_member.church_membership %}
+            <a class="sboi-comms-button sboi-comms-button--quiet sboi-comms-button--small"
+               href="{% url 'admin:members_churchmembership_profile' office_member.church_membership.pk %}">
+                {% translate 'Membership' %}
+            </a>
+            {% endif %}
+        </div>
+    </header>
+
+    <form class="comms-thread-search" method="get" action="{% url 'communications:inbox' %}">
+        <input type="hidden" name="view" value="chat">
+        <input type="hidden" name="channel" value="office">
+        <input type="hidden" name="member" value="{{ office_member.pk }}">
+        <span class="comms-search__icon">{% admin_icon 'search' %}</span>
+        <input type="search" name="mq" value="{{ message_query }}" placeholder="{% translate 'Search this conversation' %}" aria-label="{% translate 'Search this conversation' %}">
+        {% if message_query %}
+        <a class="comms-thread-search__clear" href="{% url 'communications:inbox' %}?view=chat&amp;channel=office&amp;member={{ office_member.pk }}">{% translate 'Clear' %}</a>
+        {% endif %}
+    </form>
+
+    <div class="comms-messages-wrap">
+        <div class="comms-messages sboi-office__messages" id="officeThread" aria-live="polite">
+            {% for message in office_thread_messages %}
+            <article class="sboi-bubble {% if message.is_from_admin %}sboi-bubble--staff{% else %}sboi-bubble--member{% endif %}" id="message-{{ message.pk }}">
+                <header class="sboi-bubble__head">
+                    <strong>
+                        {% if message.is_from_admin %}
+                            {{ message.sender.get_full_name|default:'Church administration' }}
+                        {% else %}
+                            {{ office_member.get_full_name|default:office_member.get_username }}
+                        {% endif %}
+                    </strong>
+                    <time datetime="{{ message.created_at|date:'c' }}">{{ message.created_at|date:"j M Y, H:i" }}</time>
+                </header>
+                {% if message.subject %}<p class="sboi-bubble__subject">{{ message.subject }}</p>{% endif %}
+                <div class="sboi-bubble__body">{{ message.message|linebreaksbr }}</div>
+                {% if message.attachment %}
+                <a class="sboi-bubble__attachment" href="{{ message.attachment_url }}" target="_blank" rel="noopener">
+                    <span aria-hidden="true">↓</span>
+                    <span>
+                        <strong>{{ message.attachment_name }}</strong>
+                        <small>{% translate 'Private attachment' %}</small>
+                    </span>
+                </a>
+                {% endif %}
+                <footer class="sboi-bubble__foot">
+                    {% if message.is_from_admin %}
+                        <span class="sboi-bubble__tag">{% translate 'Church office' %}</span>
+                    {% else %}
+                        <span class="sboi-bubble__tag">{% translate 'Member' %}</span>
+                        <span class="sboi-bubble__state">{% if message.is_read %}{% translate 'Read' %}{% else %}{% translate 'Unread' %}{% endif %}</span>
+                    {% endif %}
+                </footer>
+            </article>
+            {% empty %}
+            <div class="comms-thread-empty sboi-thread-empty">
+                <span class="comms-empty-state__icon">{% admin_icon 'mail' %}</span>
+                <h2>{% translate 'No messages yet' %}</h2>
+                <p>{% translate 'This member has not written to the church office yet. Start the conversation below.' %}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <form class="comms-composer sboi-office__composer"
+          method="post"
+          action="{% url 'communications:office_reply' office_member.pk %}"
+          enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="comms-composer__row">
+            <label class="comms-attach" title="{% translate 'Attach a document or image' %}">
+                {% admin_icon 'file' %}
+                <input type="file" name="attachment" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.rtf,.odt,.ods,.jpg,.jpeg,.png,.gif,.webp" data-office-file>
+                <span class="comms-attach__name" data-office-file-name>{% translate 'Attach' %}</span>
+            </label>
+            <textarea name="message"
+                      rows="1"
+                      maxlength="5000"
+                      placeholder="{% translate 'Reply to this member…' %}"
+                      aria-label="{% translate 'Reply' %}"
+                      required
+                      data-office-textarea></textarea>
+            <button type="submit" class="comms-send">
+                {% admin_icon 'arrow-right' %}
+                <span>{% translate 'Send reply' %}</span>
+            </button>
+        </div>
+        <div class="comms-composer__hint">
+            <span>{% translate 'Replies appear in the member\'s existing church-office inbox.' %}</span>
+            <span data-office-file-hint></span>
+        </div>
+    </form>
+</section>

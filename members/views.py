@@ -1,8 +1,10 @@
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LoginView
 from django.db import transaction
 from django.shortcuts import redirect, render
+from django.urls import reverse
 
 from blackboard.models import MemberProfile
 
@@ -10,8 +12,26 @@ from .forms import (
     ChurchMembershipFieldsMixin,
     ChurchMembershipJoinForm,
     ChurchMembershipRegistrationForm,
+    MemberLoginForm,
     MemberRegistrationForm,
 )
+
+
+class MemberLoginView(LoginView):
+    """Send first-time sign-ins to the profile; later sign-ins go home."""
+
+    template_name = 'members/login.html'
+    redirect_authenticated_user = True
+    authentication_form = MemberLoginForm
+
+    def form_valid(self, form):
+        first_login = form.get_user().last_login is None
+        response = super().form_valid(form)
+        # Public sign-in deliberately ignores ?next=: a brand-new account
+        # lands on its profile, every later sign-in returns to the home page.
+        target = 'members:account_profile' if first_login else 'home:home'
+        response['Location'] = reverse(target)
+        return response
 
 
 def register(request):
@@ -36,7 +56,7 @@ def register_user(request):
                 request,
                 'Your account has been created. Welcome to the Shekinah Blaze family!',
             )
-            return redirect('blackboard:blackboard')
+            return redirect('members:account_profile')
     else:
         form = MemberRegistrationForm()
     return render(request, 'members/register_user.html', {'form': form})
@@ -56,7 +76,7 @@ def register_church(request):
                 request,
                 'Thank you! Your church membership registration was received.',
             )
-            return redirect('blackboard:blackboard')
+            return redirect('members:account_profile')
     else:
         form = ChurchMembershipRegistrationForm()
     return render(

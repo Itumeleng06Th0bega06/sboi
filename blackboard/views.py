@@ -8,7 +8,6 @@ from .forms import EventRsvpForm
 from .models import Announcement, Devotion, Event, PdfMaterial, Sermon
 
 
-@login_required
 def _member_access_denied(request):
     profile = getattr(request.user, 'member_profile', None)
     if profile is None:
@@ -16,7 +15,6 @@ def _member_access_denied(request):
     return profile.access_block()
 
 
-@login_required
 def blackboard(request):
     denied = _member_access_denied(request)
     if denied:

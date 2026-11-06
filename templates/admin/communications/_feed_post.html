@@ -1,0 +1,91 @@
+{% load i18n %}
+<article class="comms-post" id="post-{{ post.pk }}" data-feed-post data-post-id="{{ post.pk }}">
+    <header class="comms-post__head">
+        <span class="comms-avatar comms-avatar--sm" aria-hidden="true">{{ post.author_initials }}</span>
+        <div class="comms-post__identity">
+            <strong>{{ post.author_name }}{% if post.is_staff_post %} <span class="comms-post__badge">{% translate 'Admin' %}</span>{% endif %}</strong>
+            <span class="comms-muted">{{ post.created_at|timesince }} {% translate 'ago' %}{% if post.audience == 'staff' %} · {% translate 'Staff only' %}{% endif %}</span>
+        </div>
+        <details class="comms-post__menu">
+            <summary aria-label="{% translate 'Post actions' %}">⋯</summary>
+            <div class="comms-post__menu-panel">
+                {% if request.user.is_staff or request.user.is_superuser or post.author_id == request.user.pk %}
+                    <form method="post" action="{% url 'members:feed_post_delete' post.pk %}" data-feed-post-delete>
+                        {% csrf_token %}
+                        <button type="submit">{% translate 'Remove post' %}</button>
+                    </form>
+                {% endif %}
+                <span class="comms-post__menu-note">{% translate 'Visible to signed-in accounts only' %}</span>
+            </div>
+        </details>
+    </header>
+
+    {% if post.title %}<h3 class="comms-post__title">{{ post.title }}</h3>{% endif %}
+    {% if post.body %}<p class="comms-post__body">{{ post.body|linebreaksbr }}</p>{% endif %}
+
+    {% for attachment in post.attachments_list %}
+        <div class="comms-post__attachment comms-post__attachment--{{ attachment.kind }}">
+            {% if attachment.kind == 'image' %}
+                <a class="comms-post__media" href="{% url 'members:feed_attachment_download' attachment.pk %}" target="_blank" rel="noopener">
+                    <img src="{% url 'members:feed_attachment_download' attachment.pk %}?inline=1" alt="{{ attachment.original_name }}" loading="lazy">
+                </a>
+            {% elif attachment.kind == 'video' %}
+                <video controls preload="metadata">
+                    <source src="{% url 'members:feed_attachment_download' attachment.pk %}?inline=1" type="{{ attachment.content_type|default:'video/mp4' }}">
+                </video>
+            {% else %}
+                <a class="comms-post__file" href="{% url 'members:feed_attachment_download' attachment.pk %}">
+                    <span class="comms-post__file-icon" aria-hidden="true">📄</span>
+                    <span class="comms-post__file-body">
+                        <strong>{{ attachment.original_name }}</strong>
+                        <span>{{ attachment.size|filesizeformat }}</span>
+                    </span>
+                </a>
+            {% endif %}
+            <a class="comms-post__download" href="{% url 'members:feed_attachment_download' attachment.pk %}">
+                {% translate 'Save to device' %}
+            </a>
+        </div>
+    {% endfor %}
+
+    <footer class="comms-post__foot">
+        <form method="post" action="{% url 'members:feed_post_react' post.pk %}" class="comms-reactions" data-feed-reaction>
+            {% csrf_token %}
+            <button type="button" class="comms-reaction-toggle{% if post.reaction_summary.mine %} has-reaction{% endif %}"
+                    data-cf-reaction-toggle aria-haspopup="true" aria-expanded="false"
+                    aria-label="{% if post.reaction_summary.mine %}{% translate 'Change reaction' %}{% else %}{% translate 'Add reaction' %}{% endif %}">
+                <span class="comms-reaction-current" data-cf-react-current>
+                    <svg class="comms-reaction-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4 4 0 0 0 7 0"/><circle cx="9" cy="10" r=".8"/><circle cx="15" cy="10" r=".8"/></svg>
+                    <span class="comms-reaction-current-emoji" data-cf-react-emoji>{% for value, emoji in post_reaction_choices %}{% if value in post.reaction_summary.mine %}{{ emoji }}{% endif %}{% endfor %}</span>
+                </span>
+                <span class="comms-reaction-total" data-cf-react-total>{% if post.reaction_summary.total %}{{ post.reaction_summary.total }}{% endif %}</span>
+                <span class="comms-reaction-label">{% translate 'React' %}</span>
+            </button>
+            <div class="comms-reaction-picker" data-cf-reaction-picker role="group" aria-label="{% translate 'Choose a reaction' %}">
+                {% for value, emoji in post_reaction_choices %}
+                    <button type="submit" name="reaction" value="{{ value }}"
+                            class="comms-reaction{% if value in post.reaction_summary.mine %} is-active{% endif %}"
+                            data-reaction="{{ value }}"
+                            aria-label="{{ emoji }}"
+                            aria-pressed="{% if value in post.reaction_summary.mine %}true{% else %}false{% endif %}">
+                        <span class="comms-reaction__emoji" aria-hidden="true">{{ emoji }}</span>
+                        <span class="comms-reaction__count" data-reaction-count="{{ value }}">{% for key, n in post.reaction_summary.counts.items %}{% if key == value %}{{ n }}{% endif %}{% endfor %}</span>
+                    </button>
+                {% endfor %}
+            </div>
+        </form>
+        <span class="comms-post__comment-count" data-comment-count>💬 {{ post.comments_list|length }}</span>
+    </footer>
+
+    <div class="comms-post__comments" data-feed-comments>
+        {% for comment in post.comments_list %}
+            {% include "admin/communications/_feed_comment.html" with comment=comment post=post %}
+        {% endfor %}
+        <form method="post" action="{% url 'members:feed_post_comment' post.pk %}" class="comms-comment-form" data-feed-comment>
+            {% csrf_token %}
+            <input type="text" name="body" maxlength="2000" placeholder="{% translate 'Write a comment…' %}" aria-label="{% translate 'Comment' %}" autocomplete="off">
+            <button type="submit" class="comms-comment-form__send" aria-label="{% translate 'Send comment' %}">→</button>
+        </form>
+        <p class="comms-comment-form__error" data-feed-comment-error hidden></p>
+    </div>
+</article>

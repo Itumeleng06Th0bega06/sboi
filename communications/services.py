@@ -219,6 +219,208 @@ def unread_total(user):
     return sum(row['unread_count'] for row in conversation_summaries(user))
 
 
+# ---------------------------------------------------------------------------
+# Admin community: church-office threads and member-to-member moderation
+# ---------------------------------------------------------------------------
+
+def avatar_url_for(user):
+    """Return a member avatar URL without assuming a profile row exists."""
+    profile = getattr(user, 'member_profile', None)
+    if profile is not None and profile.avatar:
+        try:
+            return profile.avatar.url
+        except ValueError:
+            return ''
+    return ''
+
+
+def office_conversation_rows(query='', limit=80):
+    """One row per member who has written to the church office.
+
+    Only threads tied to a member account belong here: anonymous contact-form
+    submissions stay in the existing contact admin. ``unread`` counts the
+    member's messages an administrator has not read yet, matching
+    ``ContactMessage.is_read``.
+    """
+    from contact.models import ContactMessage
+
+    queryset = (
+        ContactMessage.objects
+        .filter(user__isnull=False)
+        .select_related('user', 'sender')
+    )
+    query = (query or '').strip()
+    if query:
+        queryset = queryset.filter(
+            Q(user__username__icontains=query)
+            | Q(user__first_name__icontains=query)
+            | Q(user__last_name__icontains=query)
+            | Q(user__email__icontains=query)
+            | Q(subject__icontains=query)
+            | Q(message__icontains=query)
+        )
+
+    groups = {}
+    for message in queryset.order_by('created_at', 'pk'):
+        row = groups.get(message.user_id)
+        if row is None:
+            row = {
+                'user': message.user,
+                'latest': message,
+                'unread': 0,
+                'total': 0,
+            }
+            groups[message.user_id] = row
+        row['latest'] = message
+        row['total'] += 1
+        if not message.is_from_admin and not message.is_read:
+            row['unread'] += 1
+
+    rows = sorted(
+        groups.values(),
+        key=lambda item: item['latest'].created_at,
+        reverse=True,
+    )[:limit]
+    for row in rows:
+        display_name = (
+            row['user'].get_full_name() or row['user'].get_username()
+        )
+        row['display_name'] = display_name
+        row['initials'] = name_initials(display_name)
+        row['avatar_url'] = avatar_url_for(row['user'])
+        row['membership'] = getattr(row['user'], 'church_membership', None)
+    return rows
+
+
+def office_thread_for(member, query=''):
+    """Chronological church-office messages for one member."""
+    from contact.models import ContactMessage
+
+    queryset = (
+        ContactMessage.objects
+        .filter(user=member)
+        .select_related('sender')
+        .order_by('created_at', 'pk')
+    )
+    query = (query or '').strip()
+    if query:
+        queryset = queryset.filter(
+            Q(message__icontains=query)
+            | Q(subject__icontains=query)
+        )
+    return queryset
+
+
+def mark_office_thread_read(member):
+    """Mark the member's messages as read, firing notification cleanup."""
+    from contact.models import ContactMessage
+
+    unread = list(
+        ContactMessage.objects.filter(
+            user=member,
+            is_from_admin=False,
+            is_read=False,
+        )
+    )
+    for message in unread:
+        message.is_read = True
+        # Saving each row lets the shared notification receiver close the
+        # matching staff-bell entry, exactly like the contact admin does.
+        message.save(update_fields=['is_read'])
+    return len(unread)
+
+
+def office_unread_total():
+    from contact.models import ContactMessage
+
+    return ContactMessage.objects.filter(
+        user__isnull=False,
+        is_from_admin=False,
+        is_read=False,
+    ).count()
+
+
+def dm_moderation_rows(query='', limit=80):
+    """Member-to-member direct threads, newest first.
+
+    These rows are only ever built for superusers. Staff-to-staff and
+    staff-to-member threads are deliberately excluded: the first belongs in
+    staff chat, the second is a member inbox conversation.
+    """
+    from members.models_comms import CommsDirectMessage, CommsDirectThread
+
+    queryset = (
+        CommsDirectThread.objects
+        .filter(user_a__is_staff=False, user_b__is_staff=False)
+        .select_related('user_a', 'user_b')
+        .annotate(message_count=Count('messages'))
+        .order_by('-last_message_at', '-updated_at', '-pk')
+    )
+    query = (query or '').strip()
+    if query:
+        queryset = queryset.filter(
+            Q(user_a__username__icontains=query)
+            | Q(user_a__first_name__icontains=query)
+            | Q(user_a__last_name__icontains=query)
+            | Q(user_b__username__icontains=query)
+            | Q(user_b__first_name__icontains=query)
+            | Q(user_b__last_name__icontains=query)
+            | Q(messages__body__icontains=query)
+        ).distinct()
+
+    threads = list(queryset[:limit])
+    if not threads:
+        return []
+
+    thread_ids = [thread.pk for thread in threads]
+    latest_ids = (
+        CommsDirectMessage.objects
+        .filter(thread_id__in=thread_ids)
+        .values('thread_id')
+        .annotate(latest_id=Max('pk'))
+        .values_list('latest_id', flat=True)
+    )
+    latest_by_thread = {
+        message.thread_id: message
+        for message in (
+            CommsDirectMessage.objects
+            .filter(pk__in=list(latest_ids))
+            .select_related('sender')
+        )
+    }
+
+    rows = []
+    for thread in threads:
+        latest = latest_by_thread.get(thread.pk)
+        name_a = (
+            thread.user_a.get_full_name() or thread.user_a.get_username()
+        )
+        name_b = (
+            thread.user_b.get_full_name() or thread.user_b.get_username()
+        )
+        display_name = f'{name_a} & {name_b}'
+        rows.append({
+            'thread': thread,
+            'display_name': display_name,
+            'initials': (
+                name_initials(name_a)[:1] + name_initials(name_b)[:1]
+            ),
+            'user_a': thread.user_a,
+            'user_b': thread.user_b,
+            'latest': latest,
+            'preview': (
+                latest.body.strip().replace('\n', ' ')
+                if latest is not None else 'No messages yet'
+            ),
+            'last_activity': (
+                latest.created_at if latest is not None
+                else thread.updated_at
+            ),
+            'message_count': thread.message_count,
+        })
+    return rows
+
+
 def unread_summary(user):
     """Return ``(total, latest_unread_conversation_id)`` for the admin bell."""
     if not can_use_portal(user):

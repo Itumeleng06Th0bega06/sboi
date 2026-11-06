@@ -38,6 +38,30 @@
         <section class="account-card">
             <header class="account-card-head">
                 <div>
+                    <h2>Blocked members</h2>
+                    <p class="account-muted">Blocked members cannot see your posts or message you.</p>
+                </div>
+            </header>
+            {% if blocked_members %}
+            <ul class="cf-blocked-settings">
+                {% for member in blocked_members %}
+                <li>
+                    <span>{{ member.get_full_name|default:member.get_username }}</span>
+                    <form method="post" action="{% url 'members:account_unblock_member' member.username %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-ghost">Unblock</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="account-muted">You have not blocked anyone.</p>
+            {% endif %}
+        </section>
+
+        <section class="account-card">
+            <header class="account-card-head">
+                <div>
                     <h2>Change password</h2>
                     <p class="account-muted">Use a strong password you do not reuse elsewhere.</p>
                 </div>
@@ -69,6 +93,33 @@
                 To change your email address or name, use
                 <a class="account-text-link" href="{% url 'members:account' %}">your profile</a>.
             </p>
+        </section>
+
+        <section class="account-card account-danger-zone" id="delete-account">
+            <header class="account-card-head">
+                <div>
+                    <h2>Delete account</h2>
+                    <p class="account-muted">Permanently remove your website account and church records.</p>
+                </div>
+            </header>
+            <p class="account-muted">
+                This permanently deletes your sign-in details, profile photo,
+                church membership record, private messages and activity history.
+                This cannot be undone.
+            </p>
+            <details class="account-delete-disclosure">
+                <summary class="account-text-link">I want to delete my account</summary>
+                <form method="post" action="{% url 'members:account_delete' %}" class="account-form">
+                    {% csrf_token %}
+                    <label class="account-check-line">
+                        <input type="checkbox" name="confirm_delete" value="yes" required>
+                        <span>I understand that deleting my account is permanent and cannot be undone.</span>
+                    </label>
+                    <div class="account-form-actions">
+                        <button type="submit" class="btn account-danger-button">Delete my account permanently</button>
+                    </div>
+                </form>
+            </details>
         </section>
     </div>
 </div>

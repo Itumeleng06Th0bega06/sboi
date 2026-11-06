@@ -2,8 +2,8 @@
   Admin notification bell.
 
   The bell markup is rendered server-side by admin/base_site.html. This script
-  refreshes it from the JSON endpoint and sends per-user read/dismiss actions
-  without reloading the page.
+  refreshes it from the JSON endpoint. Opening an item follows open_url, and
+  the server marks it read before redirecting; there are no per-item actions.
 */
 (function () {
     'use strict';
@@ -26,11 +26,6 @@
         return node;
     }
 
-    function csrfToken() {
-        var match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
-        return match ? decodeURIComponent(match[1]) : '';
-    }
-
     function icon(name) {
         var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('class', 'sboi-ico');
@@ -42,19 +37,13 @@
         return svg;
     }
 
-    function actionButton(label, url) {
-        var button = el('button', 'sboi-bell-action');
-        button.type = 'button';
-        button.setAttribute('data-sboi-bell-action', url || '');
-        button.textContent = label;
-        return button;
-    }
-
     function row(item) {
-        var wrap = el('div', 'sboi-bell-item tone-' + (item.tone || 'info'));
-
-        var link = el('a', 'sboi-bell-item__link');
-        link.href = item.url || '#';
+        var link = el(
+            'a',
+            'sboi-bell-item tone-' + (item.tone || 'info') + (item.unread ? ' is-unread' : '')
+        );
+        link.href = item.open_url || item.url || '#';
+        link.setAttribute('data-notification-id', item.id || '');
 
         var iconWrap = el('span', 'sboi-bell-icon');
         iconWrap.appendChild(icon(item.icon || 'bell'));
@@ -76,15 +65,7 @@
 
         link.appendChild(iconWrap);
         link.appendChild(copy);
-        wrap.appendChild(link);
-
-        var actions = el('span', 'sboi-bell-actions');
-        if (item.unread) {
-            actions.appendChild(actionButton('Mark read', item.mark_read_url));
-        }
-        actions.appendChild(actionButton('Dismiss', item.dismiss_url));
-        wrap.appendChild(actions);
-        return wrap;
+        return link;
     }
 
     function emptyState() {
@@ -129,43 +110,28 @@
         });
     }
 
-    function act(url, button) {
-        if (!url) {
-            return;
-        }
-        button.disabled = true;
-        fetch(url, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': csrfToken()
-            }
-        }).then(function (resp) {
-            if (!resp.ok) {
-                throw new Error('HTTP ' + resp.status);
-            }
-            return resp.json();
-        }).then(function () {
-            refresh();
-        }).catch(function () {
-            button.disabled = false;
-        });
+    function closeMore() {
+        var more = bell.querySelector('.sboi-bell-more');
+        if (more) more.open = false;
     }
-
-    bell.addEventListener('click', function (event) {
-        var button = event.target.closest('[data-sboi-bell-action]');
-        if (!button) {
-            return;
-        }
-        event.preventDefault();
-        event.stopPropagation();
-        act(button.getAttribute('data-sboi-bell-action'), button);
-    });
 
     bell.addEventListener('toggle', function () {
         if (bell.open) {
             refresh();
+        } else {
+            closeMore();
+        }
+    });
+
+    document.addEventListener('click', function (event) {
+        if (bell.open && !bell.contains(event.target)) {
+            bell.open = false;
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && bell.open) {
+            bell.open = false;
         }
     });
 

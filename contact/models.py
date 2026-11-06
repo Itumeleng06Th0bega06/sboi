@@ -115,6 +115,10 @@ class ContactMessage(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
+    # WhatsApp presence cache (checked on first admin thread open)
+    has_whatsapp = models.BooleanField(default=False)
+    whatsapp_checked = models.BooleanField(default=False)
+    whatsapp_checked_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -160,3 +164,61 @@ class ContactMessage(models.Model):
         if not self.attachment:
             return ''
         return reverse('contact:attachment', args=[self.pk])
+
+    def check_whatsapp(self):
+        """Check if the message's phone number has WhatsApp.
+        Returns True/False and caches the result."""
+        import urllib.request
+        from django.conf import settings as _settings
+        from django.utils import timezone
+
+        phone = self.phone.strip() if self.phone else ''
+        if not phone:
+            self.has_whatsapp = False
+            self.whatsapp_checked = True
+            self.whatsapp_checked_at = timezone.now()
+            self.save(update_fields=['has_whatsapp', 'whatsapp_checked', 'whatsapp_checked_at'])
+            return False
+
+        api_url = getattr(_settings, 'WHATSAPP_API_URL', '').strip()
+        api_token = getattr(_settings, 'WHATSAPP_API_TOKEN', '').strip()
+        if not api_url or not api_token:
+            self.whatsapp_checked = False
+            self.save(update_fields=['whatsapp_checked'])
+            return False
+
+        digits = ''.join(ch for ch in phone if ch.isdigit())
+        if len(digits) < 7:
+            self.has_whatsapp = False
+            self.whatsapp_checked = True
+            self.whatsapp_checked_at = timezone.now()
+            self.save(update_fields=['has_whatsapp', 'whatsapp_checked', 'whatsapp_checked_at'])
+            return False
+
+        try:
+            # WhatsApp Business API contact check
+            url = f'{api_url.rstrip("/")}/contacts'
+            payload = {'contacts': [digits]}
+            request = urllib.request.Request(
+                url,
+                data=__import__('json').dumps(payload).encode('utf-8'),
+                headers={
+                    'Authorization': f'Bearer {api_token}',
+                    'Content-Type': 'application/json',
+                },
+                method='POST',
+            )
+            with urllib.request.urlopen(request, timeout=10) as response:
+                import json
+                data = json.loads(response.read().decode('utf-8'))
+                contacts = data.get('contacts', [])
+                status = 'valid' if contacts and contacts[0].get('status') == 'valid' else 'invalid'
+                result = status == 'valid'
+        except Exception:
+            result = False
+
+        self.has_whatsapp = result
+        self.whatsapp_checked = True
+        self.whatsapp_checked_at = timezone.now()
+        self.save(update_fields=['has_whatsapp', 'whatsapp_checked', 'whatsapp_checked_at'])
+        return result

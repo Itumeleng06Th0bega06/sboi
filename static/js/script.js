@@ -33,6 +33,38 @@
     });
   }
 
+  /* ---------- Mobile bottom nav: Account menu sheet ---------- */
+  var accountBtn = document.getElementById('bottomAccountBtn');
+  var accountSheet = document.getElementById('accountSheet');
+  if (accountBtn && accountSheet) {
+    var accountSheetTimer = null;
+    function closeAccountSheet() {
+      accountSheet.classList.remove('open');
+      accountBtn.setAttribute('aria-expanded', 'false');
+      document.body.classList.remove('sheet-open');
+      if (accountSheetTimer) window.clearTimeout(accountSheetTimer);
+      accountSheetTimer = window.setTimeout(function () { accountSheet.hidden = true; accountSheetTimer = null; }, 300);
+    }
+    function openAccountSheet() {
+      if (accountSheetTimer) { window.clearTimeout(accountSheetTimer); accountSheetTimer = null; }
+      accountSheet.hidden = false;
+      window.requestAnimationFrame(function () { accountSheet.classList.add('open'); });
+      accountBtn.setAttribute('aria-expanded', 'true');
+      document.body.classList.add('sheet-open');
+    }
+    accountBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (accountSheet.hidden) { openAccountSheet(); } else { closeAccountSheet(); }
+    });
+    accountSheet.addEventListener('click', function (e) {
+      if (e.target.closest('[data-sheet-close]') || e.target.closest('a')) closeAccountSheet();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !accountSheet.hidden) closeAccountSheet();
+    });
+  }
+
   /* Keep the active About sub-page tab in view on small screens */
   var aboutSubnav = document.querySelector('.about-subnav');
   if (aboutSubnav) {
@@ -317,6 +349,22 @@
       if (e.key === 'Escape') closeNavDropdown();
     });
   }
+
+  /* ---------- Avatar account dropdown ---------- */
+  document.addEventListener('click', function (e) {
+    var openAccount = document.querySelector('.nav-account[open]');
+    if (openAccount && !openAccount.contains(e.target)) {
+      openAccount.open = false;
+    }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    var openAccount = document.querySelector('.nav-account[open]');
+    if (!openAccount) return;
+    openAccount.open = false;
+    var toggle = openAccount.querySelector('summary');
+    if (toggle) toggle.focus();
+  });
 
   /* ---------- Back to top ---------- */
   var toTop = document.getElementById('toTop');

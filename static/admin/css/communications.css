@@ -1506,3 +1506,1017 @@
     animation: none;
   }
 }
+
+/* ==========================================================================
+   COMMUNITY FEED WORKSPACE
+   The card vocabulary itself lives in static/css/community-feed.css so the
+   member account page can share it. This section is staff-layout only.
+   ========================================================================== */
+
+.comms-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem;
+  border: 1px solid var(--sboi-line);
+  border-radius: 12px;
+  background: rgba(12, 9, 27, 0.45);
+}
+
+.comms-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 34px;
+  padding: 0.38rem 0.8rem;
+  border-radius: 9px;
+  color: var(--sboi-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.comms-tab:hover {
+  background: rgba(210, 162, 78, 0.08);
+  color: var(--sboi-gold-soft);
+  text-decoration: none;
+}
+
+.comms-tab.is-active {
+  background: rgba(210, 162, 78, 0.16);
+  color: var(--sboi-gold-soft);
+}
+
+.comms-tab .sboi-ico {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.comms-tab__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--sboi-gold);
+  color: #14111e;
+  font-size: 0.6rem;
+  font-weight: 800;
+}
+
+.comms-feed-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(255px, 310px);
+  gap: 1rem;
+  align-items: start;
+}
+
+.comms-feed-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.comms-feed-main > .comms-compose-card {
+  margin: 0;
+}
+
+.comms-feed-main .comms-post {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.018));
+}
+
+.comms-accounts {
+  position: sticky;
+  top: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 265px);
+  min-height: 280px;
+  overflow: hidden;
+  border: 1px solid var(--sboi-line);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #1a1630 0%, #151126 100%);
+  box-shadow: var(--sboi-shadow-sm);
+}
+
+.comms-accounts__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.9rem 0.95rem 0.65rem;
+  border-bottom: 1px solid var(--sboi-line);
+}
+
+.comms-accounts__head h2 {
+  margin: 0;
+  color: var(--sboi-gold);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.comms-accounts__list {
+  overflow-y: auto;
+  padding: 0.35rem;
+}
+
+.comms-account-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.55rem;
+  border-radius: 10px;
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.comms-account-row:hover {
+  background: rgba(210, 162, 78, 0.09);
+  text-decoration: none;
+}
+
+.comms-account-row__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.comms-account-row__name {
+  overflow: hidden;
+  color: var(--sboi-ink);
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comms-account-row__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--sboi-muted);
+  font-size: 0.64rem;
+  line-height: 1.35;
+}
+
+.comms-account-row__staff {
+  display: inline-flex;
+  margin-left: 0.1rem;
+  padding: 0.03rem 0.32rem;
+  border: 1px solid rgba(210, 162, 78, 0.32);
+  border-radius: 999px;
+  color: var(--sboi-gold-soft);
+  font-size: 0.54rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.comms-account-row__mail {
+  overflow: hidden;
+  margin-left: auto;
+  max-width: 42%;
+  color: var(--sboi-muted);
+  font-size: 0.6rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comms-status-dot {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8a849c;
+}
+
+.comms-status-dot--active { background: #4fbf88; }
+.comms-status-dot--pending { background: #e8c98d; }
+.comms-status-dot--inactive { background: #8a849c; }
+.comms-status-dot--rejected { background: #d65858; }
+
+@media (max-width: 1080px) {
+  .comms-feed-layout {
+    grid-template-columns: minmax(0, 1fr) 260px;
+  }
+}
+
+@media (max-width: 900px) {
+  .comms-feed-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .comms-accounts {
+    position: static;
+    max-height: 320px;
+  }
+}
+
+@media (max-width: 640px) {
+  .comms-tabs {
+    width: 100%;
+  }
+
+  .comms-tab {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .comms-feed-main > .comms-compose-card {
+    padding: 0.8rem;
+  }
+}
+
+/* ==========================================================================
+   ADMIN COMMUNITY
+   A member-style shell for the staff workspace: Feed, Chat, Members, Profile.
+   Reuses the member rail, feed cards and chat bubbles while keeping every
+   admin action (account links, moderation, audience) intact.
+   ========================================================================== */
+
+.sboi-community {
+  display: grid;
+  grid-template-columns: 224px minmax(0, 1fr);
+  gap: 1.4rem;
+  align-items: start;
+}
+
+.sboi-community__rail {
+  position: sticky;
+  top: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  max-height: calc(100vh - 110px);
+  padding: 0.7rem 0.45rem 0.7rem;
+  overflow-y: auto;
+  border: 1px solid var(--sboi-line);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #1a1630 0%, #141024 100%);
+  box-shadow: var(--sboi-shadow-sm);
+}
+
+.sboi-community__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(210, 162, 78, 0.28);
+  border-radius: 10px;
+  background: rgba(210, 162, 78, 0.1);
+  color: var(--sboi-gold);
+}
+
+.sboi-community__mark .sboi-ico {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.sboi-community__brand-copy {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.sboi-community__brand-copy strong {
+  color: #ffffff;
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.sboi-community__brand-copy small {
+  color: var(--sboi-gold);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sboi-community__rail .cf-rail-identity {
+  margin-top: 0.6rem;
+}
+
+.sboi-community__rail .cf-nav-item svg {
+  width: 18px;
+  height: 18px;
+}
+
+.sboi-community__main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.sboi-community__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0 0.15rem;
+}
+
+.sboi-community__head h1 {
+  margin: 0.05rem 0 0;
+  color: #ffffff;
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.5rem, 2.2vw, 2rem);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.sboi-community__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(255px, 300px);
+  gap: 1.2rem;
+  align-items: start;
+}
+
+.sboi-community__feed {
+  min-width: 0;
+}
+
+.sboi-community__aside {
+  position: sticky;
+  top: 0.85rem;
+}
+
+.sboi-comms-button--danger {
+  border-color: rgba(214, 88, 88, 0.4);
+  background: rgba(214, 88, 88, 0.12);
+  color: #ffb4b0;
+}
+
+.sboi-comms-button--danger:hover {
+  border-color: rgba(214, 88, 88, 0.65);
+  background: rgba(214, 88, 88, 0.22);
+  color: #ffffff;
+}
+
+.sboi-comms-button form {
+  margin: 0;
+}
+
+.comms-avatar--img {
+  object-fit: cover;
+}
+
+/* ---------- Unified chat list ------------------------------------------- */
+.sboi-chat-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.9rem 0.65rem 0.3rem;
+  color: rgba(244, 239, 228, 0.44);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sboi-chat-label:first-child {
+  margin-top: 0.15rem;
+}
+
+.sboi-chat-label--space {
+  margin-top: 1.2rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--sboi-line);
+}
+
+.sboi-chat-label span {
+  color: var(--sboi-muted);
+  font-size: 0.6rem;
+  letter-spacing: 0;
+}
+
+.sboi-chat-label__badge {
+  margin-left: auto;
+  padding: 0.08rem 0.38rem;
+  border-radius: 999px;
+  background: var(--sboi-gold);
+  color: #14111e;
+  font-size: 0.58rem;
+  letter-spacing: 0;
+}
+
+.sboi-chat-label__note {
+  margin-left: auto;
+  color: rgba(244, 239, 228, 0.34);
+  font-size: 0.55rem;
+  font-style: normal;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.sboi-chat-row {
+  align-items: center;
+}
+
+.sboi-chat-row--dm .comms-conversation__name {
+  font-size: 0.76rem;
+}
+
+.sboi-chat-count {
+  flex: 0 0 auto;
+  min-width: 18px;
+  padding: 0.05rem 0.32rem;
+  border: 1px solid var(--sboi-line);
+  border-radius: 999px;
+  color: var(--sboi-muted);
+  font-size: 0.58rem;
+  text-align: center;
+}
+
+.sboi-chat-hint {
+  margin: 0.15rem 0.65rem 0.5rem;
+  color: var(--sboi-muted);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.sboi-chat-shell {
+  height: calc(100vh - 228px);
+  min-height: 540px;
+}
+
+.sboi-chat-workspace--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.sboi-chat-empty .comms-empty-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.sboi-chat-empty .comms-empty-state__actions a {
+  color: var(--sboi-gold);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* ---------- Office and moderation threads -------------------------------- */
+.sboi-office__head,
+.sboi-dm__head {
+  align-items: center;
+}
+
+.sboi-office__back,
+.sboi-dm__back {
+  display: inline-flex;
+}
+
+.sboi-dm__head form {
+  margin: 0;
+}
+
+.sboi-office__messages,
+.sboi-dm__messages {
+  gap: 0.7rem;
+}
+
+.sboi-bubble {
+  max-width: min(76%, 720px);
+  padding: 0.65rem 0.8rem 0.55rem;
+  border: 1px solid var(--sboi-line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.sboi-bubble--member {
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.sboi-bubble--member-alt {
+  align-self: flex-end;
+  border-color: rgba(122, 146, 210, 0.3);
+  border-bottom-right-radius: 4px;
+}
+
+.sboi-bubble--staff {
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+  border-color: rgba(210, 162, 78, 0.32);
+  background: linear-gradient(160deg, rgba(210, 162, 78, 0.16), rgba(210, 162, 78, 0.05));
+}
+
+.sboi-bubble__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.28rem;
+}
+
+.sboi-bubble__head strong {
+  color: var(--sboi-gold-soft);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.sboi-bubble--staff .sboi-bubble__head strong {
+  color: var(--sboi-gold);
+}
+
+.sboi-bubble__head time {
+  flex: 0 0 auto;
+  color: rgba(244, 239, 228, 0.42);
+  font-size: 0.56rem;
+}
+
+.sboi-bubble__subject {
+  margin: 0 0 0.25rem;
+  color: var(--sboi-gold-soft);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.sboi-bubble__body {
+  color: var(--sboi-ink);
+  font-size: 0.81rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.sboi-bubble__attachment {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--sboi-line);
+  border-radius: 9px;
+  background: rgba(12, 9, 27, 0.32);
+  color: var(--sboi-ink);
+  text-decoration: none;
+}
+
+.sboi-bubble__attachment small {
+  display: block;
+  color: var(--sboi-muted);
+  font-size: 0.56rem;
+}
+
+.sboi-bubble__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-top: 0.35rem;
+}
+
+.sboi-bubble__tag {
+  color: rgba(244, 239, 228, 0.4);
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sboi-bubble__state {
+  color: var(--sboi-muted);
+  font-size: 0.56rem;
+}
+
+.sboi-bubble__foot form {
+  margin: 0;
+}
+
+.sboi-link-danger {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #ffaaa4;
+  font: inherit;
+  font-size: 0.6rem;
+  cursor: pointer;
+}
+
+.sboi-link-danger:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.sboi-thread-empty h2 {
+  margin: 0;
+  color: #ffffff;
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.sboi-thread-empty p {
+  max-width: 380px;
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+/* ---------- Members directory ------------------------------------------- */
+.sboi-community__directory {
+  min-width: 0;
+}
+
+.sboi-directory-search {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.9rem 0;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--sboi-line);
+  border-radius: 12px;
+  background: var(--sboi-surface);
+}
+
+.sboi-directory-search input[type='search'] {
+  flex: 1 1 220px;
+  min-width: 0;
+  padding: 0.4rem 0.2rem;
+  border: 0;
+  background: transparent;
+  color: var(--sboi-ink);
+  font: inherit;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.sboi-directory-search__clear {
+  color: var(--sboi-muted);
+  font-size: 0.68rem;
+}
+
+.sboi-people-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(238px, 1fr));
+  gap: 0.8rem;
+}
+
+.sboi-person {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.85rem;
+  border: 1px solid var(--sboi-line);
+  border-radius: 15px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.018));
+}
+
+.sboi-person__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+  color: var(--sboi-ink);
+  text-decoration: none;
+}
+
+.sboi-person__copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sboi-person__copy strong {
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 650;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sboi-person__copy span {
+  color: var(--sboi-muted);
+  font-size: 0.64rem;
+}
+
+.sboi-person__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.sboi-person__facts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--sboi-line);
+}
+
+.sboi-person__facts > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.sboi-person__facts dt {
+  color: var(--sboi-muted);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.sboi-person__facts dd {
+  overflow: hidden;
+  margin: 0;
+  color: var(--sboi-ink);
+  font-size: 0.68rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sboi-person__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.sboi-person__actions .cf-btn {
+  flex: 1 1 auto;
+}
+
+/* The admin shell paints every link gold, which would make gold buttons
+   unreadable. Restore the member palette's dark ink on gold. */
+.sboi-community a.cf-btn--gold,
+.sboi-community a.cf-btn--gold:link,
+.sboi-community a.cf-btn--gold:visited,
+.sboi-community a.cf-btn--gold:hover,
+.sboi-community a.cf-btn--gold:focus {
+  color: #171226;
+  text-decoration: none;
+}
+
+.sboi-stat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sboi-stat-list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--sboi-muted);
+  font-size: 0.7rem;
+}
+
+.sboi-stat-list strong {
+  color: #ffffff;
+  font-size: 0.82rem;
+}
+
+.sboi-people-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sboi-people-mini a {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.32rem 0.2rem;
+  border-radius: 9px;
+  color: var(--sboi-ink);
+  text-decoration: none;
+}
+
+.sboi-people-mini a:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sboi-people-mini a > span:last-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sboi-people-mini strong {
+  overflow: hidden;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sboi-people-mini small {
+  color: var(--sboi-muted);
+  font-size: 0.58rem;
+}
+
+.sboi-people-mini__empty {
+  color: var(--sboi-muted);
+  font-size: 0.68rem;
+}
+
+/* ---------- Admin profile ------------------------------------------------ */
+.sboi-community__profile {
+  max-width: 900px;
+}
+
+.sboi-community__profile .cf-info-list dd {
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Responsive --------------------------------------------------- */
+@media (max-width: 1180px) {
+  .sboi-community {
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .sboi-community__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sboi-community__aside {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .sboi-community {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sboi-community__rail {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    max-height: none;
+    padding: 0.5rem;
+  }
+
+  .sboi-community__rail .cf-rail-brand {
+    padding: 0;
+  }
+
+  .sboi-community__rail .cf-rail-nav {
+    flex: 1 1 auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .sboi-community__rail .cf-rail-label {
+    display: none;
+  }
+
+  .sboi-community__rail .cf-nav-item {
+    min-height: 36px;
+    padding: 0.4rem 0.55rem;
+    font-size: 0.74rem;
+  }
+
+  .sboi-community__rail .cf-nav-item svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .sboi-community__rail .cf-rail-identity {
+    display: none;
+  }
+
+  .sboi-chat-shell {
+    height: auto;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sboi-chat-sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--sboi-line);
+    max-height: 320px;
+  }
+
+  /* On a phone the conversation list and the thread cannot share the screen.
+     Opening a thread hides the list, and every thread header already offers a
+     back control that returns to ?view=chat. */
+  .sboi-chat-shell.is-thread-open .sboi-chat-sidebar {
+    display: none;
+  }
+
+  .sboi-chat-shell.is-thread-open .sboi-chat-workspace {
+    min-height: calc(100vh - 260px);
+  }
+
+  .sboi-chat-workspace {
+    min-height: 480px;
+  }
+}
+
+@media (max-width: 640px) {
+  .sboi-community__head {
+    align-items: flex-start;
+  }
+
+  .sboi-community__head .sboi-comms__topbar-actions {
+    width: 100%;
+  }
+
+  .sboi-community__head .sboi-comms__topbar-actions .sboi-comms-button {
+    flex: 1 1 auto;
+  }
+
+  .sboi-community__aside {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sboi-people-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sboi-bubble {
+    max-width: 92%;
+  }
+
+  .sboi-office__head,
+  .sboi-dm__head {
+    align-items: flex-start;
+  }
+
+  .sboi-office__head .comms-chat__actions,
+  .sboi-dm__head .comms-chat__actions {
+    width: 100%;
+  }
+
+  .sboi-directory-search {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sboi-directory-search .comms-search__icon {
+    display: none;
+  }
+
+  .sboi-directory-search input[type='search'] {
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding: 0.45rem 0.3rem;
+  }
+}
+
+/* Django admin gives every ``ul > li`` a square marker. The community
+   sidebar is a list of links, not prose, so remove the inherited marker. */
+.sboi-people-mini li {
+  list-style: none;
+  padding: 0;
+}
+
+/* The admin composer adds an audience picker that member composers do not
+   have. Keep it compact so the post field keeps most of the row. */
+.sboi-community .cf-composer-audience {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  min-width: 0;
+}
+
+.sboi-community .cf-composer-audience select {
+  max-width: 118px;
+  min-height: 32px;
+  padding: 0 0.45rem;
+  border-radius: 9px;
+  font-size: 0.68rem;
+}
+
+@media (max-width: 640px) {
+  .sboi-community .cf-composer-avatar {
+    display: none;
+  }
+
+  .sboi-community .cf-composer-audience select {
+    max-width: 98px;
+    font-size: 0.64rem;
+  }
+}

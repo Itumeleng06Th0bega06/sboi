@@ -1,0 +1,14 @@
+{% load i18n %}
+<div class="comms-comment" data-feed-comment-item data-comment-id="{{ comment.pk }}">
+    <span class="comms-avatar comms-avatar--xs" aria-hidden="true">{{ comment.author.get_full_name|default:comment.author.get_username|first|upper }}</span>
+    <div class="comms-comment__body">
+        <strong>{{ comment.author_name }}</strong>
+        <p>{{ comment.body|linebreaksbr }}</p>
+    </div>
+    {% if request.user.is_staff or request.user.is_superuser or comment.author_id == request.user.pk or post.author_id == request.user.pk %}
+        <form method="post" action="{% url 'members:feed_comment_delete' comment.pk %}" class="comms-comment__delete" data-feed-comment-delete>
+            {% csrf_token %}
+            <button type="submit" aria-label="{% translate 'Remove comment' %}">×</button>
+        </form>
+    {% endif %}
+</div>

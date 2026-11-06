@@ -62,6 +62,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'members.middleware.CommunityPresenceMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'sboi.middleware.ConsumeStalePublicMessages',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -165,7 +166,7 @@ STORAGES = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = 'members:login'
-LOGIN_REDIRECT_URL = 'members:account'
+LOGIN_REDIRECT_URL = 'home:home'
 LOGOUT_REDIRECT_URL = 'home:home'
 
 # Outgoing email. Development prints messages to the runserver console; the
@@ -183,6 +184,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 WHATSAPP_API_URL = ''
 WHATSAPP_API_TOKEN = ''
 WHATSAPP_SENDER_ID = ''
+ADMIN_EMAIL = 'admin@shekinahblaze.org'
+ADMIN_WHATSAPP_NUMBER = ''
 
 
 CSRF_TRUSTED_ORIGINS = [

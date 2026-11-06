@@ -27,6 +27,26 @@ urlpatterns = [
         name='send_message',
     ),
     path(
+        'office/<int:user_id>/reply/',
+        views.office_reply,
+        name='office_reply',
+    ),
+    path(
+        'direct/<int:thread_id>/reply/',
+        views.dm_reply,
+        name='dm_reply',
+    ),
+    path(
+        'direct/<int:thread_id>/delete/',
+        views.dm_thread_delete,
+        name='dm_thread_delete',
+    ),
+    path(
+        'direct/<int:thread_id>/message/<int:pk>/delete/',
+        views.dm_message_delete,
+        name='dm_message_delete',
+    ),
+    path(
         'conversation/<int:pk>/update/',
         views.update_group_view,
         name='update_group',

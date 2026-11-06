@@ -4,7 +4,6 @@
   <div class="cm-page-heading">
     <div>
       <h1 id="cm-page-title">{% trans 'Church Membership' %}</h1>
-      <p>{% trans 'Manage church members, view details and keep track of their information.' %}</p>
     </div>
     <div class="cm-heading-actions">
       {% if can_add %}
@@ -19,19 +18,19 @@
   <div class="cm-stats-grid" aria-label="{% trans 'Membership statistics' %}">
     <article class="cm-card cm-stat-card">
       <span class="cm-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM20 8v6M23 11h-6"/></svg></span>
-      <div><p class="cm-stat-label">{% trans 'Total Members' %}</p><p class="cm-stat-value">{{ stats.total_members|default:0 }}</p><p class="cm-stat-note">{% trans 'Church membership records' %}</p></div>
+      <div><p class="cm-stat-label">{% trans 'Total Members' %}</p><p class="cm-stat-value">{{ stats.total_members|default:0 }}</p></div>
     </article>
     <article class="cm-card cm-stat-card">
       <span class="cm-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg></span>
-      <div><p class="cm-stat-label">{% trans 'Baptized Members' %}</p><p class="cm-stat-value">{{ stats.baptized_members|default:0 }}</p><p class="cm-stat-note">{% trans 'Based on recorded status' %}</p></div>
+      <div><p class="cm-stat-label">{% trans 'Baptized Members' %}</p><p class="cm-stat-value">{{ stats.baptized_members|default:0 }}</p></div>
     </article>
     <article class="cm-card cm-stat-card">
       <span class="cm-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM20 8v6M23 11h-6"/></svg></span>
-      <div><p class="cm-stat-label">{% trans 'Active Groups' %}</p><p class="cm-stat-value">{{ stats.active_groups|default:0 }}</p><p class="cm-stat-note">{% trans 'Groups and ministries' %}</p></div>
+      <div><p class="cm-stat-label">{% trans 'Active Groups' %}</p><p class="cm-stat-value">{{ stats.active_groups|default:0 }}</p></div>
     </article>
     <article class="cm-card cm-stat-card">
       <span class="cm-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
-      <div><p class="cm-stat-label">{% trans 'New This Month' %}</p><p class="cm-stat-value">{{ stats.new_this_month|default:0 }}</p><p class="cm-stat-note">{% trans 'New membership records' %}</p></div>
+      <div><p class="cm-stat-label">{% trans 'New This Month' %}</p><p class="cm-stat-value">{{ stats.new_this_month|default:0 }}</p></div>
     </article>
   </div>
 
@@ -88,7 +87,7 @@
             <tr>
               <td class="cm-col-member">
                 <a class="cm-member-cell" href="{{ member.profile_url }}" aria-label="View {{ member.full_name }}">
-                  <span class="cm-avatar">{{ member.initials|default:'M' }}</span>
+                  <span class="cm-avatar">{% if member.avatar_url %}<img src="{{ member.avatar_url }}" alt="{{ member.full_name }}" class="cm-avatar-img">{% else %}{{ member.initials|default:'M' }}{% endif %}</span>
                   <span class="cm-member-name-wrap"><strong>{{ member.full_name|default:'Unnamed member' }}</strong><small>{{ member.member_id|default:'ID not assigned' }}</small></span>
                 </a>
               </td>

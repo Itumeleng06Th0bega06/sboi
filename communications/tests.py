@@ -15,6 +15,12 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from contact.models import ContactMessage
+from members.models_comms import (
+    CommsComment,
+    CommsDirectMessage,
+    CommsDirectThread,
+    CommsPost,
+)
 from notifications.models import Notification
 
 from .models import (
@@ -135,11 +141,11 @@ class PortalAccessTests(CommunicationsBase):
         # context (account menu, notification bell, logout) must be present.
         self.assertTrue(response.context['has_permission'])
         self.assertIn('admin_dashboard', response.context)
-        # New-conversation buttons were removed; staff use existing threads.
-        self.assertNotContains(response, 'Create a group')
-        self.assertNotContains(response, 'Send a direct message')
-        self.assertNotContains(response, 'New direct message')
-        self.assertNotContains(response, 'New group')
+        # Staff can start new conversations from the portal dialogs.
+        self.assertContains(response, 'New message')
+        self.assertContains(response, 'New group')
+        self.assertContains(response, 'Create a group')
+        self.assertContains(response, 'Start a direct message')
 
     def test_superuser_passes_without_explicit_permission_row(self):
         superuser = self.make_user('root', allowed=False, superuser=True)
@@ -680,3 +686,203 @@ class SearchAndIsolationTests(CommunicationsBase):
             ).count(),
             0,
         )
+
+
+class AdminCommunityTests(CommunicationsBase):
+    """The member-style admin community: feed, office chat and DM moderation."""
+
+    def make_office_message(self, body='Please pray for our family.'):
+        return ContactMessage.objects.create(
+            user=self.member,
+            sender=self.member,
+            name=self.member.get_full_name() or self.member.get_username(),
+            email=self.member.email,
+            subject='Prayer request',
+            message=body,
+            is_read=False,
+        )
+
+    def test_each_community_section_renders_for_staff(self):
+        expected = {
+            'feed': 'Community feed',
+            'chat': 'Chat',
+            'members': 'Members',
+            'profile': 'Profile',
+        }
+        for view, heading in expected.items():
+            response = self.client.get(
+                reverse('communications:inbox') + f'?view={view}',
+            )
+            self.assertEqual(response.status_code, 200, view)
+            self.assertContains(response, 'Admin Communications')
+            self.assertContains(response, heading)
+
+    def test_members_directory_lists_accounts_and_can_be_searched(self):
+        response = self.client.get(
+            reverse('communications:inbox') + '?view=members',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.member.get_username())
+        self.assertContains(response, self.ordinary_member.get_username())
+
+        response = self.client.get(
+            reverse('communications:inbox') + '?view=members&q=ordinary',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.ordinary_member.get_username())
+        self.assertNotContains(response, self.outsider.get_username())
+
+    def test_office_thread_lists_messages_and_marks_them_read(self):
+        office = self.make_office_message('A private prayer request')
+        response = self.client.get(
+            reverse('communications:inbox')
+            + f'?view=chat&channel=office&member={self.member.pk}',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['office_member'], self.member)
+        self.assertContains(response, 'A private prayer request')
+        self.assertContains(response, 'Church office conversation')
+        office.refresh_from_db()
+        self.assertTrue(office.is_read)
+
+    def test_office_reply_reuses_the_member_contact_thread(self):
+        office = self.make_office_message()
+        response = self.client.post(
+            reverse('communications:office_reply', args=[self.member.pk]),
+            {'message': 'We are praying with you this week.'},
+        )
+        self.assertEqual(response.status_code, 302)
+        reply = ContactMessage.objects.get(
+            user=self.member, is_from_admin=True,
+        )
+        self.assertEqual(reply.parent_id, office.pk)
+        self.assertEqual(reply.sender, self.owner)
+        self.assertTrue(
+            Notification.objects.filter(
+                recipient=self.member,
+                source_type='contact_reply',
+                source_id=reply.pk,
+            ).exists()
+        )
+
+        member_client = self.login(self.member)
+        inbox = member_client.get(reverse('members:account_messages'))
+        self.assertEqual(inbox.status_code, 200)
+        self.assertContains(inbox, 'We are praying with you this week.')
+
+    def test_only_a_superuser_can_open_member_direct_messages(self):
+        first_member = self.make_user(
+            'first_member', staff=False, allowed=False,
+        )
+        second_member = self.make_user(
+            'second_member', staff=False, allowed=False,
+        )
+        thread = CommsDirectThread.objects.create(
+            user_a=first_member,
+            user_b=second_member,
+        )
+        CommsDirectMessage.objects.create(
+            thread=thread,
+            sender=first_member,
+            body='A private member conversation',
+        )
+        url = (
+            reverse('communications:inbox')
+            + f'?view=chat&channel=dm&thread={thread.pk}'
+        )
+
+        self.assertEqual(self.client.get(url).status_code, 403)
+        self.assertEqual(
+            self.client.post(
+                reverse('communications:dm_reply', args=[thread.pk]),
+                {'body': 'Staff must not write here.'},
+            ).status_code,
+            403,
+        )
+
+        root = self.make_user('root', superuser=True)
+        root_client = self.login(root)
+        response = root_client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'A private member conversation')
+        self.assertContains(response, 'superuser moderation')
+
+        root_client.post(
+            reverse('communications:dm_reply', args=[thread.pk]),
+            {'body': 'Please keep this conversation respectful.'},
+        )
+        self.assertEqual(
+            CommsDirectMessage.objects.filter(thread=thread).count(), 2,
+        )
+        self.assertEqual(
+            Notification.objects.filter(
+                source_type='direct_message',
+                recipient__in=[first_member, second_member],
+                title='Message from church administration',
+            ).count(),
+            2,
+        )
+
+    def test_superuser_can_remove_a_message_or_the_whole_dm_thread(self):
+        root = self.make_user('root', superuser=True)
+        root_client = self.login(root)
+        first_member = self.make_user(
+            'first_member', staff=False, allowed=False,
+        )
+        second_member = self.make_user(
+            'second_member', staff=False, allowed=False,
+        )
+        thread = CommsDirectThread.objects.create(
+            user_a=first_member,
+            user_b=second_member,
+        )
+        first = CommsDirectMessage.objects.create(
+            thread=thread, sender=first_member, body='First message',
+        )
+        second = CommsDirectMessage.objects.create(
+            thread=thread, sender=second_member, body='Second message',
+        )
+
+        response = root_client.post(
+            reverse(
+                'communications:dm_message_delete',
+                args=[thread.pk, first.pk],
+            ),
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(
+            CommsDirectMessage.objects.filter(pk=first.pk).exists(),
+        )
+        self.assertTrue(
+            CommsDirectMessage.objects.filter(pk=second.pk).exists(),
+        )
+
+        response = root_client.post(
+            reverse('communications:dm_thread_delete', args=[thread.pk]),
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(CommsDirectThread.objects.filter(pk=thread.pk).exists())
+
+    def test_admin_feed_lists_and_removes_member_posts_and_comments(self):
+        post = CommsPost.objects.create(
+            author=self.member,
+            body='A testimony from a member',
+        )
+        comment = CommsComment.objects.create(
+            post=post,
+            author=self.outsider,
+            body='Amen to this.',
+        )
+
+        response = self.client.get(
+            reverse('communications:inbox') + '?view=feed',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'A testimony from a member')
+        self.assertContains(response, 'data-surface="admin_feed"')
+
+        self.client.post(reverse('members:feed_comment_delete', args=[comment.pk]))
+        self.assertFalse(CommsComment.objects.filter(pk=comment.pk).exists())
+
+        self.client.post(reverse('members:feed_post_delete', args=[post.pk]))
+        self.assertFalse(CommsPost.objects.filter(pk=post.pk).exists())

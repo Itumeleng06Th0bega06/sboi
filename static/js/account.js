@@ -33,6 +33,30 @@
     return document.querySelector('[data-account-section]');
   }
 
+  /* ---- Spouse name: only when married ----------------------------------- */
+  (function () {
+    var statusEl = document.querySelector('select[name="marital_status"]');
+    if (!statusEl) return;
+    function toggle() {
+      var spouses = document.querySelectorAll('input[name="spouse_name"], textarea[name="spouse_name"], .account-form-field[data-for-spouse]');
+      for (var i = 0; i < spouses.length; i++) {
+        var container = spouses[i].closest('.account-form-field');
+        if (!container) container = spouses[i].parentElement;
+        if (container) container.style.display = statusEl.value === 'married' ? '' : 'none';
+      }
+      // Fallback: find any field whose label contains "Spouse"
+      var fields = document.querySelectorAll('.account-form-field');
+      for (var j = 0; j < fields.length; j++) {
+        var label = fields[j].querySelector('label');
+        if (label && (label.textContent || '').indexOf('Spouse') !== -1) {
+          fields[j].style.display = statusEl.value === 'married' ? '' : 'none';
+        }
+      }
+    }
+    toggle();
+    statusEl.addEventListener('change', toggle);
+  })();
+
   /* ---- Flash messages ---------------------------------------------------- */
   function showFlash(message, kind) {
     var host = document.querySelector('.account-main');
@@ -196,6 +220,7 @@
     if (!next || !current) return false;
     current.replaceWith(next);
     bindMessagePolling();
+    document.dispatchEvent(new CustomEvent('sboi:section-updated'));
     return true;
   }
 
@@ -293,10 +318,17 @@
 
     var link = closest(event.target, 'a[href]');
     if (!link || link.target || link.hasAttribute('download')) return;
+    if (link.hasAttribute('data-account-ajax') && link.getAttribute('data-account-ajax') === 'off') return;
     if (!closest(link, '[data-account-base]')) return;
 
     var url = new URL(link.href, window.location.origin);
     if (!isAccountUrl(url)) return;
+    if (
+      url.pathname === window.location.pathname &&
+      url.search !== window.location.search
+    ) {
+      return;
+    }
 
     event.preventDefault();
     loadSection(url.href, { push: true });
@@ -312,12 +344,12 @@
 
   /* ---- Counts and notification links ------------------------------------ */
   function setCount(name, value) {
-    var badge = document.querySelector('[data-account-count="' + name + '"]');
-    if (badge) {
-      var count = parseInt(value || '0', 10) || 0;
+    var badges = document.querySelectorAll('[data-account-count="' + name + '"]');
+    var count = parseInt(value || '0', 10) || 0;
+    badges.forEach(function (badge) {
       badge.textContent = count > 99 ? '99+' : String(count);
       badge.hidden = count === 0;
-    }
+    });
   }
 
   function setCounts(data) {
@@ -373,11 +405,14 @@
     if (!submit) return;
     if (isSubmitting) {
       submit.disabled = true;
-      submit.dataset.originalLabel = submit.textContent;
-      submit.textContent = label || 'Saving…';
+      submit.dataset.originalHtml = submit.innerHTML;
+      if (label) submit.textContent = label;
     } else {
       submit.disabled = false;
-      if (submit.dataset.originalLabel) submit.textContent = submit.dataset.originalLabel;
+      if (submit.dataset.originalHtml) {
+        submit.innerHTML = submit.dataset.originalHtml;
+        delete submit.dataset.originalHtml;
+      }
     }
   }
 
@@ -580,7 +615,7 @@
     pollTimer = window.setInterval(function () {
       thread = currentThread();
       if (!thread || document.hidden || sendingMessage) return;
-      fetch(pollUrl + '?after=' + threadAfter() + '&read=1', {
+      fetch(pollUrl + (pollUrl.indexOf('?') === -1 ? '?' : '&') + 'after=' + threadAfter() + '&read=1', {
         headers: ajaxHeaders,
         credentials: 'same-origin'
       }).then(function (response) {
@@ -623,6 +658,21 @@
       name.textContent = event.target.files && event.target.files[0]
         ? event.target.files[0].name
         : '';
+    }
+  });
+
+  document.addEventListener('input', function (event) {
+    if (!event.target.matches('.cf-thread-input, .cf-comment-input textarea')) return;
+    event.target.style.height = 'auto';
+    event.target.style.height = Math.min(event.target.scrollHeight, 110) + 'px';
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (!event.target.matches('.cf-thread-input')) return;
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      var form = closest(event.target, '[data-account-message-form]');
+      if (form) form.requestSubmit();
     }
   });
 

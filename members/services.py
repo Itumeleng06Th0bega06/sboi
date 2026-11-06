@@ -17,8 +17,10 @@ import urllib.request
 from datetime import timedelta
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
+from django.db.models import Q
 from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 
@@ -760,9 +762,13 @@ def unread_message_count(user):
 
     if not user or not user.is_authenticated:
         return 0
-    return ContactMessage.objects.filter(
+    admin_count = ContactMessage.objects.filter(
         user=user, is_from_admin=True, read_by_member=False,
     ).count()
+    direct_count = 0
+    for thread in direct_threads_for(user):
+        direct_count += thread.unread_count(user)
+    return admin_count + direct_count
 
 
 def mark_member_messages_read(user):
@@ -775,6 +781,161 @@ def mark_member_messages_read(user):
     ).update(read_by_member=True)
     mark_message_notifications_read(user)
     return count
+
+
+# ---------------------------------------------------------------------------
+# Community presence, blocking and direct messages
+# ---------------------------------------------------------------------------
+
+ONLINE_WINDOW = timedelta(minutes=5)
+
+
+def is_user_online(user):
+    if not user or not user.is_authenticated:
+        return False
+    from .models_comms import CommunityPresence
+
+    return CommunityPresence.objects.filter(
+        user=user,
+        last_seen_at__gte=timezone.now() - ONLINE_WINDOW,
+    ).exists()
+
+
+def blocked_relationship_ids(user):
+    """Accounts hidden from ``user`` because either side blocked the other."""
+    from .models_comms import CommsBlock
+
+    if not user or not user.is_authenticated:
+        return set()
+    pairs = CommsBlock.objects.filter(
+        Q(blocker=user) | Q(blocked=user),
+    ).values_list('blocker_id', 'blocked_id')
+    hidden = set()
+    for blocker_id, blocked_id in pairs:
+        hidden.add(blocked_id if blocker_id == user.pk else blocker_id)
+    hidden.discard(user.pk)
+    return hidden
+
+
+def interaction_blocked(user, other):
+    """True when either account has blocked the other."""
+    from .models_comms import CommsBlock
+
+    if not user or not user.is_authenticated or not other:
+        return False
+    other_id = getattr(other, 'pk', other)
+    if not other_id or other_id == user.pk:
+        return False
+    return CommsBlock.objects.filter(
+        Q(blocker=user, blocked_id=other_id)
+        | Q(blocker_id=other_id, blocked=user)
+    ).exists()
+
+
+def online_members(user, limit=8):
+    """Active accounts with a fresh presence ping, excluding blocks."""
+    from .models_comms import CommunityPresence
+
+    if not user or not user.is_authenticated:
+        return []
+    cutoff = timezone.now() - ONLINE_WINDOW
+    hidden = blocked_relationship_ids(user)
+    online_ids = list(
+        CommunityPresence.objects
+        .filter(last_seen_at__gte=cutoff)
+        .exclude(user_id=user.pk)
+        .exclude(user_id__in=hidden)
+        .order_by('-last_seen_at')
+        .values_list('user_id', flat=True)[:limit]
+    )
+    if not online_ids:
+        return []
+    people = list(
+        get_user_model().objects
+        .filter(pk__in=online_ids, is_active=True)
+        .select_related('member_profile')
+    )
+    order = {pk: index for index, pk in enumerate(online_ids)}
+    people.sort(key=lambda person: order.get(person.pk, 999))
+    return people
+
+
+def is_staff_online():
+    """Whether anyone from the church office is currently online."""
+    from .models_comms import CommunityPresence
+
+    return CommunityPresence.objects.filter(
+        last_seen_at__gte=timezone.now() - ONLINE_WINDOW,
+        user__is_staff=True,
+        user__is_active=True,
+    ).exists()
+
+
+def direct_threads_for(user):
+    from .models_comms import CommsDirectThread
+
+    if not user or not user.is_authenticated:
+        return CommsDirectThread.objects.none()
+    hidden = blocked_relationship_ids(user)
+    queryset = (
+        CommsDirectThread.objects
+        .filter(Q(user_a=user) | Q(user_b=user))
+        .select_related('user_a', 'user_b')
+        .order_by('-last_message_at', '-updated_at', '-pk')
+    )
+    if hidden:
+        queryset = queryset.exclude(
+            Q(user_a=user, user_b_id__in=hidden)
+            | Q(user_b=user, user_a_id__in=hidden)
+        )
+    return queryset
+
+
+def blocked_members(user):
+    from .models_comms import CommsBlock
+
+    if not user or not user.is_authenticated:
+        return []
+    return [
+        block.blocked
+        for block in CommsBlock.objects
+        .filter(blocker=user)
+        .select_related('blocked', 'blocked__member_profile')
+        .order_by('blocked__first_name', 'blocked__username')
+    ]
+
+
+def notify_direct_message(message):
+    """Create a member-facing bell row for a private member message."""
+    from .models_comms import CommsDirectThread
+
+    thread = message.thread
+    recipient = thread.other_user(message.sender)
+    if recipient is None:
+        return None
+    inbox_url = reverse('members:account_messages')
+    return Notification.objects.update_or_create(
+        source_key=f'direct_message:{message.pk}',
+        defaults={
+            'recipient': recipient,
+            'audience': Notification.AUDIENCE_MEMBER,
+            'category': 'direct_message',
+            'source_type': 'direct_message',
+            'source_id': message.pk,
+            'title': f'New message from {message.sender_name}',
+            'body': (message.body or '')[:180],
+            'url': f'{inbox_url}?thread={thread.pk}',
+            'icon': 'message',
+            'tone': Notification.TONE_INFO,
+            'permission': '',
+            'status': Notification.STATUS_ACTIVE,
+            'requires_action': False,
+            'created_at': message.created_at or timezone.now(),
+            'expires_at': None,
+            'resolved_at': None,
+            'completed_at': None,
+        },
+    )[0]
 
 
 def unread_notification_count(request):

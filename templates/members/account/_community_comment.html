@@ -1,0 +1,48 @@
+<article class="cf-comment{% if comment.is_reply %} cf-comment--reply{% endif %}" data-feed-comment-item data-cf-comment-item data-comment-id="{{ comment.pk }}">
+    <span class="cf-avatar cf-avatar--sm cf-avatar--comment" aria-hidden="true">{{ comment.author_initials }}</span>
+    <div class="cf-comment-main">
+        <div class="cf-comment-bubble">
+            <div class="cf-comment-head">
+                <strong>{{ comment.author_name }}</strong>
+                <time datetime="{{ comment.created_at|date:'c' }}">{{ comment.created_at|timesince }} ago</time>
+                {% if comment.edited_at %}<span>Edited</span>{% endif %}
+            </div>
+            <p>{{ comment.body|linebreaksbr }}</p>
+        </div>
+        <div class="cf-comment-actions">
+            {% if not comment.is_reply %}
+            <button type="button" data-cf-reply data-comment-id="{{ comment.pk }}" data-reply-name="{{ comment.author_name }}">Reply</button>
+            {% endif %}
+            {% if not admin_community and comment.author_id != request.user.pk %}
+            <button type="button" data-cf-report data-comment-id="{{ comment.pk }}">Report</button>
+            {% endif %}
+            {% if comment.can_delete %}
+            <form method="post" action="{% url 'members:feed_comment_delete' comment.pk %}" data-cf-comment-delete data-confirm="Delete this comment?">
+                {% csrf_token %}
+                <button type="submit">Delete</button>
+            </form>
+            {% endif %}
+        </div>
+
+        {% if not comment.is_reply %}
+        <div class="cf-replies" data-cf-replies="{{ comment.pk }}">
+            {% for reply in comment.replies_list %}
+            {% include 'members/account/_community_comment.html' with comment=reply post=post %}
+            {% endfor %}
+        </div>
+        <form method="post" action="{% url 'members:feed_post_comment' post.pk %}" class="cf-reply-form" data-cf-reply-form hidden>
+            {% csrf_token %}
+            <input type="hidden" name="surface" value="{% if admin_community %}admin_feed{% else %}community{% endif %}">
+            <input type="hidden" name="parent" value="{{ comment.pk }}">
+            <label class="cf-comment-input">
+                <span class="sr-only">Reply to {{ comment.author_name }}</span>
+                <input type="text" name="body" maxlength="2000" placeholder="Reply to {{ comment.author_name }}…" autocomplete="off">
+                <button type="submit" class="cf-comment-send" aria-label="Send reply">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m4 12 16-8-5 16-3-7-8-1Z"/></svg>
+                </button>
+            </label>
+            <button type="button" class="cf-reply-cancel" data-cf-reply-cancel>Cancel</button>
+        </form>
+        {% endif %}
+    </div>
+</article>

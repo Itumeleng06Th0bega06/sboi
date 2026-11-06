@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, SetPasswordForm, UserCreationForm
 from django.contrib.auth.models import User
 from django.db import transaction
 
@@ -40,6 +40,15 @@ class MemberLoginForm(AuthenticationForm):
         if identifier:
             self.cleaned_data['username'] = username_for_login(identifier)
         return super().clean()
+
+
+class MemberSetPasswordForm(SetPasswordForm):
+    """Reset-confirm form using the site's standard input styling."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.setdefault('class', 'input')
 
 
 class MemberRegistrationForm(UserCreationForm):
@@ -503,19 +512,23 @@ class ChurchMembershipJoinForm(ChurchMembershipFieldsMixin, forms.ModelForm):
 # ---------------------------------------------------------------------------
 
 # These are the membership questions a member may edit from their own account.
-# Personal contact details live on ``AccountProfileForm``; internal fields
-# (``notes``, record status, pastoral notes) are deliberately excluded so a
-# member can never write them.
+# They mirror the public church form (family, church, interest, activity,
+# skills and additional-information sections). Personal contact details live on
+# ``AccountProfileForm``; the record status and approval state are never
+# writable from here.
 MEMBERSHIP_EDIT_FIELDS = (
+    'spouse_name', 'children_names',
     'membership_category', 'date_joined_church', 'baptism_status',
-    'baptism_date', 'preferred_language', 'campus_branch',
+    'baptism_date', 'previous_church', 'transferring_from_church',
+    'preferred_language', 'campus_branch',
     'interests', 'interests_other', 'spiritual_growth_goals',
-    'wants_bible_study', 'wants_contact',
+    'wants_bible_study', 'wants_contact', 'guidance_support',
     'currently_involved', 'current_ministries', 'current_activities',
     'small_group_name', 'volunteers_currently', 'volunteer_ministries',
-    'wants_to_join', 'wants_to_volunteer',
+    'volunteer_details', 'wants_to_join', 'wants_to_volunteer',
     'skills', 'talents', 'service_areas', 'preferred_times',
-    'additional_info', 'whatsapp_consent',
+    'additional_info', 'notes', 'prayer_request', 'pastoral_support_requested',
+    'whatsapp_consent',
 )
 
 PROFILE_MARITAL_CHOICES = [('', 'Not specified')] + MARITAL_STATUS_FORM_CHOICES
@@ -687,6 +700,10 @@ class MembershipDetailsForm(ChurchMembershipFieldsMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Personal details belong to the profile form. They must never be
+        # rendered or accepted here, even for an active membership: a bound
+        # form without those inputs would otherwise save empty strings over
+        # the member's stored phone, address, birth date and similar fields.
         for name in list(self.fields):
             if name not in MEMBERSHIP_EDIT_FIELDS:
                 self.fields.pop(name)
@@ -708,6 +725,14 @@ class MembershipDetailsForm(ChurchMembershipFieldsMixin, forms.ModelForm):
                     instance.ministries.filter(status=status)
                     .values_list('name', flat=True)
                 )
+            note = getattr(instance, 'pastoral_note', None)
+            if note is not None:
+                for name in (
+                    'guidance_support', 'prayer_request',
+                    'pastoral_support_requested',
+                ):
+                    if name in self.fields and name not in self.initial:
+                        self.initial[name] = getattr(note, name)
 
     @transaction.atomic
     def save(self, user, commit=True):
@@ -725,10 +750,14 @@ class MembershipDetailsForm(ChurchMembershipFieldsMixin, forms.ModelForm):
     def summary(self):
         """A readable snapshot of the submitted answers for the reviewer."""
         labels = {
+            'spouse_name': 'Spouse',
+            'children_names': 'Children',
             'membership_category': 'Membership category',
             'date_joined_church': 'Joined the church',
             'baptism_status': 'Baptism status',
             'baptism_date': 'Baptism date',
+            'previous_church': 'Previous church',
+            'transferring_from_church': 'Transferring from another church',
             'preferred_language': 'Preferred language',
             'campus_branch': 'Campus / branch',
             'interests': 'Areas of interest',
@@ -736,12 +765,14 @@ class MembershipDetailsForm(ChurchMembershipFieldsMixin, forms.ModelForm):
             'spiritual_growth_goals': 'Spiritual growth goals',
             'wants_bible_study': 'Wants Bible study',
             'wants_contact': 'Wants contact',
+            'guidance_support': 'Guidance or support requested',
             'currently_involved': 'Currently participating',
             'current_ministries': 'Current ministries',
             'current_activities': 'Other activities',
             'small_group_name': 'Small group',
             'volunteers_currently': 'Currently volunteers',
             'volunteer_ministries': 'Volunteer ministries',
+            'volunteer_details': 'Volunteering details',
             'wants_to_join': 'Wants to join',
             'wants_to_volunteer': 'Wants to volunteer',
             'skills': 'Skills',
@@ -749,6 +780,9 @@ class MembershipDetailsForm(ChurchMembershipFieldsMixin, forms.ModelForm):
             'service_areas': 'Willing to serve in',
             'preferred_times': 'Preferred times',
             'additional_info': 'Additional information',
+            'notes': 'Additional notes',
+            'prayer_request': 'Prayer request',
+            'pastoral_support_requested': 'Pastoral support requested',
             'whatsapp_consent': 'WhatsApp consent',
         }
         lines = []

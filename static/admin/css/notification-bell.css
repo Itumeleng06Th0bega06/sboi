@@ -1,5 +1,6 @@
 /* ==========================================================================
    Admin notification bell (header dropdown)
+   Matches the member bell: cream card, dark unread rows, no per-item actions.
    ========================================================================== */
 .sboi-bell .sboi-action {
   position: relative;
@@ -31,59 +32,123 @@
 
 /* ---------- Dropdown card ---------- */
 .sboi-bell-menu {
-  width: min(360px, calc(100vw - 1.8rem));
-  max-height: 440px;
+  width: min(380px, calc(100vw - 1.8rem));
   padding: 0;
-  overflow-y: auto;
+  overflow: hidden;
+  border: 1px solid rgba(210, 162, 78, 0.3);
+  border-radius: 16px;
+  background: #fbf8f1;
+  color: #1e2b26;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
 }
 
 .sboi-bell-head {
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
   margin: 0;
-  padding: 0.8rem 1rem;
-  border-bottom: 1px solid var(--sboi-line);
-  background: #1b1729;
-  color: #ffffff;
+  padding: 0.7rem 0.85rem 0.7rem 1rem;
+  border-bottom: 1px solid rgba(0, 47, 43, 0.1);
+  background: #f7f5ee;
+  color: #002f2b;
   font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
-  font-size: 0.98rem;
+  font-size: 1rem;
   font-weight: 600;
+}
+
+.sboi-bell-more {
+  position: relative;
+}
+
+.sboi-bell-more > summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(0, 47, 43, 0.12);
+  border-radius: 9px;
+  color: #002f2b;
+  cursor: pointer;
+  list-style: none;
+}
+
+.sboi-bell-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.sboi-bell-more > summary:hover,
+.sboi-bell-more[open] > summary {
+  border-color: rgba(210, 162, 78, 0.4);
+  background: rgba(210, 162, 78, 0.14);
+}
+
+.sboi-bell-more > summary svg {
+  width: 17px;
+  height: 17px;
+  fill: currentColor;
+}
+
+.sboi-bell-more-panel {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 3;
+  min-width: 178px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 47, 43, 0.12);
+  border-radius: 11px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(0, 31, 28, 0.22);
+}
+
+.sboi-bell-more-panel a {
+  display: block;
+  padding: 0.6rem 0.75rem;
+  color: #002f2b;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.sboi-bell-more-panel a:hover {
+  background: rgba(210, 162, 78, 0.14);
+  color: #002f2b;
+  text-decoration: none;
 }
 
 /* ---------- Items ---------- */
 .sboi-bell-list {
-  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  max-height: 390px;
+  padding: 0.4rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 47, 43, 0.25) transparent;
 }
 
 .sboi-bell-item {
   display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.6rem 0.65rem;
-  border-radius: 9px;
-  color: var(--sboi-ink);
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: #1e2b26;
   text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .sboi-bell-item:hover,
-.sboi-bell-item:focus-within {
+.sboi-bell-item:focus-visible {
+  border-color: rgba(210, 162, 78, 0.3);
   background: rgba(210, 162, 78, 0.12);
-  color: #ffffff;
-  text-decoration: none;
-}
-
-.sboi-bell-item__link {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  color: inherit;
-  text-decoration: none;
-}
-
-.sboi-bell-item__link:hover,
-.sboi-bell-item__link:focus {
-  color: #ffffff;
+  color: #1e2b26;
   text-decoration: none;
 }
 
@@ -95,9 +160,18 @@
   gap: 0.14rem;
 }
 
+.sboi-bell-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #002f2b;
+  font-size: 0.82rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
 .sboi-bell-desc {
   overflow: hidden;
-  color: var(--sboi-muted);
+  color: #5c6b64;
   font-size: 0.73rem;
   line-height: 1.4;
   display: -webkit-box;
@@ -107,39 +181,11 @@
 }
 
 .sboi-bell-date {
-  color: var(--sboi-gold-2);
+  color: #b07f3a;
   font-size: 0.63rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-}
-
-.sboi-bell-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  padding-left: 2.75rem;
-}
-
-.sboi-bell-action {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--sboi-gold-soft);
-  font: inherit;
-  font-size: 0.68rem;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
-}
-
-.sboi-bell-action:hover {
-  color: #ffffff;
-}
-
-.sboi-bell-action:disabled {
-  opacity: 0.5;
-  cursor: wait;
 }
 
 .sboi-bell-icon {
@@ -150,8 +196,8 @@
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  background: rgba(210, 162, 78, 0.12);
-  color: var(--sboi-gold);
+  background: rgba(0, 47, 43, 0.07);
+  color: #002f2b;
 }
 
 .sboi-bell-icon .sboi-ico {
@@ -159,60 +205,60 @@
   height: 1rem;
 }
 
-.tone-attention .sboi-bell-icon {
-  background: rgba(210, 162, 78, 0.18);
-  color: var(--sboi-gold-soft);
+/* Unread rows use the dark church green, matching the member bell. */
+.sboi-bell-item.is-unread {
+  border-color: #1c3935;
+  background: #122a27;
 }
 
-.tone-warning .sboi-bell-icon {
-  background: rgba(214, 88, 88, 0.14);
-  color: var(--sboi-danger);
+.sboi-bell-item.is-unread:hover,
+.sboi-bell-item.is-unread:focus-visible {
+  border-color: #d2a24e;
+  background: #17332f;
+  color: #fbf8f1;
 }
 
-.sboi-bell-label {
-  flex: 1 1 auto;
-  min-width: 0;
-  font-size: 0.82rem;
-  line-height: 1.35;
+.sboi-bell-item.is-unread .sboi-bell-label {
+  color: #fbf8f1;
 }
 
-.sboi-bell-count {
-  flex: 0 0 auto;
-  min-width: 24px;
-  padding: 0.1rem 0.5rem;
-  border-radius: 999px;
-  background: var(--sboi-surface-4);
-  color: var(--sboi-ink);
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-align: center;
+.sboi-bell-item.is-unread .sboi-bell-desc {
+  color: rgba(247, 245, 238, 0.72);
 }
 
-.tone-attention .sboi-bell-count {
-  background: linear-gradient(145deg, var(--sboi-gold-soft), var(--sboi-gold));
-  color: #14111e;
+.sboi-bell-item.is-unread .sboi-bell-date {
+  color: #d2a24e;
 }
 
-.tone-warning .sboi-bell-count {
-  background: var(--sboi-danger-2);
-  color: #ffffff;
+.sboi-bell-item.is-unread .sboi-bell-icon {
+  background: rgba(210, 162, 78, 0.16);
+  color: #e7c47c;
 }
 
-.sboi-bell-count.zero {
-  background: transparent;
-  border: 1px solid var(--sboi-line);
-  color: var(--sboi-muted);
-  font-weight: 600;
+.sboi-bell-item.is-unread.tone-warning .sboi-bell-label {
+  color: #ffc9c4;
 }
 
-/* ---------- Empty state / footer ---------- */
+.sboi-bell-item.is-unread.tone-attention .sboi-bell-label {
+  color: #d2a24e;
+}
+
+.sboi-bell-item.tone-warning:not(.is-unread) .sboi-bell-label {
+  color: #a33a3a;
+}
+
+.sboi-bell-item.tone-attention:not(.is-unread) .sboi-bell-label {
+  color: #b07f3a;
+}
+
+/* ---------- Empty state ---------- */
 .sboi-bell-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.45rem;
   padding: 1.5rem 1rem;
-  color: var(--sboi-muted);
+  color: #5c6b64;
   font-size: 0.84rem;
   text-align: center;
 }
@@ -220,32 +266,5 @@
 .sboi-bell-empty .sboi-ico {
   width: 1.35rem;
   height: 1.35rem;
-  color: var(--sboi-gold-2);
-}
-
-.sboi-bell-foot {
-  position: sticky;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  padding: 0.65rem 1rem;
-  border-top: 1px solid var(--sboi-line);
-  background: #1b1729;
-  color: var(--sboi-gold-soft);
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.sboi-bell-foot:hover {
-  background: #221c34;
-  color: #ffffff;
-  text-decoration: none;
-}
-
-.sboi-bell-foot .sboi-ico {
-  width: 0.95rem;
-  height: 0.95rem;
+  color: #b07f3a;
 }

@@ -35,11 +35,9 @@ class MemberMessageForm(forms.Form):
         max_length=5000,
         widget=forms.Textarea(attrs={
             'class': 'input account-message-input',
-            'placeholder': (
-                'Share a testimony, prayer request, concern, question, or any '
-                'other private message with the church administration team…'
-            ),
-            'rows': 5,
+            'placeholder': 'Message…',
+            'rows': 1,
+            'style': 'min-height:36px; max-height:60px; resize:none; padding-top:0.35rem; padding-bottom:0.35rem;',
             'required': True,
         }),
     )
@@ -61,6 +59,24 @@ class MemberMessageForm(forms.Form):
 
 class AdminReplyForm(MemberMessageForm):
     """Administrator reply. Same validation, different label."""
+    CHANNEL_EMAIL = 'email'
+    CHANNEL_WHATSAPP = 'whatsapp'
+    CHANNEL_BOTH = 'both'
+    CHANNEL_CHOICES = [
+        (CHANNEL_EMAIL, 'Email'),
+        (CHANNEL_WHATSAPP, 'WhatsApp'),
+        (CHANNEL_BOTH, 'Both'),
+    ]
+
+    channel = forms.ChoiceField(
+        choices=CHANNEL_CHOICES,
+        initial=CHANNEL_EMAIL,
+        required=False,
+        widget=forms.Select(attrs={'class': 'select'}),
+    )
+
+    def clean_channel(self):
+        return self.cleaned_data.get('channel') or self.CHANNEL_EMAIL
 
 
 class AdminComposeForm(forms.Form):

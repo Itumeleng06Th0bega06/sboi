@@ -1,0 +1,189 @@
+{% load i18n %}
+<article class="cf-post" id="post-{{ post.pk }}" data-feed-post data-cf-post data-post-id="{{ post.pk }}"{% if post.saved_by_me %} data-cf-saved="true"{% endif %}>
+    <header class="cf-post-head">
+        {% if post.author %}
+        <a class="cf-post-avatar" href="{% url 'members:member_profile' post.author.username %}" aria-label="View {{ post.author_name }}'s profile">
+            {% if post.author_avatar_url %}
+            <img src="{{ post.author_avatar_url }}" alt="" class="cf-avatar cf-avatar--md cf-avatar-img" loading="lazy">
+            {% else %}
+            <span class="cf-avatar cf-avatar--md" aria-hidden="true">{{ post.author_initials }}</span>
+            {% endif %}
+        </a>
+        {% else %}
+        <span class="cf-post-avatar">
+            <span class="cf-avatar cf-avatar--md" aria-hidden="true">{{ post.author_initials }}</span>
+        </span>
+        {% endif %}
+        <div class="cf-post-meta">
+            {% if post.author %}
+            <a class="cf-post-author" href="{% url 'members:member_profile' post.author.username %}">{{ post.author_name }}</a>
+            {% else %}
+            <span class="cf-post-author">{{ post.author_name }}</span>
+            {% endif %}
+            {% if post.is_staff_post %}<span class="cf-badge">Church admin</span>{% endif %}
+            {% if post.audience == 'staff' %}<span class="cf-badge cf-badge--staff">Staff only</span>{% endif %}
+            <span class="cf-post-time">
+                <time datetime="{{ post.created_at|date:'c' }}" title="{{ post.created_at|date:'d M Y, H:i' }}">{{ post.created_at|date:"j M, H:i" }}</time>
+                {% if post.edited_at %}<span class="cf-post-edited">· Edited</span>{% endif %}
+            </span>
+        </div>
+        <details class="cf-post-menu">
+            <summary aria-label="Post actions">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+            </summary>
+            <div class="cf-post-menu-panel">
+                {% if not admin_community %}
+                <form method="post" action="{% url 'members:feed_post_save' post.pk %}" data-cf-save>
+                    {% csrf_token %}
+                    <button type="submit" class="cf-menu-action">
+                        <span data-cf-save-label>{% if post.saved_by_me %}Remove from saved{% else %}Save post{% endif %}</span>
+                    </button>
+                </form>
+                {% endif %}
+                {% if post.can_edit %}
+                <button type="button" class="cf-menu-action" data-cf-edit>Edit post</button>
+                {% endif %}
+                {% if post.can_delete %}
+                <form method="post" action="{% url 'members:feed_post_delete' post.pk %}" data-cf-delete data-confirm="Remove this post?">
+                    {% csrf_token %}
+                    <button type="submit" class="cf-menu-action cf-menu-action--danger">Delete post</button>
+                </form>
+                {% endif %}
+                {% if not admin_community and post.author_id != request.user.pk %}
+                <button type="button" class="cf-menu-action" data-cf-report data-post-id="{{ post.pk }}">Report post</button>
+                {% endif %}
+                {% if post.author %}
+                <a class="cf-menu-action" href="{% url 'members:member_profile' post.author.username %}">View profile</a>
+                {% if admin_community and perms.auth.change_user %}
+                <a class="cf-menu-action" href="{% url 'admin:auth_user_change' post.author.pk %}">Open admin account</a>
+                {% endif %}
+                {% if not admin_community and post.author_id != request.user.pk %}
+                <form method="post" action="{% url 'members:account_direct_start' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="username" value="{{ post.author.username }}">
+                    <button type="submit" class="cf-menu-action">Message privately</button>
+                </form>
+                <form method="post" action="{% url 'members:account_block_member' post.author.username %}">
+                    {% csrf_token %}
+                    <button type="submit" class="cf-menu-action cf-menu-action--danger">Block this member</button>
+                </form>
+                {% endif %}
+                {% endif %}
+            </div>
+        </details>
+    </header>
+
+    <div class="cf-post-content">
+        {% if post.title %}<h3 class="cf-post-title">{{ post.title }}</h3>{% endif %}
+        {% if post.body %}<p class="cf-post-body">{{ post.body|linebreaksbr }}</p>{% endif %}
+    </div>
+
+    {% for attachment in post.attachments_list %}
+    <div class="cf-post-attachment cf-post-attachment--{{ attachment.kind }}">
+        {% if attachment.kind == 'image' %}
+        <a class="cf-post-media" href="{% url 'members:feed_attachment_download' attachment.pk %}" target="_blank" rel="noopener">
+            <img src="{% url 'members:feed_attachment_download' attachment.pk %}?inline=1" alt="{{ attachment.original_name }}" loading="lazy">
+        </a>
+        {% elif attachment.kind == 'video' %}
+        <video controls preload="metadata" playsinline>
+            <source src="{% url 'members:feed_attachment_download' attachment.pk %}?inline=1" type="{{ attachment.content_type|default:'video/mp4' }}">
+        </video>
+        {% else %}
+        <a class="cf-post-file" href="{% url 'members:feed_attachment_download' attachment.pk %}">
+            <span class="cf-post-file-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+            </span>
+            <span class="cf-post-file-copy">
+                <strong>{{ attachment.original_name }}</strong>
+                <span>{{ attachment.size|filesizeformat }} · {{ attachment.extension|upper }}</span>
+            </span>
+            <span class="cf-post-file-download" aria-hidden="true">↓</span>
+        </a>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <footer class="cf-post-actions">
+        <form method="post" action="{% url 'members:feed_post_react' post.pk %}" class="cf-reactions" data-feed-reaction>
+            {% csrf_token %}
+            <button type="button" class="cf-react-toggle{% if post.reaction_summary.mine %} has-reaction{% endif %}"
+                    data-cf-reaction-toggle aria-haspopup="true" aria-expanded="false"
+                    aria-label="{% if post.reaction_summary.mine %}Change reaction{% else %}Add reaction{% endif %}">
+                <span class="cf-react-current" data-cf-react-current>
+                    <svg class="cf-react-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4 4 0 0 0 7 0"/><circle cx="9" cy="10" r=".8"/><circle cx="15" cy="10" r=".8"/></svg>
+                    <span class="cf-react-current-emoji" data-cf-react-emoji>{% for value, emoji in post_reaction_choices %}{% if value in post.reaction_summary.mine %}{{ emoji }}{% endif %}{% endfor %}</span>
+                </span>
+                <span class="cf-react-total" data-cf-react-total>{% if post.reaction_summary.total %}{{ post.reaction_summary.total }}{% endif %}</span>
+                <span class="cf-react-label">React</span>
+            </button>
+            <div class="cf-reaction-picker" data-cf-reaction-picker role="group" aria-label="Choose a reaction">
+                {% for value, emoji in post_reaction_choices %}
+                <button type="submit" name="reaction" value="{{ value }}"
+                        class="cf-react{% if value in post.reaction_summary.mine %} is-active{% endif %}"
+                        data-reaction="{{ value }}"
+                        aria-label="{{ emoji }} reaction"
+                        aria-pressed="{% if value in post.reaction_summary.mine %}true{% else %}false{% endif %}">
+                    <span class="cf-react-emoji" aria-hidden="true">{{ emoji }}</span>
+                    <span class="cf-react-count" data-reaction-count="{{ value }}">{% for key, n in post.reaction_summary.counts.items %}{% if key == value %}{{ n }}{% endif %}{% endfor %}</span>
+                </button>
+                {% endfor %}
+            </div>
+        </form>
+
+        <button type="button" class="cf-post-action cf-post-action--center" data-cf-comments-toggle aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/></svg>
+            <span data-cf-comment-count>{{ post.comment_count }}</span>
+            <span class="cf-action-label">Comments</span>
+        </button>
+        <button type="button" class="cf-post-action cf-post-action--right" aria-label="Share post" title="Share" onclick="navigator.clipboard.writeText(window.location.href);this.textContent='Copied';setTimeout(()=>this.textContent='Share',1200);">Share</button>
+
+    </footer>
+
+    <div class="cf-comments" data-feed-comments data-cf-comments>
+        <div class="cf-comments-list" data-cf-comments-list>
+            {% for comment in post.comments_root %}
+            {% include 'members/account/_community_comment.html' with comment=comment post=post %}
+            {% endfor %}
+        </div>
+
+        <form method="post" action="{% url 'members:feed_post_comment' post.pk %}" class="cf-comment-composer" data-cf-comment>
+            {% csrf_token %}
+            <input type="hidden" name="surface" value="{% if admin_community %}admin_feed{% else %}community{% endif %}">
+            {% if member_avatar_url %}
+            <img src="{{ member_avatar_url }}" alt="" class="cf-avatar cf-avatar--sm cf-avatar-img">
+            {% else %}
+            <span class="cf-avatar cf-avatar--sm" aria-hidden="true">{{ member_initials|default:'S' }}</span>
+            {% endif %}
+            <label class="cf-comment-input">
+                <span class="sr-only">Write a comment</span>
+                <textarea name="body" rows="1" maxlength="2000" placeholder="Write a comment…"></textarea>
+                <button type="submit" class="cf-comment-send" aria-label="Send comment">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m4 12 16-8-5 16-3-7-8-1Z"/></svg>
+                </button>
+            </label>
+        </form>
+        <p class="cf-field-error" data-cf-comment-error hidden></p>
+    </div>
+
+    {% if post.can_edit %}
+    <form method="post" action="{% url 'members:feed_post_edit' post.pk %}" class="cf-edit-form" data-cf-post-edit hidden data-surface="{% if admin_community %}admin_feed{% else %}community{% endif %}">
+        {% csrf_token %}
+        <input type="hidden" name="surface" value="{% if admin_community %}admin_feed{% else %}community{% endif %}">
+        {% if post.title %}
+        <label class="cf-field">
+            <span>Title</span>
+            <input type="text" name="title" value="{{ post.title }}" maxlength="200">
+        </label>
+        {% endif %}
+        <label class="cf-field">
+            <span class="sr-only">Edit post</span>
+            <textarea name="body" rows="3" maxlength="8000">{{ post.body }}</textarea>
+        </label>
+        <p class="cf-field-error" data-cf-edit-error hidden></p>
+        <div class="cf-edit-actions">
+            <button type="button" class="cf-btn cf-btn--quiet" data-cf-edit-cancel>Cancel</button>
+            <button type="submit" class="cf-btn cf-btn--gold">Save changes</button>
+        </div>
+    </form>
+    {% endif %}
+</article>

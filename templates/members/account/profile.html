@@ -1,0 +1,122 @@
+{% extends account_base|default:'members/account/base_account.html' %}
+{% load static %}
+
+{% block title %}My profile · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
+
+{% block account_content %}
+<section class="cf-profile-page">
+    <header class="cf-profile-hero">
+        {% if member_avatar_url %}
+        <a href="{% url 'members:account_profile_edit' %}" class="cf-avatar-link" aria-label="Edit profile photo">
+            <img src="{{ member_avatar_url }}" alt="{{ member_display_name }}" class="cf-avatar cf-avatar--xl cf-avatar-img">
+            <span class="sr-only">Edit profile photo</span>
+        </a>
+        {% else %}
+        <a href="{% url 'members:account_profile_edit' %}" class="cf-avatar-link" aria-label="Add profile photo">
+            <span class="cf-avatar cf-avatar--xl" aria-hidden="true">{{ member_initials|default:'S' }}</span>
+            <span class="sr-only">Add profile photo</span>
+        </a>
+        {% endif %}
+        <div class="cf-profile-identity">
+            <h1>{{ member_display_name|default:request.user.username }}</h1>
+            <p>@{{ request.user.username }}</p>
+            <div class="cf-profile-pills">
+                {% if membership %}
+                <span class="cf-pill cf-pill--{{ membership.status }}">{{ membership.get_status_display }}</span>
+                <span class="cf-pill cf-pill--quiet">Church membership</span>
+                {% else %}
+                <span class="cf-pill cf-pill--quiet">Visitor account</span>
+                {% endif %}
+                <span class="cf-pill cf-pill--quiet">{{ account_type }}</span>
+            </div>
+        </div>
+        <div class="cf-profile-actions">
+            <button type="button" class="cf-btn cf-btn--gold" data-account-open="profileModal">Edit personal information</button>
+            <a class="cf-btn cf-btn--quiet" href="{% url 'members:member_profile' request.user.username %}">View public profile</a>
+        </div>
+    </header>
+
+    <div id="personal" class="cf-anchor" tabindex="-1"></div>
+    <div class="cf-profile-stack">
+        {% include 'members/account/_profile_card.html' %}
+
+        {% include 'members/account/_membership_card.html' %}
+
+        <section class="cf-panel">
+            <header class="cf-panel-head">
+                <div>
+                    <h2>Account &amp; activity</h2>
+                    <p>Your sign-in, notifications and church life.</p>
+                </div>
+            </header>
+            <div class="cf-setting-links">
+                <a href="{% url 'members:account_settings' %}">
+                    <span>
+                        <strong>Account settings</strong>
+                        <small>Contact preferences and password</small>
+                    </span>
+                    <span aria-hidden="true">›</span>
+                </a>
+                <a href="{% url 'members:account_notifications' %}">
+                    <span>
+                        <strong>Notifications</strong>
+                        <small>Membership decisions and church updates</small>
+                    </span>
+                    <span aria-hidden="true">›</span>
+                </a>
+                <a href="{% url 'members:account_children' %}">
+                    <span>
+                        <strong>Children</strong>
+                        <small>{{ children|length }} name{{ children|length|pluralize }} with the church office</small>
+                    </span>
+                    <span aria-hidden="true">›</span>
+                </a>
+                <a href="{% url 'members:account_activities' %}">
+                    <span>
+                        <strong>My church activity</strong>
+                        <small>Ministries, interests and event responses</small>
+                    </span>
+                    <span aria-hidden="true">›</span>
+                </a>
+            </div>
+        </section>
+    </div>
+</section>
+{% endblock %}
+
+{% block account_modals %}
+<div class="account-modal" id="profileModal" hidden>
+    <div class="account-modal-backdrop" data-account-modal-close></div>
+    <div class="account-modal-panel" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
+        <header class="account-modal-head">
+            <div>
+                <p class="account-eyebrow">Personal details</p>
+                <h2 id="profileModalTitle">Edit my profile</h2>
+            </div>
+            <button type="button" class="account-modal-close" data-account-modal-close aria-label="Close">&times;</button>
+        </header>
+        <div class="account-modal-body" data-account-form-target="profile">
+            {% include 'members/account/_profile_form.html' %}
+        </div>
+    </div>
+</div>
+
+{% if membership_editable %}
+<div class="account-modal" id="membershipModal" hidden>
+    <div class="account-modal-backdrop" data-account-modal-close></div>
+    <div class="account-modal-panel account-modal-panel--wide" role="dialog" aria-modal="true" aria-labelledby="membershipModalTitle">
+        <header class="account-modal-head">
+            <div>
+                <p class="account-eyebrow">Church membership</p>
+                <h2 id="membershipModalTitle">Update membership details</h2>
+                <p class="account-muted">Changes are reviewed by the church administration. Your current status is never changed by this form.</p>
+            </div>
+            <button type="button" class="account-modal-close" data-account-modal-close aria-label="Close">&times;</button>
+        </header>
+        <div class="account-modal-body" data-account-form-target="membership">
+            {% include 'members/account/_membership_form.html' %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

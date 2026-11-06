@@ -1,8 +1,9 @@
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
-from django.views.decorators.http import require_POST
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_GET, require_POST
 
 from . import services
 from .models import Notification
@@ -46,6 +47,30 @@ def bell_api(request):
 def bell_api_staff(request):
     request.notification_scope = services.STAFF_SCOPE
     return JsonResponse(_bell_context(request, services.STAFF_SCOPE))
+
+
+@require_GET
+def open_notification(request, pk):
+    """Open a bell item: mark it read, then follow its safe internal link.
+
+    Opening is the only read action in the redesigned bell, so a member never
+    has to hunt for a separate "mark read" control.
+    """
+    notification = services.get_visible_notification(pk, request)
+    if notification is None:
+        raise Http404('Notification not found.')
+    services.mark_read(notification, request)
+
+    target = (notification.url or '').strip()
+    if target and url_has_allowed_host_and_scheme(
+        target,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return redirect(target)
+    if request.user.is_authenticated:
+        return redirect(reverse('members:account_notifications'))
+    return redirect(reverse('notifications:history'))
 
 
 @require_POST

@@ -80,23 +80,6 @@
 </section>
 {% endif %}
 
-{% if stats %}
-<section class="section section-tint stats-section">
-    <div class="container">
-        <h2 class="section-title center">Our Journey</h2>
-        <p class="section-sub center">{{ site_profile.tagline|default:'' }}</p>
-        <div class="stats-grid">
-            {% for stat in stats %}
-            <div class="stat-card reveal">
-                <div class="stat-value">{{ stat.value }}</div>
-                <div class="stat-label">{{ stat.label }}</div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-{% endif %}
-
 {% if announcements %}
 <section class="section">
     <div class="container">

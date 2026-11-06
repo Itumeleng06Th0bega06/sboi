@@ -181,6 +181,7 @@ EMAIL_USE_TLS = os.environ.get('SMTP_USE_TLS', 'true').lower() == 'true'
 # ADMIN_EMAIL in .env.
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@shekinahblaze.org')
 ADMINS = [('Shekinah Blaze Admin', ADMIN_EMAIL)]
+ADMIN_WHATSAPP_NUMBER = os.environ.get('ADMIN_WHATSAPP_NUMBER', '').strip()
 MANAGERS = ADMINS
 SERVER_EMAIL = ADMIN_EMAIL
 DEFAULT_FROM_EMAIL = os.environ.get(

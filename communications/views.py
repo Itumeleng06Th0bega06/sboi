@@ -1,15 +1,32 @@
 """Views for the private admin communications portal."""
 
 import mimetypes
+from datetime import timedelta
 from functools import wraps
 from pathlib import Path
 
+from django.conf import settings
 from django.contrib import admin, messages
+from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db.models import Q
 from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
+
+from contact.forms import AdminReplyForm
+from contact.models import ContactMessage
+from members.models import ChurchMembership
+from members.models_comms import (
+    CommsDirectMessage,
+    CommsDirectThread,
+    CommsPost,
+    CommsReaction,
+)
+from members.services import notify_member_reply
+from members.views_comms import feed_page_for, feed_posts_for, serialize_posts
 
 from .forms import (
     AddMembersForm,
@@ -29,11 +46,16 @@ from .services import (
     conversation_summaries,
     create_group,
     create_message,
+    dm_moderation_rows,
     get_or_create_direct,
     leave_group,
     mark_conversation_read,
+    mark_office_thread_read,
     message_queryset,
     name_initials,
+    office_conversation_rows,
+    office_thread_for,
+    office_unread_total,
     participant_for,
     portal_users,
     remove_member,
@@ -57,10 +79,85 @@ def _is_ajax(request):
     return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
 
+def _purge_chat_retention():
+    """Expire 90-day-old chats without requiring a cron job on small hosts."""
+    from members.retention import purge_expired_chats_once_per_hour
+
+    purge_expired_chats_once_per_hour()
+
+
+COMMUNITY_VIEWS = {'feed', 'chat', 'members', 'profile'}
+
+
+def _community_view(request):
+    view = (request.GET.get('view') or '').strip().lower()
+    return view if view in COMMUNITY_VIEWS else 'chat'
+
+
+def _admin_identity(user):
+    display_name = user.get_full_name() or user.get_username()
+    return {
+        'display_name': display_name,
+        'initials': name_initials(display_name),
+        'avatar_url': _admin_avatar_url(user),
+    }
+
+
+def _admin_avatar_url(user):
+    profile = getattr(user, 'member_profile', None)
+    if profile is not None and profile.avatar:
+        try:
+            return profile.avatar.url
+        except ValueError:
+            return ''
+    return ''
+
+
+def _member_directory(query='', limit=240):
+    """Active accounts for the Members section, with church status."""
+    accounts = (
+        get_user_model().objects
+        .filter(is_active=True)
+        .select_related('member_profile', 'church_membership')
+        .order_by('-is_staff', 'first_name', 'last_name', 'username')
+    )
+    query = (query or '').strip()
+    if query:
+        accounts = accounts.filter(
+            Q(username__icontains=query)
+            | Q(first_name__icontains=query)
+            | Q(last_name__icontains=query)
+            | Q(email__icontains=query)
+        )
+
+    rows = []
+    for account in accounts[:limit]:
+        membership = getattr(account, 'church_membership', None)
+        display_name = (
+            account.get_full_name() or account.get_username()
+        )
+        rows.append({
+            'user': account,
+            'display_name': display_name,
+            'initials': name_initials(display_name),
+            'avatar_url': _admin_avatar_url(account),
+            'membership': membership,
+            'status': membership.status if membership else '',
+            'status_label': (
+                membership.get_status_display() if membership else 'Visitor'
+            ),
+            'is_staff': account.is_staff,
+            'is_superuser': account.is_superuser,
+        })
+    return rows
+
+
 def _inbox_context(request, group_form=None, direct_form=None, open_dialog=''):
     user = request.user
+    community_view = _community_view(request)
     query = (request.GET.get('q') or '').strip()
     message_query = (request.GET.get('mq') or '').strip()
+    channel = (request.GET.get('channel') or '').strip().lower()
 
     selected = None
     selected_id = request.GET.get('conversation')
@@ -71,6 +168,8 @@ def _inbox_context(request, group_form=None, direct_form=None, open_dialog=''):
             selected_id = None
     if selected_id:
         selected = conversation_for_user(user, selected_id)
+        if selected is not None:
+            channel = 'staff'
 
     selected_context = {}
     if selected is not None:
@@ -105,14 +204,107 @@ def _inbox_context(request, group_form=None, direct_form=None, open_dialog=''):
             }),
         }
 
-    # Build the list after the selected thread has been marked read so its
-    # unread badge does not survive the page load that opened it.
+    # Church-office thread: any communications staff member may read and
+    # answer the member's existing ContactMessage conversation.
+    office_member = None
+    office_messages = []
+    if community_view == 'chat' and channel == 'office':
+        member_id = (request.GET.get('member') or '').strip()
+        if member_id.isdigit():
+            office_member = get_object_or_404(
+                get_user_model().objects.filter(is_active=True),
+                pk=int(member_id),
+            )
+            mark_office_thread_read(office_member)
+            office_messages = list(
+                office_thread_for(office_member, message_query)[:500]
+            )
+
+    # Member-to-member direct messages are a superuser-only moderation view.
+    dm_thread = None
+    dm_messages = []
+    if community_view == 'chat' and channel == 'dm':
+        if not user.is_superuser:
+            raise PermissionDenied(
+                'Only a superuser may read member-to-member conversations.',
+            )
+        thread_id = (request.GET.get('thread') or '').strip()
+        if thread_id.isdigit():
+            dm_thread = get_object_or_404(
+                CommsDirectThread.objects.select_related('user_a', 'user_b'),
+                pk=int(thread_id),
+            )
+            if dm_thread.user_a.is_staff or dm_thread.user_b.is_staff:
+                raise Http404('Conversation not found.')
+            dm_messages = list(
+                dm_thread.messages
+                .select_related('sender')
+                .order_by('created_at', 'pk')[:500]
+            )
+
+    # Build the staff list after the selected thread has been marked read so
+    # its unread badge does not survive the page load that opened it.
     rows = conversation_summaries(user, query)
     users = portal_users(exclude=user)
+    office_rows = office_conversation_rows(query)
+    office_unread = office_unread_total()
+    dm_rows = dm_moderation_rows(query) if user.is_superuser else []
+
+    posts = []
+    feed_has_more = False
+    feed_next_before = ''
+    if community_view == 'feed':
+        posts, feed_has_more, feed_next_before = feed_page_for(
+            feed_posts_for(user), user,
+        )
+
+    member_directory = []
+    if community_view in {'feed', 'members'}:
+        member_directory = _member_directory(query)
+
+    member_total = get_user_model().objects.filter(
+        is_active=True, is_staff=False,
+    ).count()
+    staff_total = get_user_model().objects.filter(
+        is_active=True, is_staff=True,
+    ).count()
+    identity = _admin_identity(user)
+    admin_membership = (
+        ChurchMembership.objects
+        .select_related('user')
+        .filter(user=user)
+        .first()
+    )
+
     context = admin.site.each_context(request)
     context.update({
         'title': 'Admin Communications',
         'section_label': 'communications',
+        'community_view': community_view,
+        'community_heading': {
+            'feed': 'Community feed',
+            'chat': 'Chat',
+            'members': 'Members',
+            'profile': 'Profile',
+        }.get(community_view, 'Chat'),
+        'community_lead': {
+            'feed': 'Share updates and keep the community feed healthy.',
+            'chat': 'Church office conversations, staff chat and member moderation.',
+            'members': 'Everyone who belongs to the church community.',
+            'profile': 'Your staff account and communication access.',
+        }.get(community_view, ''),
+        'member_display_name': identity['display_name'],
+        'member_initials': identity['initials'],
+        'member_avatar_url': identity['avatar_url'],
+        'admin_profile': {
+            **identity,
+            'user': user,
+            'membership': admin_membership,
+            'status_label': (
+                admin_membership.get_status_display()
+                if admin_membership else 'Staff account'
+            ),
+        },
         'conversation_rows': rows,
         'conversation_query': query,
         'selected_id': selected.pk if selected else None,
@@ -121,7 +313,33 @@ def _inbox_context(request, group_form=None, direct_form=None, open_dialog=''):
         'portal_users': users,
         'open_dialog': open_dialog,
         'total_unread': unread_total(user),
+        'office_rows': office_rows,
+        'office_unread_total': office_unread,
+        'office_member': office_member,
+        'office_thread_messages': office_messages,
+        'dm_rows': dm_rows,
+        'dm_thread': dm_thread,
+        'dm_messages': dm_messages,
+        'can_moderate_dms': user.is_superuser,
+        'chat_unread_total': unread_total(user) + office_unread,
+        'member_directory': member_directory,
+        'member_query': query,
+        'member_total': member_total,
+        'staff_total': staff_total,
         'inbox_url': reverse('communications:inbox'),
+        'posts': posts,
+        'feed_posts': posts,
+        'feed_member_accounts': member_directory,
+        'feed_view': community_view == 'feed',
+        'feed_member_count': member_total,
+        'feed_staff_count': staff_total,
+        'feed_audience_choices': CommsPost.AUDIENCE_CHOICES,
+        'feed_latest_id': posts[0].pk if posts else '',
+        'feed_has_more': feed_has_more,
+        'feed_next_before': feed_next_before,
+        'feed_surface': 'admin_feed',
+        'post_reaction_choices': CommsReaction.REACTION_CHOICES,
+        'message_query': message_query,
         **selected_context,
     })
     return context
@@ -130,6 +348,7 @@ def _inbox_context(request, group_form=None, direct_form=None, open_dialog=''):
 @portal_view
 @require_GET
 def inbox(request):
+    _purge_chat_retention()
     return render(
         request,
         'admin/communications/portal.html',
@@ -140,6 +359,7 @@ def inbox(request):
 @portal_view
 @require_GET
 def conversation_workspace(request, pk):
+    _purge_chat_retention()
     conversation = conversation_for_user(request.user, pk)
     if conversation is None:
         raise Http404('Conversation not found.')
@@ -203,6 +423,7 @@ def conversation_list(request):
 @require_GET
 def conversation_messages(request, pk):
     """Polling endpoint: returns the latest rendered message history."""
+    _purge_chat_retention()
     conversation = conversation_for_user(request.user, pk)
     if conversation is None:
         raise Http404('Conversation not found.')
@@ -270,6 +491,243 @@ def send_message(request, pk):
     return redirect(
         f"{reverse('communications:inbox')}?conversation={conversation.pk}"
     )
+
+
+def _office_thread_url(member):
+    return (
+        f"{reverse('communications:inbox')}?view=chat"
+        f"&channel=office&member={member.pk}"
+    )
+
+
+def _dm_thread_url(thread):
+    return (
+        f"{reverse('communications:inbox')}?view=chat"
+        f"&channel=dm&thread={thread.pk}"
+    )
+
+
+def _notify_dm_moderation(message):
+    """Tell both members that the church office wrote in their DM thread.
+
+    A superuser message has a sender outside the two thread participants, so
+    ``members.services.notify_direct_message`` cannot resolve a recipient.
+    Creating the two member-facing rows here keeps the bell consistent without
+    changing the member model.
+    """
+    from notifications.models import Notification
+
+    thread = message.thread
+    inbox_url = reverse('members:account_messages') + f'?thread={thread.pk}'
+    created_at = message.created_at or timezone.now()
+    for recipient in (thread.user_a, thread.user_b):
+        Notification.objects.update_or_create(
+            source_key=f'direct_message:{message.pk}:{recipient.pk}',
+            defaults={
+                'recipient': recipient,
+                'audience': Notification.AUDIENCE_MEMBER,
+                'category': 'direct_message',
+                'source_type': 'direct_message',
+                'source_id': message.pk,
+                'title': 'Message from church administration',
+                'body': (message.body or '')[:180],
+                'url': inbox_url,
+                'icon': 'message',
+                'tone': Notification.TONE_INFO,
+                'permission': '',
+                'status': Notification.STATUS_ACTIVE,
+                'requires_action': False,
+                'created_at': created_at,
+                'expires_at': None,
+                'resolved_at': None,
+                'completed_at': None,
+            },
+        )
+
+
+@portal_view
+@require_POST
+def office_reply(request, user_id):
+    """Reply in the member's existing church-office conversation."""
+    member = get_object_or_404(
+        get_user_model().objects.filter(is_active=True),
+        pk=user_id,
+    )
+    target = _office_thread_url(member)
+    form = AdminReplyForm(request.POST, request.FILES)
+    if not form.is_valid():
+        error = ' '.join(
+            message for errors in form.errors.values() for message in errors
+        ) or 'The reply could not be sent.'
+        messages.error(request, error)
+        return redirect(target)
+
+    body = form.cleaned_data['message']
+    duplicate = (
+        ContactMessage.objects
+        .filter(
+            user=member,
+            sender=request.user,
+            is_from_admin=True,
+            message=body,
+            created_at__gte=timezone.now() - timedelta(seconds=30),
+        )
+        .order_by('-created_at')
+        .first()
+    )
+    if duplicate is not None:
+        messages.info(request, 'That reply was already sent.')
+        return redirect(f'{target}#message-{duplicate.pk}')
+
+    latest = (
+        ContactMessage.objects
+        .filter(user=member)
+        .order_by('-created_at', '-pk')
+        .first()
+    )
+    membership = ChurchMembership.objects.filter(user=member).first()
+    reply = ContactMessage.objects.create(
+        user=member,
+        sender=request.user,
+        name=request.user.get_full_name() or request.user.get_username(),
+        email=(
+            (latest.email if latest else '')
+            or member.email
+            or request.user.email
+            or ''
+        ),
+        phone=(
+            (latest.phone if latest else '')
+            or (membership.phone if membership else '')
+        ),
+        subject=(
+            (latest.subject if latest and latest.subject else '')
+            or 'Reply from church administration'
+        ),
+        message=body,
+        attachment=form.cleaned_data.get('attachment') or None,
+        parent=latest,
+        is_from_admin=True,
+        is_read=True,
+        read_by_member=False,
+    )
+    channel = (form.cleaned_data.get('channel') or 'email').strip().lower()
+    notify_member_reply(reply)
+    # Optional WhatsApp doorbell (generic, no message content).
+    if channel in {'whatsapp', 'both'}:
+        from members.services import _post_whatsapp_to
+        membership = ChurchMembership.objects.filter(user=member).first()
+        phone = (reply.phone or (membership.phone if membership else '') or '').strip()
+        digits = ''.join(ch for ch in phone if ch.isdigit())
+        if len(digits) >= 7:
+            _post_whatsapp_to(
+                digits,
+                'You have a new private message from the Shekinah Blaze church '
+                'administration. Sign in to your account to read and reply.',
+            )
+    messages.success(
+        request,
+        'Reply sent. The member will see it in their church-office inbox.',
+    )
+    return redirect(f'{target}#message-{reply.pk}')
+
+
+@portal_view
+@require_POST
+def dm_reply(request, thread_id):
+    """Superuser moderation note inside a member-to-member conversation."""
+    if not request.user.is_superuser:
+        raise PermissionDenied(
+            'Only a superuser may write to member-to-member conversations.',
+        )
+    thread = get_object_or_404(
+        CommsDirectThread.objects.select_related('user_a', 'user_b'),
+        pk=thread_id,
+    )
+    if thread.user_a.is_staff or thread.user_b.is_staff:
+        raise Http404('Conversation not found.')
+
+    target = _dm_thread_url(thread)
+    body = (request.POST.get('body') or '').replace('\x00', '').strip()[:2000]
+    if not body:
+        messages.error(request, 'Write a message before sending.')
+        return redirect(target)
+
+    message = CommsDirectMessage.objects.create(
+        thread=thread,
+        sender=request.user,
+        body=body,
+    )
+    thread.last_message_at = message.created_at
+    thread.save(update_fields=['last_message_at', 'updated_at'])
+    _notify_dm_moderation(message)
+    messages.success(
+        request,
+        'Moderation message sent. Both members can see it in their inbox.',
+    )
+    return redirect(f'{target}#dm-message-{message.pk}')
+
+
+@portal_view
+@require_POST
+def dm_message_delete(request, thread_id, pk):
+    """Remove a single message from a member-to-member conversation."""
+    if not request.user.is_superuser:
+        raise PermissionDenied(
+            'Only a superuser may moderate member-to-member conversations.',
+        )
+    thread = get_object_or_404(
+        CommsDirectThread.objects.select_related('user_a', 'user_b'),
+        pk=thread_id,
+    )
+    if thread.user_a.is_staff or thread.user_b.is_staff:
+        raise Http404('Conversation not found.')
+    message = get_object_or_404(
+        CommsDirectMessage,
+        pk=pk,
+        thread=thread,
+    )
+    from notifications.models import Notification
+
+    Notification.objects.filter(
+        source_type='direct_message',
+        source_id=message.pk,
+    ).delete()
+    message.delete()
+
+    latest = thread.messages.order_by('-created_at', '-pk').first()
+    thread.last_message_at = latest.created_at if latest else None
+    thread.save(update_fields=['last_message_at', 'updated_at'])
+    messages.success(request, 'Message removed from the conversation.')
+    return redirect(_dm_thread_url(thread))
+
+
+@portal_view
+@require_POST
+def dm_thread_delete(request, thread_id):
+    """Remove an entire member-to-member conversation."""
+    if not request.user.is_superuser:
+        raise PermissionDenied(
+            'Only a superuser may moderate member-to-member conversations.',
+        )
+    thread = get_object_or_404(
+        CommsDirectThread.objects.select_related('user_a', 'user_b'),
+        pk=thread_id,
+    )
+    if thread.user_a.is_staff or thread.user_b.is_staff:
+        raise Http404('Conversation not found.')
+
+    from notifications.models import Notification
+
+    message_ids = list(thread.messages.values_list('pk', flat=True))
+    if message_ids:
+        Notification.objects.filter(
+            source_type='direct_message',
+            source_id__in=message_ids,
+        ).delete()
+    thread.delete()
+    messages.success(request, 'Member conversation removed.')
+    return redirect(f"{reverse('communications:inbox')}?view=chat")
 
 
 @portal_view

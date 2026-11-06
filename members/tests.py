@@ -1,10 +1,18 @@
+from datetime import date, timedelta
+from io import StringIO
+from urllib.parse import urlsplit
+
 from django.contrib.auth.models import Permission, User
+from django.core import mail
 from django.core.exceptions import PermissionDenied
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.core.management import call_command
+from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from blackboard.models import MemberProfile
+from communications.models import Conversation, Message
 from contact.models import ContactMessage
 from notifications.models import Notification
 
@@ -15,6 +23,18 @@ from .models import (
     MembershipInterest,
     MembershipMinistry,
     MembershipPastoralNote,
+)
+from .models_comms import (
+    CommsAttachment,
+    CommsBlock,
+    CommsComment,
+    CommsDirectMessage,
+    CommsDirectThread,
+    CommsPost,
+    CommsPostSave,
+    CommsReaction,
+    CommsReport,
+    CommunityPresence,
 )
 
 STRONG = 'Str0ng-Pass-123'
@@ -38,7 +58,7 @@ class UserRegistrationTests(TestCase):
             'password1': STRONG,
             'password2': STRONG,
         })
-        self.assertRedirects(response, reverse('blackboard:blackboard'))
+        self.assertRedirects(response, reverse('members:account_profile'))
         user = User.objects.get(username='normalcustomer')
         self.assertTrue(MemberProfile.objects.filter(user=user).exists())
         # A plain user account must not gain a church membership.
@@ -65,7 +85,7 @@ class ChurchRegistrationTests(TestCase):
 
     def test_minimal_registration_succeeds(self):
         response = self.client.post(reverse(self.url), self._minimal())
-        self.assertRedirects(response, reverse('blackboard:blackboard'))
+        self.assertRedirects(response, reverse('members:account_profile'))
         membership = ChurchMembership.objects.get(user__username='gracemember')
         self.assertTrue(membership.membership_id)
         self.assertTrue(membership.membership_id.startswith('SBOI-M-'))
@@ -83,7 +103,7 @@ class ChurchRegistrationTests(TestCase):
             'password1': STRONG,
             'password2': STRONG,
         })
-        self.assertRedirects(response, reverse('blackboard:blackboard'))
+        self.assertRedirects(response, reverse('members:account_profile'))
         user = User.objects.get(username='barest')
         self.assertEqual(user.first_name, '')
         self.assertEqual(user.last_name, '')
@@ -99,7 +119,7 @@ class ChurchRegistrationTests(TestCase):
         data.pop('last_name')
         data.pop('phone')
         response = self.client.post(reverse(self.url), data)
-        self.assertRedirects(response, reverse('blackboard:blackboard'))
+        self.assertRedirects(response, reverse('members:account_profile'))
         user = User.objects.get(username='gracemember')
         self.assertEqual(user.first_name, '')
         self.assertEqual(user.last_name, '')
@@ -111,14 +131,14 @@ class ChurchRegistrationTests(TestCase):
             emergency_contact_name='', emergency_contact_phone='',
         )
         response = self.client.post(reverse(self.url), data)
-        self.assertRedirects(response, reverse('blackboard:blackboard'))
+        self.assertRedirects(response, reverse('members:account_profile'))
         membership = ChurchMembership.objects.get(user__username='gracemember')
         self.assertEqual(membership.membership_category, '')
         self.assertEqual(membership.baptism_status, '')
 
     def test_phone_is_optional(self):
         response = self.client.post(reverse(self.url), self._minimal(phone=''))
-        self.assertRedirects(response, reverse('blackboard:blackboard'))
+        self.assertRedirects(response, reverse('members:account_profile'))
         self.assertEqual(
             ChurchMembership.objects.get(user__username='gracemember').phone, '',
         )
@@ -166,6 +186,53 @@ class ChurchRegistrationTests(TestCase):
         ))
         self.assertEqual(response.status_code, 200)
         self.assertFalse(User.objects.filter(username='gracemember').exists())
+
+
+class MemberPasswordResetTests(TestCase):
+    """Member "forgot password" flow and the public login page."""
+
+    def setUp(self):
+        mail.outbox.clear()
+        self.user = User.objects.create_user(
+            'resetmember', 'resetmember@example.com', STRONG,
+        )
+
+    def _request_reset(self):
+        response = self.client.post(
+            reverse('members:password_reset'),
+            {'email': 'resetmember@example.com'},
+        )
+        self.assertRedirects(response, reverse('members:password_reset_done'))
+        self.assertEqual(len(mail.outbox), 1)
+        for token in mail.outbox[0].body.split():
+            if '/members/password-reset/confirm/' in token:
+                return token
+        self.fail('No reset link found in the reset email.')
+
+    def test_login_page_has_toggle_and_reset_link(self):
+        response = self.client.get(reverse('members:login'))
+        self.assertContains(response, 'Login to your account')
+        self.assertContains(response, 'password-toggle')
+        self.assertContains(response, reverse('members:password_reset'))
+        self.assertNotContains(response, 'auth-logo')
+
+    @override_settings(
+        EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+    )
+    def test_reset_email_sets_a_new_password(self):
+        link = self._request_reset()
+        response = self.client.get(urlsplit(link).path)
+        self.assertEqual(response.status_code, 302)
+        final = response.headers['Location']
+        response = self.client.post(final, {
+            'new_password1': 'Brand-new-2026',
+            'new_password2': 'Brand-new-2026',
+        })
+        self.assertRedirects(
+            response, reverse('members:password_reset_complete'),
+        )
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('Brand-new-2026'))
 
 
 class GenderFieldTests(TestCase):
@@ -984,13 +1051,22 @@ class AccountPortalTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn(reverse('members:login'), response['Location'])
 
-    def test_login_redirects_to_the_profile(self):
+    def test_login_redirects_to_home_after_the_first_login(self):
         self.client.logout()
         response = self.client.post(
             reverse('members:login'),
             {'username': self.member.username, 'password': STRONG},
         )
-        self.assertRedirects(response, reverse('members:account'))
+        self.assertRedirects(response, reverse('home:home'))
+
+    def test_first_ever_login_redirects_to_the_profile(self):
+        User.objects.create_user('firstlogin', 'first@example.com', STRONG)
+        self.client.logout()
+        response = self.client.post(
+            reverse('members:login'),
+            {'username': 'firstlogin', 'password': STRONG},
+        )
+        self.assertRedirects(response, reverse('members:account_profile'))
 
     def test_account_page_has_no_sidebar_and_sign_out_uses_post(self):
         response = self.client.get(reverse('members:account'))
@@ -1077,22 +1153,65 @@ class AccountPortalTests(TestCase):
             ).exists()
         )
 
+    def test_membership_edit_preserves_private_contact_details(self):
+        """The focused form must not clear fields it never renders."""
+        self.membership.address = '12 Church Street'
+        self.membership.date_of_birth = date(1990, 1, 2)
+        self.membership.gender = 'female'
+        self.membership.marital_status = 'married'
+        self.membership.save()
+
+        response = self.client.post(
+            reverse('members:account_membership_edit'),
+            {
+                'membership_category': 'regular',
+                'baptism_status': 'baptized',
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['ok'])
+        self.membership.refresh_from_db()
+        self.assertEqual(self.membership.phone, '0821234567')
+        self.assertEqual(self.membership.address, '12 Church Street')
+        self.assertEqual(self.membership.date_of_birth, date(1990, 1, 2))
+        self.assertEqual(self.membership.gender, 'female')
+        self.assertEqual(self.membership.marital_status, 'married')
+
     def test_new_application_is_pending_and_not_active(self):
         new_member = User.objects.create_user(
             'applicant', 'applicant@example.com', STRONG,
         )
         self.client.force_login(new_member)
         response = self.client.post(
-            reverse('members:account_membership_edit'),
-            {'membership_category': 'regular', 'baptism_status': 'not_baptized'},
+            reverse('members:account_membership_request'),
             HTTP_X_REQUESTED_WITH='XMLHttpRequest',
         )
         self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['ok'])
         membership = ChurchMembership.objects.get(user=new_member)
         self.assertEqual(membership.status, 'pending')
         change = MembershipChangeRequest.objects.get(membership=membership)
         self.assertEqual(change.kind, MembershipChangeRequest.KIND_APPLICATION)
         self.assertEqual(change.status, 'pending')
+
+    def test_membership_edit_locked_until_approved(self):
+        new_member = User.objects.create_user(
+            'lockedapplicant', 'locked@example.com', STRONG,
+        )
+        self.client.force_login(new_member)
+        # Requesting membership creates a pending record; editing is locked.
+        self.client.post(reverse('members:account_membership_request'))
+        membership = ChurchMembership.objects.get(user=new_member)
+        self.assertEqual(membership.status, 'pending')
+        response = self.client.post(
+            reverse('members:account_membership_edit'),
+            {'membership_category': 'regular', 'baptism_status': 'not_baptized'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(response.json()['ok'])
 
     def test_member_cannot_open_admin_review_page(self):
         change = MembershipChangeRequest.objects.create(
@@ -1394,6 +1513,819 @@ class AccountPortalTests(TestCase):
         self.client.post(url, payload)
         self.assertEqual(notices.count(), 1)
 
+        # Personal contact details now live on the member profile page: the
+        # feed landing page deliberately shows no personal records.
         self.client.force_login(self.member)
         response = self.client.get(reverse('members:account'))
-        self.assertContains(response, '0837654321')
+        self.assertEqual(response.status_code, 200)
+        profile = self.client.get(reverse('members:account_profile'))
+        self.assertEqual(profile.status_code, 200)
+        self.assertContains(profile, '0837654321')
+
+
+class AccountDeletionTests(TestCase):
+    """Account deletion requires confirmation and cascades safely."""
+
+    def setUp(self):
+        self.member = User.objects.create_user(
+            'deletable', 'deletable@example.com', STRONG,
+            first_name='Deletable', last_name='Member',
+        )
+        self.membership = ChurchMembership.objects.create(
+            user=self.member,
+            status='active',
+            phone='0821234567',
+            membership_category='regular',
+        )
+        self.client.force_login(self.member)
+
+    def test_delete_requires_confirmation(self):
+        response = self.client.post(
+            reverse('members:account_delete'),
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 302)
+        self.member.refresh_from_db()
+        self.assertTrue(User.objects.filter(pk=self.member.pk).exists())
+
+    def test_delete_removes_account_and_membership(self):
+        response = self.client.post(
+            reverse('members:account_delete'),
+            {'confirm_delete': 'yes'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(User.objects.filter(pk=self.member.pk).exists())
+        self.assertFalse(
+            ChurchMembership.objects.filter(user=self.member).exists()
+        )
+
+    def test_delete_signs_user_out(self):
+        self.client.post(
+            reverse('members:account_delete'),
+            {'confirm_delete': 'yes'},
+        )
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+
+class CommunityFeedTests(TestCase):
+    """The members-only feed must never leak to visitors or other members."""
+
+    def setUp(self):
+        self.member = User.objects.create_user(
+            'feedmember', 'feed@example.com', STRONG,
+            first_name='Feed', last_name='Member',
+        )
+        self.other = User.objects.create_user(
+            'othermember', 'other@example.com', STRONG,
+            first_name='Other', last_name='Member',
+        )
+        self.staff = User.objects.create_superuser(
+            'feedstaff', 'staff@example.com', STRONG,
+            first_name='Feed', last_name='Admin',
+        )
+        self.client.force_login(self.member)
+
+    def _publish(self, body='A church update', **extra):
+        payload = {'body': body}
+        payload.update(extra)
+        return self.client.post(reverse('members:feed_post_create'), payload)
+
+    def test_visitor_cannot_see_feed_or_publish(self):
+        self.client.logout()
+        post = CommsPost.objects.create(author=self.staff, body='Members only')
+        response = self.client.get(reverse('members:account'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('members:login'), response.url)
+        response = self.client.post(
+            reverse('members:feed_post_create'), {'body': 'Nope'},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(CommsPost.objects.count(), 1)
+        public = self.client.get(reverse('home:home'))
+        self.assertNotContains(public, 'Members only')
+        self.assertNotContains(public, reverse('members:feed_post_create'))
+        self.assertTrue(post.pk)
+
+    def test_member_sees_composer_and_can_publish(self):
+        response = self.client.get(reverse('members:account'))
+        self.assertContains(response, 'data-feed-composer')
+        self.assertContains(response, reverse('members:feed_post_create'))
+
+        response = self._publish('Youth night this Friday.')
+        self.assertEqual(response.status_code, 302)
+        post = CommsPost.objects.get()
+        self.assertEqual(post.author, self.member)
+        self.assertEqual(post.audience, CommsPost.AUDIENCE_ALL)
+        self.assertTrue(post.is_published)
+        self.assertFalse(post.is_hidden)
+
+        response = self.client.get(reverse('members:account'))
+        self.assertContains(response, 'Youth night this Friday.')
+
+    def test_member_cannot_publish_staff_only_post(self):
+        self._publish('For everyone', audience=CommsPost.AUDIENCE_STAFF)
+        self.assertEqual(
+            CommsPost.objects.get().audience, CommsPost.AUDIENCE_ALL,
+        )
+
+    def test_staff_only_post_is_hidden_from_members(self):
+        post = CommsPost.objects.create(
+            author=self.staff,
+            audience=CommsPost.AUDIENCE_STAFF,
+            body='Leadership retreat notes',
+        )
+        response = self.client.get(reverse('members:account'))
+        self.assertNotContains(response, 'Leadership retreat notes')
+
+        self.client.force_login(self.staff)
+        response = self.client.get(
+            reverse('communications:inbox') + '?view=feed',
+        )
+        self.assertContains(response, 'Leadership retreat notes')
+        self.assertTrue(post.pk)
+
+    def test_comment_is_created_and_abuse_is_rejected(self):
+        post = CommsPost.objects.create(author=self.staff, body='Welcome')
+        response = self.client.post(
+            reverse('members:feed_post_comment', args=[post.pk]),
+            {'body': 'Amen!'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(post.comments.count(), 1)
+        self.assertContains(response, 'Amen!')
+
+        response = self.client.post(
+            reverse('members:feed_post_comment', args=[post.pk]),
+            {'body': 'You are an idiot'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(post.comments.count(), 1)
+
+    def test_reaction_toggles_and_replaces(self):
+        post = CommsPost.objects.create(author=self.staff, body='Prayer')
+        url = reverse('members:feed_post_react', args=[post.pk])
+
+        response = self.client.post(
+            url, {'reaction': 'heart'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['active'])
+        self.assertEqual(CommsReaction.objects.get().reaction, 'heart')
+
+        response = self.client.post(
+            url, {'reaction': 'pray'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertTrue(response.json()['active'])
+        self.assertEqual(CommsReaction.objects.count(), 1)
+        self.assertEqual(CommsReaction.objects.get().reaction, 'pray')
+
+        response = self.client.post(
+            url, {'reaction': 'pray'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertFalse(response.json()['active'])
+        self.assertEqual(CommsReaction.objects.count(), 0)
+
+    def test_attachment_upload_and_download(self):
+        upload = SimpleUploadedFile(
+            'notice.pdf', b'%PDF-1.4 test attachment',
+            content_type='application/pdf',
+        )
+        response = self.client.post(
+            reverse('members:feed_post_create'),
+            {'body': 'See the attached notice', 'attachment': upload},
+        )
+        self.assertEqual(response.status_code, 302)
+        attachment = CommsAttachment.objects.get()
+        self.addCleanup(attachment.file.delete, save=False)
+        self.assertEqual(attachment.kind, CommsAttachment.KIND_DOCUMENT)
+        self.assertEqual(attachment.original_name, 'notice.pdf')
+
+        response = self.client.get(
+            reverse('members:feed_attachment_download', args=[attachment.pk]),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('attachment', response['Content-Disposition'])
+        # Consume the stream instead of response.close(): closing the response
+        # sends request_finished, which closes the test database connection and
+        # breaks every test that runs after this one.
+        self.assertIn(b'%PDF-1.4', b''.join(response.streaming_content))
+
+    def test_member_cannot_download_staff_only_attachment(self):
+        post = CommsPost.objects.create(
+            author=self.staff,
+            audience=CommsPost.AUDIENCE_STAFF,
+            body='Staff file',
+        )
+        attachment = CommsAttachment.objects.create(
+            post=post,
+            file=SimpleUploadedFile('staff.pdf', b'%PDF-1.4 staff'),
+            original_name='staff.pdf',
+            kind=CommsAttachment.KIND_DOCUMENT,
+        )
+        self.addCleanup(attachment.file.delete, save=False)
+        response = self.client.get(
+            reverse('members:feed_attachment_download', args=[attachment.pk]),
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_member_can_delete_own_post(self):
+        post = CommsPost.objects.create(author=self.member, body='My post')
+        response = self.client.post(
+            reverse('members:feed_post_delete', args=[post.pk]),
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(CommsPost.objects.filter(pk=post.pk).exists())
+
+    def test_member_cannot_delete_another_members_post(self):
+        post = CommsPost.objects.create(author=self.other, body='Not mine')
+        response = self.client.post(
+            reverse('members:feed_post_delete', args=[post.pk]),
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(CommsPost.objects.filter(pk=post.pk).exists())
+
+        self.client.force_login(self.staff)
+        response = self.client.post(
+            reverse('members:feed_post_delete', args=[post.pk]),
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(CommsPost.objects.filter(pk=post.pk).exists())
+
+
+class CommunityMemberExperienceTests(TestCase):
+    """Member feed actions stay private, incremental and owner-scoped."""
+
+    def setUp(self):
+        self.member = User.objects.create_user(
+            'memberone', 'memberone@example.com', STRONG,
+            first_name='Member', last_name='One',
+        )
+        self.other = User.objects.create_user(
+            'membertwo', 'membertwo@example.com', STRONG,
+            first_name='Member', last_name='Two',
+        )
+        self.staff = User.objects.create_superuser(
+            'communitystaff', 'communitystaff@example.com', STRONG,
+            first_name='Church', last_name='Admin',
+        )
+        self.membership = ChurchMembership.objects.create(
+            user=self.member,
+            status='active',
+            phone='0831234567',
+            membership_category='regular',
+            date_joined_church=timezone.localdate() - timedelta(days=400),
+        )
+        self.client.force_login(self.member)
+
+    def _post(self, author=None, body='Community post', **extra):
+        return CommsPost.objects.create(
+            author=author or self.member, body=body, **extra,
+        )
+
+    def _comment(self, post, author, body, parent=None):
+        return CommsComment.objects.create(
+            post=post, author=author, body=body, parent=parent,
+        )
+
+    def test_member_can_edit_own_post_only(self):
+        post = self._post(body='Before the edit')
+        url = reverse('members:feed_post_edit', args=[post.pk])
+        response = self.client.post(
+            url,
+            {'body': 'After the edit', 'surface': 'community'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['ok'])
+        post.refresh_from_db()
+        self.assertEqual(post.body, 'After the edit')
+        self.assertIsNotNone(post.edited_at)
+        self.assertIn('After the edit', response.json()['html'])
+        self.assertIn('cf-post', response.json()['html'])
+        self.assertNotIn('comms-post', response.json()['html'])
+
+        response = self.client.post(
+            url, {'body': 'idiot'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 400)
+        post.refresh_from_db()
+        self.assertEqual(post.body, 'After the edit')
+
+        self.client.force_login(self.other)
+        response = self.client.post(
+            url, {'body': 'Not mine'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 403)
+        post.refresh_from_db()
+        self.assertEqual(post.body, 'After the edit')
+
+    def test_save_and_unsave_are_private_bookmarks(self):
+        post = self._post(body='A post worth keeping')
+        url = reverse('members:feed_post_save', args=[post.pk])
+        response = self.client.post(
+            url, HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['saved'])
+        self.assertTrue(
+            CommsPostSave.objects.filter(post=post, user=self.member).exists()
+        )
+
+        feed = self.client.get(reverse('members:account'))
+        self.assertContains(feed, 'data-cf-saved="true"')
+        saved = self.client.get(reverse('members:account_saved'))
+        self.assertContains(saved, 'A post worth keeping')
+        self.assertContains(saved, '1 saved')
+
+        self.client.force_login(self.other)
+        other_saved = self.client.get(reverse('members:account_saved'))
+        self.assertNotContains(other_saved, 'A post worth keeping')
+        self.assertNotContains(
+            other_saved, 'data-cf-saved="true"',
+        )
+
+        self.client.force_login(self.member)
+        response = self.client.post(
+            url, HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertFalse(response.json()['saved'])
+        self.assertFalse(
+            CommsPostSave.objects.filter(post=post, user=self.member).exists()
+        )
+        saved = self.client.get(reverse('members:account_saved'))
+        self.assertNotContains(saved, 'A post worth keeping')
+
+    def test_report_post_and_comment_deduplicates_for_each_reporter(self):
+        post = self._post(author=self.other, body='Reportable post')
+        comment = self._comment(post, self.other, 'Reportable comment')
+        url = reverse('members:feed_report')
+
+        response = self.client.post(
+            url,
+            {'post_id': post.pk, 'reason': 'spam', 'note': 'Looks like spam'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        report = CommsReport.objects.get(reporter=self.member, post=post)
+        self.assertEqual(report.reason, CommsReport.REASON_SPAM)
+
+        response = self.client.post(
+            url,
+            {'post_id': post.pk, 'reason': 'abuse', 'note': 'Changed my mind'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            CommsReport.objects.filter(reporter=self.member, post=post).count(), 1,
+        )
+        report.refresh_from_db()
+        self.assertEqual(report.reason, CommsReport.REASON_ABUSE)
+
+        response = self.client.post(
+            url,
+            {'comment_id': comment.pk, 'reason': 'harassment'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            CommsReport.objects.filter(
+                reporter=self.member, comment=comment, post__isnull=True,
+            ).exists()
+        )
+
+        staff_only = self._post(
+            author=self.staff,
+            body='Staff only report target',
+            audience=CommsPost.AUDIENCE_STAFF,
+        )
+        response = self.client.post(
+            url,
+            {'post_id': staff_only.pk, 'reason': 'spam'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_replies_stay_one_level_deep_and_render_member_markup(self):
+        post = self._post(author=self.staff, body='Discussion')
+        root = self._comment(post, self.other, 'Root comment')
+        first_reply = self._comment(post, self.member, 'First reply', root)
+        url = reverse('members:feed_post_comment', args=[post.pk])
+
+        response = self.client.post(
+            url,
+            {'body': 'Nested reply', 'parent': first_reply.pk, 'surface': 'community'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload['parent_id'], root.pk)
+        nested = CommsComment.objects.get(body='Nested reply')
+        self.assertEqual(nested.parent, root)
+        self.assertIn('cf-comment', payload['html'])
+        self.assertIn('cf-comment--reply', payload['html'])
+        self.assertIn('data-cf-comment-item', payload['html'])
+        self.assertNotIn('comms-comment', payload['html'])
+
+        response = self.client.post(
+            url,
+            {'body': 'A root comment', 'surface': 'community'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('cf-comment', response.json()['html'])
+        self.assertNotIn('comms-comment', response.json()['html'])
+        self.assertEqual(post.comments.count(), 4)
+
+    def test_load_more_uses_cursor_and_scopes(self):
+        for index in range(12):
+            self._post(author=self.staff, body=f'Staff post {index}')
+        own = self._post(author=self.member, body='My own older post')
+        saved_posts = [
+            self._post(author=self.staff, body='Saved one'),
+            self._post(author=self.staff, body='Saved two'),
+        ]
+        for saved_post in saved_posts:
+            CommsPostSave.objects.create(post=saved_post, user=self.member)
+
+        url = reverse('members:feed_load_more')
+        response = self.client.get(
+            url, {'scope': 'feed'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        first = response.json()
+        self.assertTrue(first['has_more'])
+        self.assertEqual(
+            first['html'].count('data-cf-post data-post-id'), 10,
+        )
+        self.assertIn('My own older post', first['html'])
+
+        response = self.client.get(
+            url,
+            {'scope': 'feed', 'before': first['next_before']},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        second = response.json()
+        self.assertFalse(second['has_more'])
+        self.assertEqual(second['html'].count('data-cf-post data-post-id'), 5)
+        self.assertNotIn('My own older post', second['html'])
+
+        response = self.client.get(
+            url, {'scope': 'posts'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        posts_html = response.json()['html']
+        self.assertIn('My own older post', posts_html)
+        self.assertNotIn('Staff post', posts_html)
+        self.assertFalse(response.json()['has_more'])
+
+        response = self.client.get(
+            url, {'scope': 'saved'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        saved_html = response.json()['html']
+        self.assertIn('Saved one', saved_html)
+        self.assertIn('Saved two', saved_html)
+        self.assertNotIn('Staff post', saved_html)
+        self.assertFalse(response.json()['has_more'])
+
+    def test_load_more_cursor_follows_created_at_order(self):
+        posts = [
+            self._post(
+                author=self.staff,
+                body=f'Chronological marker {index:02d}',
+            )
+            for index in range(14)
+        ]
+        base = timezone.now()
+        for index, post in enumerate(posts):
+            CommsPost.objects.filter(pk=post.pk).update(
+                created_at=base - timedelta(minutes=index),
+            )
+        ordered = list(CommsPost.objects.order_by('-created_at', '-pk'))
+        self.assertEqual([post.pk for post in ordered], [post.pk for post in posts])
+
+        url = reverse('members:feed_load_more')
+        first = self.client.get(
+            url, HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        ).json()
+        self.assertTrue(first['has_more'])
+        self.assertEqual(
+            first['html'].count('data-cf-post data-post-id'), 10,
+        )
+        for post in posts[:10]:
+            self.assertIn(post.body, first['html'])
+        for post in posts[10:]:
+            self.assertNotIn(post.body, first['html'])
+
+        second = self.client.get(
+            url,
+            {'before': first['next_before']},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        ).json()
+        self.assertFalse(second['has_more'])
+        self.assertEqual(
+            second['html'].count('data-cf-post data-post-id'), 4,
+        )
+        for post in posts[10:]:
+            self.assertIn(post.body, second['html'])
+        for post in posts[:10]:
+            self.assertNotIn(post.body, second['html'])
+
+    def test_public_profile_never_exposes_private_contact_details(self):
+        visible = self._post(body='Visible community post')
+        hidden = self._post(
+            body='Staff only profile post',
+            audience=CommsPost.AUDIENCE_STAFF,
+        )
+        self.client.force_login(self.other)
+        response = self.client.get(
+            reverse('members:member_profile', args=[self.member.username]),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Member One')
+        self.assertContains(response, 'Church member')
+        self.assertContains(response, 'Visible community post')
+        self.assertNotContains(response, 'Staff only profile post')
+        self.assertNotContains(response, 'memberone@example.com')
+        self.assertNotContains(response, '0831234567')
+        self.assertNotContains(response, 'Membership category')
+        self.assertNotContains(response, 'Emergency contact')
+
+        self.client.logout()
+        response = self.client.get(
+            reverse('members:member_profile', args=[self.member.username]),
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('members:login'), response.url)
+        self.assertTrue(visible.pk and hidden.pk)
+
+    def test_new_account_sections_support_ajax_fragments(self):
+        self._post(body='My AJAX post')
+        for name in ('account_posts', 'account_saved', 'account_profile'):
+            response = self.client.get(
+                reverse(f'members:{name}'),
+                HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, 'data-account-section')
+            self.assertNotContains(response, '<html')
+            self.assertNotContains(response, 'cf-topbar')
+
+
+class CommunitySafetyAndInboxTests(TestCase):
+    """Presence, blocking and private member-to-member conversations."""
+
+    def setUp(self):
+        self.member = User.objects.create_user(
+            'safetymember', 'safetymember@example.com', STRONG,
+            first_name='Safety', last_name='Member',
+        )
+        self.other = User.objects.create_user(
+            'safetyother', 'safetyother@example.com', STRONG,
+            first_name='Safety', last_name='Other',
+        )
+        self.outsider = User.objects.create_user(
+            'safetyoutsider', 'safetyoutsider@example.com', STRONG,
+            first_name='Safety', last_name='Outsider',
+        )
+        self.client.force_login(self.member)
+
+    def _thread(self):
+        return CommsDirectThread.for_users(self.member, self.other)
+
+    def _message(self, thread, sender, body='Private hello'):
+        message = CommsDirectMessage.objects.create(
+            thread=thread, sender=sender, body=body,
+        )
+        CommsDirectThread.objects.filter(pk=thread.pk).update(
+            last_message_at=message.created_at,
+        )
+        thread.refresh_from_db()
+        return message
+
+    def test_inbox_shows_online_members_and_known_conversations(self):
+        self.client.force_login(self.other)
+        self.client.get(reverse('members:account'))
+        self.assertTrue(
+            CommunityPresence.objects.filter(user=self.other).exists()
+        )
+
+        thread = self._thread()
+        self._message(thread, self.other, 'A private hello')
+
+        self.client.force_login(self.member)
+        response = self.client.get(reverse('members:account_messages'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Online now')
+        self.assertContains(response, 'Safety Other')
+        self.assertContains(response, 'A private hello')
+
+    def test_member_can_exchange_a_private_thread_and_recipient_is_notified(self):
+        thread = self._thread()
+        send_url = reverse('members:account_direct_send', args=[thread.pk])
+
+        response = self.client.post(send_url, {'body': 'Peace be with you'})
+        self.assertEqual(response.status_code, 302)
+        message = CommsDirectMessage.objects.get()
+        self.assertEqual(message.sender, self.member)
+        self.assertEqual(message.body, 'Peace be with you')
+        self.assertEqual(services.unread_message_count(self.other), 1)
+        notification = Notification.objects.get(
+            recipient=self.other, source_type='direct_message',
+        )
+        self.assertIn('Peace be with you', notification.body)
+
+        self.client.force_login(self.other)
+        response = self.client.get(
+            reverse('members:account_messages') + f'?thread={thread.pk}',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Peace be with you')
+        # The office row stays a real link so it can return from a member
+        # conversation, where the office thread panel is not rendered.
+        self.assertContains(response, 'data-cf-open-thread')
+        self.assertContains(
+            response, f'href="{reverse("members:account_messages")}"',
+        )
+        self.assertEqual(services.unread_message_count(self.other), 0)
+        notification.refresh_from_db()
+        self.assertTrue(
+            Notification.objects.filter(pk=notification.pk).exists()
+        )
+
+    def test_outsider_cannot_read_or_write_another_members_thread(self):
+        thread = self._thread()
+        self._message(thread, self.other, 'Just between us')
+
+        self.client.force_login(self.outsider)
+        response = self.client.get(
+            reverse('members:account_messages') + f'?thread={thread.pk}',
+        )
+        self.assertEqual(response.status_code, 404)
+        response = self.client.post(
+            reverse('members:account_direct_send', args=[thread.pk]),
+            {'body': 'Butting in'},
+        )
+        self.assertEqual(response.status_code, 404)
+        response = self.client.get(
+            reverse('members:account_direct_poll', args=[thread.pk]),
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(CommsDirectMessage.objects.count(), 1)
+
+    def test_blocking_hides_posts_comments_and_blocks_messages(self):
+        member_post = CommsPost.objects.create(
+            author=self.member, body='Visible to everyone',
+        )
+        other_post = CommsPost.objects.create(
+            author=self.other, body='Hidden after the block',
+        )
+        CommsComment.objects.create(
+            post=member_post, author=self.other, body='Hidden comment',
+        )
+
+        response = self.client.post(
+            reverse(
+                'members:account_block_member',
+                args=[self.other.username],
+            ),
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            CommsBlock.objects.filter(
+                blocker=self.member, blocked=self.other,
+            ).exists()
+        )
+
+        feed = self.client.get(reverse('members:account'))
+        self.assertContains(feed, 'Visible to everyone')
+        self.assertNotContains(feed, 'Hidden after the block')
+        self.assertNotContains(feed, 'Hidden comment')
+
+        thread = self._thread()
+        response = self.client.post(
+            reverse('members:account_direct_send', args=[thread.pk]),
+            {'body': 'You should not see this'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(CommsDirectMessage.objects.count(), 0)
+        self.assertFalse(
+            services.direct_threads_for(self.member).filter(pk=thread.pk).exists()
+        )
+        self.assertEqual(other_post.author, self.other)
+
+        response = self.client.post(
+            reverse(
+                'members:account_unblock_member',
+                args=[self.other.username],
+            ),
+        )
+        self.assertEqual(response.status_code, 302)
+        feed = self.client.get(reverse('members:account'))
+        self.assertContains(feed, 'Hidden after the block')
+
+    def test_reciprocal_block_hides_the_other_members_view_too(self):
+        CommsPost.objects.create(author=self.member, body='Member post')
+        self.client.force_login(self.other)
+        self.client.post(
+            reverse(
+                'members:account_block_member',
+                args=[self.member.username],
+            ),
+        )
+        feed = self.client.get(reverse('members:account'))
+        self.assertNotContains(feed, 'Member post')
+
+    def test_profile_and_settings_offer_block_and_unblock_controls(self):
+        self.client.post(
+            reverse(
+                'members:account_block_member',
+                args=[self.other.username],
+            ),
+        )
+        profile = self.client.get(
+            reverse('members:member_profile', args=[self.other.username]),
+        )
+        self.assertContains(profile, 'Unblock')
+        settings = self.client.get(reverse('members:account_settings'))
+        self.assertContains(settings, 'Blocked members')
+        self.assertContains(settings, 'Safety Other')
+
+
+class ChatRetentionTests(TestCase):
+    """The 90-day cleanup covers every private chat surface."""
+
+    def setUp(self):
+        self.staff = User.objects.create_superuser(
+            'retentionstaff', 'retention@example.com', STRONG,
+        )
+        self.member = User.objects.create_user(
+            'retentionmember', 'retentionmember@example.com', STRONG,
+        )
+
+    def test_cleanup_removes_only_old_messages(self):
+        old = timezone.now() - timedelta(days=120)
+        conversation = Conversation.objects.create(
+            kind=Conversation.KIND_GROUP, name='Office', created_by=self.staff,
+        )
+        old_staff_message = Message.objects.create(
+            conversation=conversation, sender=self.staff, body='Old staff',
+        )
+        new_staff_message = Message.objects.create(
+            conversation=conversation, sender=self.staff, body='New staff',
+        )
+        old_member_message = ContactMessage.objects.create(
+            user=self.member, sender=self.member, name='Member',
+            email='retentionmember@example.com', message='Old member',
+        )
+        new_member_message = ContactMessage.objects.create(
+            user=self.member, sender=self.member, name='Member',
+            email='retentionmember@example.com', message='New member',
+        )
+        # A public contact-form enquiry shares the table but is not a chat.
+        public_enquiry = ContactMessage.objects.create(
+            name='Website visitor', email='visitor@example.com',
+            message='Please call me about the youth programme.',
+        )
+        post = CommsPost.objects.create(author=self.staff, body='Announcement')
+        old_comment = CommsComment.objects.create(
+            post=post, author=self.member, body='Old comment',
+        )
+        new_comment = CommsComment.objects.create(
+            post=post, author=self.member, body='New comment',
+        )
+        Message.objects.filter(pk__in=[
+            old_staff_message.pk,
+        ]).update(created_at=old)
+        ContactMessage.objects.filter(pk__in=[
+            old_member_message.pk, public_enquiry.pk,
+        ]).update(created_at=old)
+        CommsComment.objects.filter(pk__in=[
+            old_comment.pk,
+        ]).update(created_at=old)
+
+        output = StringIO()
+        call_command('cleanup_old_chats', stdout=output)
+
+        self.assertFalse(Message.objects.filter(pk=old_staff_message.pk).exists())
+        self.assertTrue(Message.objects.filter(pk=new_staff_message.pk).exists())
+        self.assertFalse(
+            ContactMessage.objects.filter(pk=old_member_message.pk).exists()
+        )
+        self.assertTrue(
+            ContactMessage.objects.filter(pk=new_member_message.pk).exists()
+        )
+        # Public contact enquiries never expire with the private chats.
+        self.assertTrue(
+            ContactMessage.objects.filter(pk=public_enquiry.pk).exists()
+        )
+        self.assertFalse(CommsComment.objects.filter(pk=old_comment.pk).exists())
+        self.assertTrue(CommsComment.objects.filter(pk=new_comment.pk).exists())
+        # Announcements themselves are retained.
+        self.assertTrue(CommsPost.objects.filter(pk=post.pk).exists())

@@ -16,13 +16,11 @@
         <div class="account-membership-mark" aria-hidden="true">{{ member_initials|default:'S' }}</div>
         <div>
             <h3>{{ membership.full_name }}</h3>
-            <p class="account-muted">
-                {% if membership.membership_id %}Member ID {{ membership.membership_id }}{% else %}Membership record{% endif %}
-                {% if membership_snapshot.member_since %} · Since {{ membership_snapshot.member_since|date:"M Y" }}{% endif %}
-            </p>
         </div>
     </div>
+    {% endif %}
 
+    {% if membership_editable %}
     <dl class="account-detail-list">
         <div><dt>Category</dt><dd>{{ membership.get_membership_category_display|default:'Not recorded' }}</dd></div>
         <div><dt>Baptism</dt><dd>{{ membership.get_baptism_status_display|default:'Not recorded' }}</dd></div>
@@ -32,9 +30,9 @@
 
     {% if pending_change %}
     <div class="account-alert account-alert--info">
-        <strong>Your {% if pending_change.is_application %}membership application{% else %}membership update{% endif %} is with the church office.</strong>
+        <strong>Your membership details update is with the church office.</strong>
         It was submitted {{ pending_change.created_at|date:"d M Y, H:i" }}.
-        {% if membership.status == 'active' %} You remain an active member while it is reviewed.{% endif %}
+        You remain an active member while it is reviewed.
     </div>
     {% endif %}
 
@@ -54,19 +52,65 @@
     {% endif %}
 
     <div class="account-card-foot">
-        <button type="button" class="btn btn-gold" data-account-open="membershipModal">Edit membership details</button>
-        <a class="btn btn-ghost" href="{% url 'members:account_activities' %}">View activities</a>
+        <button type="button" class="btn btn-gold btn-sm" data-account-open="membershipModal">Edit membership details</button>
+        <a class="btn btn-ghost btn-sm" href="{% url 'members:account_activities' %}">View activities</a>
     </div>
+
+    {% elif membership and membership.status == 'pending' %}
+    <div class="account-alert account-alert--info">
+        <strong>Your membership request is with the church office.</strong>
+        It was submitted {{ membership.created_at|date:"d M Y, H:i" }}. The membership
+        registry form will open here automatically once an administrator approves it.
+    </div>
+    <div class="account-card-foot">
+        <a class="btn btn-ghost" href="{% url 'members:account_messages' %}">Message the church office</a>
+    </div>
+
+    {% elif membership and membership.status == 'rejected' %}
+    {% if latest_decision %}
+    <div class="account-decision account-decision--rejected">
+        <p class="account-decision-title">
+            Latest review: {{ latest_decision.get_status_display }}
+            <span>· {{ latest_decision.reviewed_at|default:latest_decision.updated_at|date:"d M Y" }}</span>
+        </p>
+        {% if latest_decision.admin_note %}
+        <p class="account-decision-note">“{{ latest_decision.admin_note|linebreaksbr }}”</p>
+        {% endif %}
+    </div>
+    {% endif %}
+    <div class="account-empty-state">
+        <h3>Your membership request was not approved</h3>
+        <p>You can request church membership again, or message the church office if you would like to talk it through first.</p>
+        <form method="post" action="{% url 'members:account_membership_request' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-gold">Request church membership again</button>
+        </form>
+        <a class="btn btn-ghost" href="{% url 'members:account_messages' %}">Message the church office</a>
+    </div>
+
+    {% elif membership and membership.status == 'inactive' %}
+    <div class="account-alert account-alert--info">
+        <strong>Your church membership is currently inactive.</strong>
+        The membership registry form is closed for this record. Please message
+        the church office if you would like your membership reviewed.
+    </div>
+    <div class="account-card-foot">
+        <a class="btn btn-ghost" href="{% url 'members:account_messages' %}">Message the church office</a>
+    </div>
+
     {% else %}
     <div class="account-empty-state">
         <h3>You have not joined the church membership yet</h3>
         <p>
-            Your website account is active. Joining the church membership is a separate,
-            optional step that tells the church office about your church family and
-            ministry interests.
+            Your website account is active. Requesting church membership tells the
+            church office that you would like to join. The full membership registry
+            form opens on your profile after they approve your request.
         </p>
-        <p class="account-muted">Nothing you enter here can approve your own membership. The church office reviews every application.</p>
-        <button type="button" class="btn btn-gold" data-account-open="membershipModal">Join the church</button>
+        <p class="account-muted">Nothing you enter here can approve your own membership. The church office reviews every request.</p>
+        <form method="post" action="{% url 'members:account_membership_request' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-gold">Request church membership</button>
+        </form>
     </div>
     {% endif %}
 </section>

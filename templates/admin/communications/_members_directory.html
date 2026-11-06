@@ -1,0 +1,61 @@
+{% load i18n admin_menu %}
+<section class="cf-feed-page sboi-community__directory" aria-label="{% translate 'Members' %}">
+    <form class="sboi-directory-search" method="get" action="{% url 'communications:inbox' %}" role="search">
+        <input type="hidden" name="view" value="members">
+        <span class="comms-search__icon">{% admin_icon 'search' %}</span>
+        <input type="search" name="q" value="{{ member_query }}" placeholder="{% translate 'Search by name, username or email' %}" aria-label="{% translate 'Search members' %}" autocomplete="off">
+        <button type="submit" class="sboi-comms-button sboi-comms-button--small">{% translate 'Search' %}</button>
+        {% if member_query %}
+        <a class="sboi-directory-search__clear" href="{% url 'communications:inbox' %}?view=members">{% translate 'Clear' %}</a>
+        {% endif %}
+    </form>
+
+    <div class="sboi-people-grid">
+        {% for row in member_directory %}
+        <article class="sboi-person">
+            <a class="sboi-person__identity" href="{% if row.membership %}{% url 'admin:members_churchmembership_profile' row.membership.pk %}{% else %}{% url 'admin:auth_user_change' row.user.pk %}{% endif %}">
+                {% if row.avatar_url %}
+                <img src="{{ row.avatar_url }}" alt="" class="cf-avatar cf-avatar--lg cf-avatar-img" loading="lazy">
+                {% else %}
+                <span class="cf-avatar cf-avatar--lg" aria-hidden="true">{{ row.initials }}</span>
+                {% endif %}
+                <span class="sboi-person__copy">
+                    <strong>{{ row.display_name }}</strong>
+                    <span>@{{ row.user.get_username }}</span>
+                </span>
+            </a>
+            <div class="sboi-person__pills">
+                {% if row.is_superuser %}
+                <span class="cf-pill cf-pill--quiet">{% translate 'Superuser' %}</span>
+                {% elif row.is_staff %}
+                <span class="cf-pill cf-pill--quiet">{% translate 'Staff' %}</span>
+                {% else %}
+                <span class="cf-pill cf-pill--quiet">{{ row.status_label }}</span>
+                {% endif %}
+                {% if row.membership %}
+                <span class="cf-pill cf-pill--{{ row.status }}">{{ row.membership.get_status_display }}</span>
+                {% endif %}
+            </div>
+            <dl class="sboi-person__facts">
+                <div>
+                    <dt>{% translate 'Email' %}</dt>
+                    <dd>{{ row.user.email|default:'—' }}</dd>
+                </div>
+                <div>
+                    <dt>{% translate 'Joined' %}</dt>
+                    <dd>{{ row.user.date_joined|date:"j M Y" }}</dd>
+                </div>
+            </dl>
+            <footer class="sboi-person__actions">
+                <a class="cf-btn cf-btn--quiet" href="{% url 'admin:auth_user_change' row.user.pk %}">{% translate 'Admin account' %}</a>
+                <a class="cf-btn cf-btn--gold" href="{% url 'members:member_profile' row.user.get_username %}">{% translate 'Profile' %}</a>
+            </footer>
+        </article>
+        {% empty %}
+        <div class="cf-feed-empty">
+            <h2>{% translate 'No matching members' %}</h2>
+            <p>{% translate 'Try a different name, username or email address.' %}</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>

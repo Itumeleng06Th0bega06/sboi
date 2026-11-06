@@ -78,7 +78,7 @@ class MemberProfileAdmin(AreaPermissionMixin, admin.ModelAdmin):
     list_editable = ['status']
     search_fields = ['user__username', 'user__email', 'user__first_name', 'user__last_name']
     actions = ['suspend_7_days', 'suspend_30_days', 'block_permanently', 'reactivate']
-    fields = ['user', 'status', 'suspended_until', 'blocked_reason', 'created_at']
+    fields = ['user', 'avatar', 'status', 'suspended_until', 'blocked_reason', 'created_at']
     readonly_fields = ['user', 'created_at']
 
     @admin.display(description='Registered')

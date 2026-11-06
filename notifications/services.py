@@ -251,6 +251,7 @@ def serialize(notification, request=None):
             if notification.created_at else ''
         ),
         'mark_read_url': _safe_reverse('notifications:read', args=[notification.pk]),
+        'open_url': _safe_reverse('notifications:open', args=[notification.pk]),
         'dismiss_url': _safe_reverse('notifications:dismiss', args=[notification.pk]),
         'archive_url': _safe_reverse('notifications:archive', args=[notification.pk]),
         # The legacy admin bell displayed one count per category row.
@@ -386,6 +387,67 @@ def _close_missing(source_type, open_source_ids, status=Notification.STATUS_RESO
     return queryset.update(**fields)
 
 
+def _notify_admin_contact(message):
+    """Best-effort email + WhatsApp notice to admin for a new contact message."""
+    import urllib.request
+    from django.conf import settings as _settings
+    from django.core.mail import send_mail
+
+    admin_email = getattr(_settings, 'ADMIN_EMAIL', 'admin@shekinahblaze.org')
+    # Email
+    try:
+        send_mail(
+            subject=f'New contact message from {message.sender_name}',
+            message=(
+                f'You have a new message from {message.sender_name}'
+                + (f' ({message.email})' if message.email else '')
+                + (f': {message.subject}' if message.subject else '')
+                + '\n\nSign in to the admin console to read and reply.'
+            ),
+            from_email=getattr(_settings, 'DEFAULT_FROM_EMAIL', admin_email),
+            recipient_list=[admin_email],
+            fail_silently=True,
+        )
+    except Exception:
+        pass
+
+    # WhatsApp doorbell
+    admin_wa = getattr(_settings, 'ADMIN_WHATSAPP_NUMBER', '').strip()
+    api_url = getattr(_settings, 'WHATSAPP_API_URL', '').strip()
+    api_token = getattr(_settings, 'WHATSAPP_API_TOKEN', '').strip()
+    if admin_wa and api_url and api_token:
+        digits = ''.join(ch for ch in admin_wa if ch.isdigit())
+        if len(digits) >= 7:
+            try:
+                payload = {
+                    'to': digits,
+                    'type': 'text',
+                    'text': {
+                        'body': (
+                            'New contact message from '
+                            f'{message.sender_name}. Sign in to the admin '
+                            'console to read and reply.'
+                        ),
+                    },
+                }
+                sender = getattr(_settings, 'WHATSAPP_SENDER_ID', '').strip()
+                if sender:
+                    payload['from'] = sender
+                request = urllib.request.Request(
+                    api_url,
+                    data=__import__('json').dumps(payload).encode('utf-8'),
+                    headers={
+                        'Authorization': f'Bearer {api_token}',
+                        'Content-Type': 'application/json',
+                    },
+                    method='POST',
+                )
+                with urllib.request.urlopen(request, timeout=10):
+                    pass
+            except Exception:
+                pass
+
+
 def sync_contact_message(message):
     source_key = f'contact:{message.pk}'
     # Administrator replies are a member-facing activity, not an admin task.
@@ -419,6 +481,8 @@ def sync_contact_message(message):
         resolved_at=None,
         completed_at=None,
     )
+    # Notify admin via email + WhatsApp (best-effort, generic, no message text)
+    _notify_admin_contact(message)
 
 
 def sync_testimony(testimony):

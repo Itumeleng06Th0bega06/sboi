@@ -1,0 +1,48 @@
+{% extends account_base|default:'members/account/base_account.html' %}
+{% load static %}
+
+{% block title %}My posts · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
+
+{% block account_content %}
+<section class="cf-feed-page">
+    <header class="cf-page-head">
+        <div>
+            <p class="cf-eyebrow">Your activity</p>
+            <h1>My posts</h1>
+            <p>Everything you have shared with the church community.</p>
+        </div>
+        <a class="cf-head-link" href="{% url 'members:account' %}">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 5-7 7 7 7M5 12h14"/></svg>
+            Back to feed
+        </a>
+    </header>
+
+    <div class="cf-feed" data-cf-feed>
+        <div class="cf-feed-list" data-cf-feed-list>
+            {% for post in posts %}
+            {% include 'members/account/_community_post.html' with post=post %}
+            {% empty %}
+            <div class="cf-feed-empty" data-feed-empty>
+                <span class="cf-feed-empty-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
+                </span>
+                <h2>You have not posted yet</h2>
+                <p>Share a testimony, prayer request or church update from the community feed.</p>
+                <a class="cf-btn cf-btn--gold" href="{% url 'members:account' %}">Go to the feed</a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="button"
+                class="cf-load-more"
+                data-cf-load-more
+                data-url="{% url 'members:feed_load_more' %}"
+                data-before="{{ feed_next_before|default:'' }}"
+                data-scope="posts"
+                {% if not feed_has_more %}hidden{% endif %}>
+            Load earlier posts
+        </button>
+        <p class="cf-load-status" data-cf-load-status role="status" aria-live="polite"></p>
+    </div>
+</section>
+{% endblock %}

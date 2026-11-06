@@ -1,0 +1,45 @@
+{% extends account_base|default:'members/account/base_account.html' %}
+{% load static %}
+
+{% block title %}Saved posts · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
+
+{% block account_content %}
+<section class="cf-feed-page" data-cf-saved-view>
+    <header class="cf-page-head">
+        <div>
+            <p class="cf-eyebrow">Private to you</p>
+            <h1>Saved posts</h1>
+            <p>Posts you kept to read again. Nobody else can see this list.</p>
+        </div>
+        <span class="cf-head-count">{{ saved_count|default:0 }} saved</span>
+    </header>
+
+    <div class="cf-feed" data-cf-feed>
+        <div class="cf-feed-list" data-cf-feed-list>
+            {% for post in posts %}
+            {% include 'members/account/_community_post.html' with post=post %}
+            {% empty %}
+            <div class="cf-feed-empty" data-feed-empty>
+                <span class="cf-feed-empty-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M6 4h12v17l-6-4-6 4V4Z"/></svg>
+                </span>
+                <h2>Nothing saved yet</h2>
+                <p>Use the save action on a post and it will wait for you here.</p>
+                <a class="cf-btn cf-btn--gold" href="{% url 'members:account' %}">Browse the feed</a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="button"
+                class="cf-load-more"
+                data-cf-load-more
+                data-url="{% url 'members:feed_load_more' %}"
+                data-before="{{ feed_next_before|default:'' }}"
+                data-scope="saved"
+                {% if not feed_has_more %}hidden{% endif %}>
+            Load earlier saved posts
+        </button>
+        <p class="cf-load-status" data-cf-load-status role="status" aria-live="polite"></p>
+    </div>
+</section>
+{% endblock %}

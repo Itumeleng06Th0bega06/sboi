@@ -1,0 +1,108 @@
+{% load i18n admin_menu %}
+<div class="comms-shell sboi-chat-shell{% if selected or office_member or dm_thread %} is-thread-open{% endif %}" data-comms-shell>
+    <aside class="comms-sidebar sboi-chat-sidebar" aria-label="{% translate 'Chat conversations' %}">
+        <div class="comms-sidebar__head">
+            <div>
+                <h2>{% translate 'Conversations' %}</h2>
+                <p class="comms-sidebar__meta">
+                    {% if chat_unread_total %}
+                        {% blocktranslate count counter=chat_unread_total %}{{ counter }} unread message{% plural %}{{ counter }} unread messages{% endblocktranslate %}
+                    {% else %}
+                        {% translate 'All caught up' %}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <form class="comms-search" method="get" action="{% url 'communications:inbox' %}" data-comms-list-search>
+            <input type="hidden" name="view" value="chat">
+            <span class="comms-search__icon">{% admin_icon 'search' %}</span>
+            <input type="search" name="q" value="{{ conversation_query }}" placeholder="{% translate 'Search people and conversations' %}" aria-label="{% translate 'Search conversations' %}" autocomplete="off">
+        </form>
+
+        <div class="comms-list sboi-chat-list">
+            <p class="sboi-chat-label">
+                {% translate 'Church office' %}
+                <span>{{ office_rows|length }}</span>
+                {% if office_unread_total %}<b class="sboi-chat-label__badge">{{ office_unread_total }}</b>{% endif %}
+            </p>
+            {% for row in office_rows %}
+            <a class="comms-conversation sboi-chat-row{% if office_member.pk == row.user.pk %} is-active{% endif %}"
+               href="{% url 'communications:inbox' %}?view=chat&amp;channel=office&amp;member={{ row.user.pk }}"
+               aria-label="{% translate 'Open church office conversation with' %} {{ row.display_name }}">
+                {% if row.avatar_url %}
+                <img src="{{ row.avatar_url }}" alt="" class="comms-avatar comms-avatar--img" loading="lazy">
+                {% else %}
+                <span class="comms-avatar" aria-hidden="true">{{ row.initials }}</span>
+                {% endif %}
+                <span class="comms-conversation__body">
+                    <span class="comms-conversation__top">
+                        <span class="comms-conversation__name">{{ row.display_name }}</span>
+                        <time class="comms-conversation__time" datetime="{{ row.latest.created_at|date:'c' }}">{{ row.latest.created_at|timesince }} {% translate 'ago' %}</time>
+                    </span>
+                    <span class="comms-conversation__bottom">
+                        <span class="comms-conversation__preview">{{ row.latest.message|striptags|truncatechars:70 }}</span>
+                        {% if row.unread %}
+                        <span class="comms-unread" aria-label="{% blocktranslate count counter=row.unread %}{{ counter }} unread message{% plural %}{{ counter }} unread messages{% endblocktranslate %}">{{ row.unread }}</span>
+                        {% endif %}
+                    </span>
+                </span>
+            </a>
+            {% empty %}
+            <p class="sboi-chat-hint">{% translate 'No member messages in the church-office inbox yet.' %}</p>
+            {% endfor %}
+
+            {% if can_moderate_dms %}
+            <p class="sboi-chat-label">
+                {% translate 'Member conversations' %}
+                <span>{{ dm_rows|length }}</span>
+                <em class="sboi-chat-label__note">{% translate 'Superuser moderation' %}</em>
+            </p>
+            {% for row in dm_rows %}
+            <a class="comms-conversation sboi-chat-row sboi-chat-row--dm{% if dm_thread.pk == row.thread.pk %} is-active{% endif %}"
+               href="{% url 'communications:inbox' %}?view=chat&amp;channel=dm&amp;thread={{ row.thread.pk }}"
+               aria-label="{% translate 'Open member conversation between' %} {{ row.display_name }}">
+                <span class="comms-avatar comms-avatar--group" aria-hidden="true">{{ row.initials }}</span>
+                <span class="comms-conversation__body">
+                    <span class="comms-conversation__top">
+                        <span class="comms-conversation__name">{{ row.display_name }}</span>
+                        <time class="comms-conversation__time" datetime="{{ row.last_activity|date:'c' }}">{{ row.last_activity|timesince }} {% translate 'ago' %}</time>
+                    </span>
+                    <span class="comms-conversation__bottom">
+                        <span class="comms-conversation__preview">{{ row.preview|truncatechars:70 }}</span>
+                        {% if row.message_count %}<span class="sboi-chat-count">{{ row.message_count }}</span>{% endif %}
+                    </span>
+                </span>
+            </a>
+            {% empty %}
+            <p class="sboi-chat-hint">{% translate 'No member-to-member conversations yet.' %}</p>
+            {% endfor %}
+            {% endif %}
+
+            <p class="sboi-chat-label sboi-chat-label--space">{% translate 'Staff conversations' %}</p>
+            <div data-comms-conversation-list>
+                {% include "admin/communications/_conversation_list.html" %}
+            </div>
+        </div>
+    </aside>
+
+    <div class="comms-workspace sboi-chat-workspace{% if office_member or dm_thread %} sboi-chat-workspace--single{% endif %}{% if not selected and not office_member and not dm_thread %} comms-workspace--empty{% endif %}" id="comms-workspace" data-comms-workspace>
+        {% if office_member %}
+            {% include "admin/communications/_office_thread.html" %}
+        {% elif dm_thread %}
+            {% include "admin/communications/_dm_thread.html" %}
+        {% elif selected %}
+            {% include "admin/communications/_workspace.html" %}
+        {% else %}
+            <div class="comms-empty-state sboi-chat-empty">
+                <span class="comms-empty-state__icon">{% admin_icon 'message' %}</span>
+                <h2>{% translate 'Choose a conversation' %}</h2>
+                <p>{% translate 'Read church-office messages, open a member conversation or continue a staff group.' %}</p>
+                <div class="comms-empty-state__actions">
+                    <a href="{% url 'communications:inbox' %}?view=feed">{% translate 'Share a feed update' %}</a>
+                    <a href="{% url 'communications:inbox' %}?view=members">{% translate 'Browse members' %}</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>

@@ -1,32 +1,26 @@
-<section class="account-card account-card--profile" id="profile">
-    <header class="account-card-head">
+<section class="account-card account-card--profile cf-panel" id="profile">
+    <header class="cf-panel-head">
         <div>
-            <h2>Personal profile</h2>
-            <p class="account-muted">Your contact details, kept private to the church office.</p>
+            <h2>Personal information</h2>
+            <p>Private to you and the church office.</p>
         </div>
-        <button type="button" class="account-text-link" data-account-open="profileModal">Edit</button>
+        <button type="button" class="cf-text-action" data-account-open="profileModal">Edit</button>
     </header>
 
-    <div class="account-profile-head">
-        {% if member_avatar_url %}
-        <img src="{{ member_avatar_url }}" alt="" class="account-avatar account-avatar--md">
-        {% else %}
-        <span class="account-avatar account-avatar--md" aria-hidden="true">{{ member_initials|default:'S' }}</span>
-        {% endif %}
-        <div>
-            <h3>{{ request.user.get_full_name|default:request.user.username }}</h3>
-            <p class="account-muted">@{{ request.user.username }}</p>
-        </div>
-    </div>
-
-    <dl class="account-detail-list">
-        <div><dt>Email</dt><dd>{{ request.user.email|default:'Not provided' }}</dd></div>
-        <div><dt>Phone</dt><dd>{% if membership and membership.phone %}{{ membership.phone }}{% else %}Not provided{% endif %}</dd></div>
-        <div><dt>Date of birth</dt><dd>{% if membership and membership.date_of_birth %}{{ membership.date_of_birth|date:"d M Y" }}{% else %}Not provided{% endif %}</dd></div>
-        <div><dt>Gender</dt><dd>{% if membership and membership.gender %}{{ membership.get_gender_display }}{% else %}Not provided{% endif %}</dd></div>
-        <div><dt>Marital status</dt><dd>{% if membership and membership.marital_status %}{{ membership.get_marital_status_display }}{% else %}Not provided{% endif %}</dd></div>
-        <div class="account-detail-list--full"><dt>Address</dt><dd>{% if membership and membership.address %}{{ membership.address|linebreaksbr }}{% else %}Not provided{% endif %}</dd></div>
-        <div><dt>Emergency contact</dt><dd>{% if membership and membership.emergency_contact_name %}{{ membership.emergency_contact_name }}{% else %}Not provided{% endif %}</dd></div>
-        <div><dt>Emergency phone</dt><dd>{% if membership and membership.emergency_contact_phone %}{{ membership.emergency_contact_phone }}{% else %}Not provided{% endif %}</dd></div>
+    <dl class="cf-info-list">
+        {% if request.user.email %}<div><dt>Email</dt><dd>{{ request.user.email }}</dd></div>{% endif %}
+        {% if membership and membership.phone %}<div><dt>Phone</dt><dd>{{ membership.phone }}</dd></div>{% endif %}
+        {% if membership and membership.date_of_birth %}<div><dt>Date of birth</dt><dd>{{ membership.date_of_birth|date:"d M Y" }}</dd></div>{% endif %}
+        {% if membership and membership.gender %}<div><dt>Gender</dt><dd>{{ membership.get_gender_display }}</dd></div>{% endif %}
+        {% if membership and membership.marital_status %}<div><dt>Marital status</dt><dd>{{ membership.get_marital_status_display }}</dd></div>{% endif %}
+        {% if membership and membership.address %}<div><dt>Address</dt><dd>{{ membership.address|linebreaksbr }}</dd></div>{% endif %}
+        {% if membership and membership.emergency_contact_name %}<div><dt>Emergency contact</dt><dd>{{ membership.emergency_contact_name }}</dd></div>{% endif %}
+        {% if membership and membership.emergency_contact_phone %}<div><dt>Emergency phone</dt><dd>{{ membership.emergency_contact_phone }}</dd></div>{% endif %}
     </dl>
+    {% if not request.user.email or not membership or not membership.phone %}
+    <p class="cf-panel-note">
+        <strong>Keep your details current.</strong>
+        Add your email, phone and personal details so the church office can reach you.
+    </p>
+    {% endif %}
 </section>

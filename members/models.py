@@ -27,7 +27,7 @@ GENDER_CHOICES = [
 ]
 
 MARITAL_STATUS_CHOICES = [
-    ('', 'Prefer not to say'),
+    ('', 'Not specified'),
     ('single', 'Single'),
     ('married', 'Married'),
     ('widowed', 'Widowed'),
@@ -62,7 +62,7 @@ WHATSAPP_STATUS_CHOICES = [
 ]
 
 BAPTISM_STATUS_CHOICES = [
-    ('', 'Prefer not to say'),
+    ('', 'Not specified'),
     ('baptized', 'Baptized'),
     ('not_baptized', 'Not Baptized'),
     ('planning', 'Planning to Be Baptized'),

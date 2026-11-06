@@ -10,8 +10,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=73">
-  <link rel="stylesheet" href="{% static 'css/notifications.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=77">
+  <link rel="stylesheet" href="{% static 'css/notifications.css' %}?v=2">
   {% block extra_head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -32,7 +32,9 @@
                     </ul>
                 </li>
                 <li><a href="{% url 'values:values' %}" class="nav-tab{% if request.resolver_match.namespace == 'values' %} active{% endif %}"><img src="{% static 'images/3d/gem.png' %}" alt="" class="nav-tab-ico" loading="lazy" decoding="async">Core Values</a></li>
+                {% if request.user.is_authenticated %}
                 <li><a href="{% url 'blackboard:blackboard' %}" class="nav-tab{% if request.resolver_match.namespace == 'blackboard' %} active{% endif %}"><img src="{% static 'images/3d/book.png' %}" alt="" class="nav-tab-ico" loading="lazy" decoding="async">Blackboard</a></li>
+                {% endif %}
             </ul>
 
             <a href="{% url 'home:home' %}" class="brand" aria-label="Home" title="Home">
@@ -49,13 +51,15 @@
                     {% if request.user.is_authenticated %}
                     <details class="nav-account">
                         <summary class="nav-account-toggle" aria-label="My account" title="My account">
-                            {% if member_avatar_url %}
-                            <img src="{{ member_avatar_url }}" alt="" class="nav-avatar nav-avatar-img">
-                            {% else %}
-                            <span class="nav-avatar" aria-hidden="true">{{ member_initials|default:'S' }}</span>
-                            {% endif %}
-                            <span class="nav-account-name">{{ request.user.first_name|default:request.user.username }}</span>
-                            <svg class="nav-account-chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41Z"/></svg>
+                            <span class="nav-account-identity">
+                                {% if member_avatar_url %}
+                                <img src="{{ member_avatar_url }}" alt="" class="nav-avatar nav-avatar-img">
+                                {% else %}
+                                <span class="nav-avatar" aria-hidden="true">{{ member_initials|default:'S' }}</span>
+                                {% endif %}
+                                <span class="nav-account-name">{{ request.user.first_name|default:request.user.username }}</span>
+                                <svg class="nav-account-chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41Z"/></svg>
+                            </span>
                         </summary>
                         <div class="nav-account-menu">
                             <div class="nav-account-head">
@@ -69,14 +73,18 @@
                                     {% if request.user.email %}<small>{{ request.user.email }}</small>{% endif %}
                                 </span>
                             </div>
-                            <a href="{% url 'members:account' %}" class="nav-account-link">My profile</a>
+                            <a href="{% url 'members:account_profile' %}" class="nav-account-link">Profile</a>
+                            {% if member_can_request_membership %}
+                            <form method="post" action="{% url 'members:account_membership_request' %}" class="nav-account-request">
+                                {% csrf_token %}
+                                <button type="submit" class="nav-account-link nav-account-request-link">Request church membership</button>
+                            </form>
+                            {% elif member_membership_status == 'pending' %}
+                            <a href="{% url 'members:account' %}#membership" class="nav-account-link">Membership request pending</a>
+                            {% endif %}
                             <a href="{% url 'members:account_messages' %}" class="nav-account-link">
-                                <span>My messages</span>
+                                <span>Chat</span>
                                 {% if member_unread_messages %}<span class="nav-menu-badge">{{ member_unread_messages }}</span>{% endif %}
-                            </a>
-                            <a href="{% url 'members:account_notifications' %}" class="nav-account-link">
-                                <span>Notifications</span>
-                                {% if member_unread_notifications %}<span class="nav-menu-badge">{{ member_unread_notifications }}</span>{% endif %}
                             </a>
                             <a href="{% url 'members:account_settings' %}" class="nav-account-link">Account settings</a>
                             {% if request.user.is_staff %}
@@ -106,10 +114,12 @@
                 <img src="{% static 'images/3d/gem.png' %}" alt="" class="bnav-ico" loading="lazy" decoding="async">
                 <span>Values</span>
             </a>
+            {% if request.user.is_authenticated %}
             <a class="bnav-item{% if request.resolver_match.namespace == 'blackboard' %} active{% endif %}" href="{% url 'blackboard:blackboard' %}">
                 <img src="{% static 'images/3d/book.png' %}" alt="" class="bnav-ico" loading="lazy" decoding="async">
                 <span>B.board</span>
             </a>
+            {% endif %}
         </div>
         <a class="bnav-home{% if request.resolver_match.namespace == 'home' %} active{% endif %}" href="{% url 'home:home' %}" aria-label="Home">
             <span class="bnav-logo">
@@ -128,10 +138,10 @@
             </a>
             <div class="bnav-auth">
                 {% if request.user.is_authenticated %}
-                <a class="bnav-item{% if request.resolver_match.namespace == 'members' %} active{% endif %}" href="{% url 'members:account' %}">
+                <button type="button" class="bnav-item{% if request.resolver_match.namespace == 'members' %} active{% endif %}" id="bottomAccountBtn" aria-haspopup="true" aria-expanded="false">
                     <span class="bnav-avatar" aria-hidden="true">{{ member_initials|default:'S' }}</span>
                     <span>Account</span>
-                </a>
+                </button>
                 {% else %}
                 <a class="bnav-item" href="{% url 'members:login' %}">
                     <img src="{% static 'images/3d/person.png' %}" alt="" class="bnav-ico" loading="lazy" decoding="async">
@@ -155,6 +165,39 @@
             </ul>
         </div>
     </div>
+    {% if request.user.is_authenticated %}
+    <div class="nav-sheet" id="accountSheet" hidden>
+        <div class="nav-sheet-backdrop" data-sheet-close></div>
+        <div class="nav-sheet-panel" role="dialog" aria-modal="true" aria-label="Account menu">
+            <div class="nav-sheet-handle"></div>
+            <p class="nav-sheet-title">Account</p>
+            <ul class="nav-sheet-list">
+                <li><a href="{% url 'members:account_profile' %}">Profile</a></li>
+                {% if member_can_request_membership %}
+                <li>
+                    <form method="post" action="{% url 'members:account_membership_request' %}" style="margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-sheet-action">Request church membership</button>
+                    </form>
+                </li>
+                {% elif member_membership_status == 'pending' %}
+                <li><a href="{% url 'members:account' %}#membership">Membership request pending</a></li>
+                {% endif %}
+                <li><a href="{% url 'members:account_messages' %}">Chat</a></li>
+                <li><a href="{% url 'members:account_settings' %}">Account settings</a></li>
+                {% if request.user.is_staff %}
+                <li><a href="{% url 'admin:index' %}">Admin console</a></li>
+                {% endif %}
+                <li>
+                    <form method="post" action="{% url 'members:logout' %}" style="margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-sheet-signout">Sign out</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+    {% endif %}
     {% endblock %}
 
     <main>
@@ -218,9 +261,9 @@
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"/></svg>
     </button>
 
-    <script src="{% static 'js/script.js' %}?v=11"></script>
+    <script src="{% static 'js/script.js' %}?v=13"></script>
     <script src="{% static 'js/ajax-forms.js' %}"></script>
-    <script src="{% static 'js/notifications.js' %}?v=2"></script>
+    <script src="{% static 'js/notifications.js' %}?v=3"></script>
     {% block extra_scripts %}{% endblock %}
     {# Ensures the CSRF cookie exists for bell actions on pages without a form. #}
     <div hidden aria-hidden="true">{% csrf_token %}</div>

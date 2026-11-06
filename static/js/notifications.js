@@ -2,44 +2,12 @@
   Public / member notification bell.
 
   The markup is rendered server-side. This script polls the JSON feed so the
-  badge stays fresh and lets a visitor or member mark an item read or dismiss
-  it without reloading the page. All state changes are posted to the same
-  notification service used by the admin bell.
+  badge stays fresh and rebuilds the list after the server changes. Opening an
+  item follows its open_url, and the server marks it read before redirecting;
+  there are no per-item action buttons to keep the dropdown calm.
 */
 (function () {
     'use strict';
-
-    function csrfToken() {
-        var match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
-        return match ? decodeURIComponent(match[1]) : '';
-    }
-
-    function act(url) {
-        if (!url) {
-            return Promise.resolve();
-        }
-        return fetch(url, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': csrfToken()
-            }
-        });
-    }
-
-    function bind(root) {
-        root.querySelectorAll('[data-notif-action]').forEach(function (button) {
-            button.addEventListener('click', function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-                button.disabled = true;
-                act(button.getAttribute('data-notif-action'))
-                    .then(function () { refresh(root); })
-                    .catch(function () { button.disabled = false; });
-            });
-        });
-    }
 
     function icon() {
         var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -53,50 +21,31 @@
     }
 
     function row(item) {
-        var wrap = document.createElement('div');
-        wrap.className = 'notif-item tone-' + (item.tone || 'info');
-
         var link = document.createElement('a');
-        link.className = 'notif-item-link';
-        link.href = item.url || '#';
+        link.className = 'notif-item tone-' + (item.tone || 'info');
+        if (item.unread) {
+            link.className += ' is-unread';
+        }
+        link.href = item.open_url || item.url || '#';
+        link.setAttribute('data-notification-id', item.id || '');
 
         var title = document.createElement('span');
         title.className = 'notif-item-title';
         title.textContent = item.title || '';
+        link.appendChild(title);
 
-        var desc = document.createElement('span');
-        desc.className = 'notif-item-desc';
-        desc.textContent = item.body || '';
+        if (item.body) {
+            var desc = document.createElement('span');
+            desc.className = 'notif-item-desc';
+            desc.textContent = item.body;
+            link.appendChild(desc);
+        }
 
         var date = document.createElement('span');
         date.className = 'notif-item-date';
         date.textContent = item.date || '';
-
-        link.appendChild(title);
-        if (item.body) {
-            link.appendChild(desc);
-        }
         link.appendChild(date);
-        wrap.appendChild(link);
-
-        var actions = document.createElement('div');
-        actions.className = 'notif-item-actions';
-        if (item.unread) {
-            var read = document.createElement('button');
-            read.type = 'button';
-            read.className = 'notif-item-action';
-            read.setAttribute('data-notif-action', item.mark_read_url || '');
-            read.textContent = 'Mark read';
-            actions.appendChild(read);
-        }
-        var dismiss = document.createElement('button');
-        dismiss.type = 'button';
-        dismiss.className = 'notif-item-action';
-        dismiss.setAttribute('data-notif-action', item.dismiss_url || '');
-        dismiss.textContent = 'Dismiss';
-        actions.appendChild(dismiss);
-        wrap.appendChild(actions);
-        return wrap;
+        return link;
     }
 
     function empty() {
@@ -134,20 +83,42 @@
             data.items.forEach(function (item) {
                 list.appendChild(row(item));
             });
-            bind(list);
         }).catch(function () {
             /* Keep the server-rendered list and try again on the next tick. */
         });
     }
 
+    function closeBell(root) {
+        if (!root.open) return;
+        root.open = false;
+        var more = root.querySelector('.notif-bell-more');
+        if (more) more.open = false;
+    }
+
     document.querySelectorAll('[data-sboi-public-bell]').forEach(function (root) {
-        bind(root);
         root.addEventListener('toggle', function () {
             if (root.open) {
                 refresh(root);
+            } else {
+                var more = root.querySelector('.notif-bell-more');
+                if (more) more.open = false;
             }
         });
         setInterval(function () { refresh(root); }, 60000);
+    });
+
+    // Close the dropdown when the page is clicked elsewhere or Escape is used.
+    document.addEventListener('click', function (event) {
+        document.querySelectorAll('[data-sboi-public-bell][open]').forEach(function (root) {
+            if (!root.contains(event.target)) {
+                closeBell(root);
+            }
+        });
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') return;
+        document.querySelectorAll('[data-sboi-public-bell][open]').forEach(closeBell);
     });
 
     // The account page updates read state without reloading. Ask the bell to

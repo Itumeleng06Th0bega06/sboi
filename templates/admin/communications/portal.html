@@ -1,70 +1,133 @@
 {% extends "admin/base_site.html" %}
 {% load i18n static admin_menu %}
 
-{% block bodyclass %}{{ block.super }} sboi-comms-page{% if selected %} comms-has-selection{% endif %}{% endblock %}
+{% block bodyclass %}{{ block.super }} sboi-comms-page community-app sboi-comms-page--{{ community_view }}{% endblock %}
 {% block content_title %}{% endblock %}
 {% block nav-breadcrumbs %}{% endblock %}
 
 {% block responsive %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'admin/css/communications.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'css/community-app.css' %}?v=9">
+    <link rel="stylesheet" href="{% static 'css/community-feed.css' %}?v=6">
+    <link rel="stylesheet" href="{% static 'admin/css/communications.css' %}?v=7">
 {% endblock %}
 
 {% block extrahead %}
     {{ block.super }}
-    <script src="{% static 'admin/js/communications.js' %}?v=2" defer></script>
+    <script src="{% static 'admin/js/communications.js' %}?v=3" defer></script>
+    <script src="{% static 'js/community-feed.js' %}?v=7" defer></script>
 {% endblock %}
 
 {% block content %}
 <div id="content-main"
-     class="sboi-comms{% if selected %} has-selection{% endif %}"
+     class="sboi-comms sboi-community{% if selected or office_member or dm_thread %} has-selection{% endif %}"
      data-comms-root
      data-list-url="{% url 'communications:conversation_list' %}"
      data-inbox-url="{% url 'communications:inbox' %}">
-    <header class="sboi-comms__topbar">
-        <div>
-            <p class="sboi-dash__eyebrow">{% translate 'Staff workspace' %}</p>
-            <h1>{% translate 'Admin Communications' %}</h1>
-            <p class="sboi-comms__lead">{% translate 'Private conversations for authorised church administrators and staff.' %}</p>
+
+    <aside class="cf-rail sboi-community__rail" aria-label="{% translate 'Community sections' %}">
+        <div class="cf-rail-brand">
+            <a href="{% url 'communications:inbox' %}?view=feed">
+                <span class="sboi-community__mark" aria-hidden="true">
+                    {% admin_icon 'church' %}
+                </span>
+                <span class="sboi-community__brand-copy">
+                    <strong>{% translate 'Community' %}</strong>
+                    <small>{% translate 'Admin' %}</small>
+                </span>
+            </a>
         </div>
-    </header>
 
-    <div class="comms-shell" data-comms-shell>
-        <aside class="comms-sidebar" aria-label="{% translate 'Conversations' %}">
-            <div class="comms-sidebar__head">
-                <div>
-                    <h2>{% translate 'Conversations' %}</h2>
-                    <p class="comms-sidebar__meta">
-                        {% if total_unread %}
-                            {% blocktranslate count counter=total_unread %}{{ counter }} unread message{% plural %}{{ counter }} unread messages{% endblocktranslate %}
-                        {% else %}
-                            {% translate 'All caught up' %}
-                        {% endif %}
-                    </p>
-                </div>
-            </div>
+        <nav class="cf-rail-nav">
+            <p class="cf-rail-label">{% translate 'Community' %}</p>
+            <a href="{% url 'communications:inbox' %}?view=feed"
+               class="cf-nav-item{% if community_view == 'feed' %} active{% endif %}">
+                {% admin_icon 'bullhorn' %}
+                <span>{% translate 'Feed' %}</span>
+            </a>
+            <a href="{% url 'communications:inbox' %}?view=chat"
+               class="cf-nav-item{% if community_view == 'chat' %} active{% endif %}">
+                {% admin_icon 'message' %}
+                <span>{% translate 'Chat' %}</span>
+                {% if chat_unread_total %}<span class="cf-nav-badge">{{ chat_unread_total }}</span>{% endif %}
+            </a>
+            <a href="{% url 'communications:inbox' %}?view=members"
+               class="cf-nav-item{% if community_view == 'members' %} active{% endif %}">
+                {% admin_icon 'users' %}
+                <span>{% translate 'Members' %}</span>
+            </a>
+            <a href="{% url 'communications:inbox' %}?view=profile"
+               class="cf-nav-item{% if community_view == 'profile' %} active{% endif %}">
+                {% admin_icon 'user' %}
+                <span>{% translate 'Profile' %}</span>
+            </a>
 
-            <form class="comms-search" method="get" action="{% url 'communications:inbox' %}" data-comms-list-search>
-                <span class="comms-search__icon">{% admin_icon 'search' %}</span>
-                <input type="search" name="q" value="{{ conversation_query }}" placeholder="{% translate 'Search conversations' %}" aria-label="{% translate 'Search conversations' %}" autocomplete="off">
-            </form>
+            <p class="cf-rail-label cf-rail-label--space">{% translate 'Church office' %}</p>
+            <a href="{% url 'admin:index' %}" class="cf-nav-item">
+                {% admin_icon 'house' %}
+                <span>{% translate 'Dashboard' %}</span>
+            </a>
+        </nav>
 
-            <div class="comms-list" data-comms-conversation-list>
-                {% include "admin/communications/_conversation_list.html" %}
-            </div>
-        </aside>
-
-        <div class="comms-workspace{% if not selected %} comms-workspace--empty{% endif %}" id="comms-workspace" data-comms-workspace>
-            {% if selected %}
-                {% include "admin/communications/_workspace.html" %}
+        <div class="cf-rail-identity">
+            {% if member_avatar_url %}
+            <img src="{{ member_avatar_url }}" alt="" class="cf-avatar cf-avatar--md cf-avatar-img">
             {% else %}
-                <div class="comms-empty-state">
-                    <span class="comms-empty-state__icon">{% admin_icon 'message' %}</span>
-                    <h2>{% translate 'Select a conversation' %}</h2>
-                    <p>{% translate 'Choose a group or direct message from the list to read and reply.' %}</p>
-                </div>
+            <span class="cf-avatar cf-avatar--md" aria-hidden="true">{{ member_initials|default:'A' }}</span>
             {% endif %}
+            <div class="cf-rail-identity-copy">
+                <strong>{{ member_display_name|default:request.user.get_username }}</strong>
+                <span>@{{ request.user.get_username }}</span>
+                <span class="cf-rail-membership">{% translate 'Staff account' %} <b>{% if request.user.is_superuser %}{% translate 'Superuser' %}{% else %}{% translate 'Communications' %}{% endif %}</b></span>
+            </div>
         </div>
-    </div>
+    </aside>
+
+    <main class="sboi-community__main">
+        <header class="sboi-community__head">
+            <div>
+                <p class="sboi-dash__eyebrow">{% translate 'Admin Communications' %}</p>
+                <h1>{{ community_heading }}</h1>
+                <p class="sboi-comms__lead">{{ community_lead }}</p>
+            </div>
+            <div class="sboi-comms__topbar-actions">
+                {% if community_view == 'feed' %}
+                <a class="sboi-comms-button sboi-comms-button--quiet sboi-comms-button--small"
+                   href="{% url 'communications:inbox' %}?view=members">
+                    {% admin_icon 'users' %} {% translate 'Members' %}
+                </a>
+                {% elif community_view == 'members' %}
+                <a class="sboi-comms-button sboi-comms-button--quiet sboi-comms-button--small"
+                   href="{% url 'communications:inbox' %}?view=feed">
+                    {% admin_icon 'bullhorn' %} {% translate 'Feed' %}
+                </a>
+                {% endif %}
+                {% if community_view == 'chat' %}
+                <button type="button"
+                        class="sboi-comms-button sboi-comms-button--quiet sboi-comms-button--small"
+                        data-comms-dialog-open="direct">
+                    {% admin_icon 'message' %} {% translate 'New message' %}
+                </button>
+                <button type="button"
+                        class="sboi-comms-button sboi-comms-button--small"
+                        data-comms-dialog-open="group">
+                    {% admin_icon 'plus' %} {% translate 'New group' %}
+                </button>
+                {% endif %}
+            </div>
+        </header>
+
+        {% if community_view == 'feed' %}
+            {% include "admin/communications/_admin_feed.html" %}
+        {% elif community_view == 'members' %}
+            {% include "admin/communications/_members_directory.html" %}
+        {% elif community_view == 'profile' %}
+            {% include "admin/communications/_admin_profile.html" %}
+        {% else %}
+            {% include "admin/communications/_chat_workspace.html" %}
+        {% endif %}
+    </main>
+
+    {% include "admin/communications/_dialogs.html" %}
 </div>
 {% endblock %}

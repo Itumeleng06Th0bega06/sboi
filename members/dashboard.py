@@ -40,6 +40,22 @@ def initials(name):
     return (parts[0][0] + parts[-1][0]).upper()
 
 
+def _avatar_url(user):
+    """Public URL of the member's uploaded profile photo, or '' when absent."""
+    if user is None:
+        return ''
+    try:
+        profile = user.member_profile
+    except Exception:
+        return ''
+    if profile is not None and getattr(profile, 'avatar', None):
+        try:
+            return profile.avatar.url
+        except (ValueError, AttributeError):
+            return ''
+    return ''
+
+
 def full_address(membership):
     parts = [membership.address, membership.city, membership.province]
     return ', '.join(p for p in parts if p)
@@ -64,6 +80,7 @@ def member_summary(membership):
         'id': membership.pk,
         'full_name': name,
         'initials': initials(name),
+        'avatar_url': _avatar_url(membership.user),
         'member_id': membership.membership_id or '',
         'email': membership.user.email,
         'phone': membership.phone,
@@ -155,7 +172,9 @@ def membership_stats():
 
 def filtered_members(request):
     """The directory queryset for the current search/filter state."""
-    queryset = ChurchMembership.objects.select_related('user').prefetch_related(
+    queryset = ChurchMembership.objects.select_related(
+        'user', 'user__member_profile',
+    ).prefetch_related(
         'interests', 'ministries',
     )
 

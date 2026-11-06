@@ -41,10 +41,18 @@ def member_account(request):
     else:
         initials = (parts[0][0] + parts[-1][0]).upper()
 
+    membership = services.membership_or_none(user)
+    membership_status = membership.status if membership is not None else ''
+
     return {
         'member_unread_notifications': services.unread_notification_count(request),
         'member_unread_messages': services.unread_message_count(user),
         'member_avatar_url': avatar_url,
         'member_initials': initials,
         'member_display_name': display_name,
+        'member_membership_status': membership_status,
+        # Visitors (and members whose earlier request was declined) can ask
+        # for church membership from the signed-in account menu. Pending,
+        # active and inactive records already have a membership to work with.
+        'member_can_request_membership': membership_status in ('', 'rejected'),
     }

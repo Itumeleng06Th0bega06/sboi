@@ -22,7 +22,7 @@
     {{ block.super }}
     <link rel="icon" href="{% static 'icons/favicon.ico' %}">
     <script src="{% static 'admin/js/sidebar-nav.js' %}?v=20" defer></script>
-    <script src="{% static 'admin/js/notification-bell.js' %}?v=3" defer></script>
+    <script src="{% static 'admin/js/notification-bell.js' %}?v=4" defer></script>
     <script src="{% static 'admin/js/delete-modal.js' %}?v=10" defer></script>
     <script src="{% static 'admin/js/admin-mobile.js' %}?v=1" defer></script>
 {% endblock %}
@@ -36,9 +36,9 @@
 {% block responsive %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'admin/css/admin-brand.css' %}?v=41">
-    <link rel="stylesheet" href="{% static 'admin/css/admin-dashboard.css' %}?v=15">
+    <link rel="stylesheet" href="{% static 'admin/css/admin-dashboard.css' %}?v=16">
     <link rel="stylesheet" href="{% static 'admin/css/delete-modal.css' %}?v=10">
-    <link rel="stylesheet" href="{% static 'admin/css/notification-bell.css' %}?v=6">
+    <link rel="stylesheet" href="{% static 'admin/css/notification-bell.css' %}?v=7">
     <link rel="stylesheet" href="{% static 'admin/css/admin-mobile.css' %}?v=1">
 {% endblock %}
 
@@ -81,7 +81,7 @@
                     {% if admin_dashboard.communications.allowed %}
                         <a class="sboi-action sboi-comms-link" href="{{ admin_dashboard.communications.url }}" title="{% translate 'Admin Communications' %}">
                             <svg class="sboi-ico" aria-hidden="true" focusable="false"><use href="#sboi-i-message"></use></svg>
-                            <span class="sboi-action__text">{% translate 'Admin Communications' %}</span>
+                            <span class="sboi-action__text">Chat</span>
                             <span class="sboi-comms-badge"{% if not admin_dashboard.communications.unread %} hidden{% endif %}>{{ admin_dashboard.communications.unread }}</span>
                         </a>
                     {% endif %}
@@ -92,25 +92,27 @@
                             <span class="sboi-bell-badge" data-sboi-bell-badge {% if not admin_dashboard.notification_badge %}hidden{% endif %}>{{ admin_dashboard.notification_badge }}</span>
                         </summary>
                         <div class="sboi-menu__panel sboi-bell-menu">
-                            <p class="sboi-bell-head">{% translate 'Notifications' %}</p>
+                            <div class="sboi-bell-head">
+                                <span>{% translate 'Notifications' %}</span>
+                                <details class="sboi-bell-more">
+                                    <summary aria-label="{% translate 'Notification options' %}">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>
+                                    </summary>
+                                    <div class="sboi-bell-more-panel">
+                                        <a href="{{ admin_dashboard.notification_history_url }}">{% translate 'Notification history' %}</a>
+                                    </div>
+                                </details>
+                            </div>
                             <div class="sboi-bell-list" data-sboi-bell-list>
                                 {% for item in admin_dashboard.notifications %}
-                                    <div class="sboi-bell-item tone-{{ item.tone }}" data-notification-id="{{ item.id }}">
-                                        <a class="sboi-bell-item__link" href="{{ item.url|default:'#' }}">
-                                            <span class="sboi-bell-icon">{% admin_icon item.icon %}</span>
-                                            <span class="sboi-bell-copy">
-                                                <span class="sboi-bell-label">{{ item.title }}</span>
-                                                {% if item.body %}<span class="sboi-bell-desc">{{ item.body|truncatechars:96 }}</span>{% endif %}
-                                                <span class="sboi-bell-date">{{ item.date }}</span>
-                                            </span>
-                                        </a>
-                                        <span class="sboi-bell-actions">
-                                            {% if item.unread %}
-                                                <button type="button" class="sboi-bell-action" data-sboi-bell-action="{{ item.mark_read_url }}">{% translate 'Mark read' %}</button>
-                                            {% endif %}
-                                            <button type="button" class="sboi-bell-action" data-sboi-bell-action="{{ item.dismiss_url }}">{% translate 'Dismiss' %}</button>
+                                    <a class="sboi-bell-item{% if item.unread %} is-unread{% endif %} tone-{{ item.tone }}" href="{{ item.open_url|default:item.url }}" data-notification-id="{{ item.id }}">
+                                        <span class="sboi-bell-icon">{% admin_icon item.icon %}</span>
+                                        <span class="sboi-bell-copy">
+                                            <span class="sboi-bell-label">{{ item.title }}</span>
+                                            {% if item.body %}<span class="sboi-bell-desc">{{ item.body|truncatechars:96 }}</span>{% endif %}
+                                            <span class="sboi-bell-date">{{ item.date }}</span>
                                         </span>
-                                    </div>
+                                    </a>
                                 {% empty %}
                                     <div class="sboi-bell-empty">
                                         <svg class="sboi-ico" aria-hidden="true" focusable="false"><use href="#sboi-i-bell-off"></use></svg>
@@ -118,10 +120,6 @@
                                     </div>
                                 {% endfor %}
                             </div>
-                            <a class="sboi-bell-foot" href="{{ admin_dashboard.notification_history_url }}">
-                                {% admin_icon 'gauge' %}
-                                <span>{% translate 'Notification history' %}</span>
-                            </a>
                         </div>
                     </details>
 

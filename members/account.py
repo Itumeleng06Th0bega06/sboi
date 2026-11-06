@@ -8,16 +8,18 @@ an approval status (see ``members.admin`` and ``members.services``).
 """
 
 from django.contrib import messages
-from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth import get_user_model, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from blackboard.models import EventRsvp, MemberProfile
+from blackboard.models import Announcement, Event, EventRsvp, MemberProfile
 from contact.forms import MemberMessageForm
 from contact.models import ContactMessage
 from notifications.models import Notification
@@ -30,13 +32,29 @@ from .forms import (
     NotificationPreferenceForm,
 )
 from .models import ChurchMembership, MembershipChangeRequest
+from .models_comms import (
+    CommsBlock,
+    CommsDirectMessage,
+    CommsDirectThread,
+    CommsReaction,
+)
+from .views_comms import (
+    FEED_PAGE_SIZE,
+    feed_page,
+    feed_page_for,
+    feed_posts_for,
+    serialize_posts,
+)
 
 
 ACCOUNT_SECTIONS = {
-    'account': ('My profile', 'Overview'),
+    'account': ('Community', 'Community'),
+    'posts': ('My posts', 'My posts'),
+    'saved': ('Saved posts', 'Saved posts'),
+    'profile': ('My profile', 'My profile'),
     'children': ('Children', 'Children'),
-    'activities': ('Activities', 'Activities'),
-    'messages': ('Messages', 'Messages'),
+    'activities': ('My activity', 'My activity'),
+    'messages': ('Inbox', 'Inbox'),
     'notifications': ('Notifications', 'Notifications'),
     'settings': ('Settings', 'Settings'),
 }
@@ -44,6 +62,18 @@ ACCOUNT_SECTIONS = {
 
 def _is_ajax(request):
     return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+
+def _redirect_back(request, fallback):
+    """Return to the referring page only when it belongs to this site."""
+    target = request.META.get('HTTP_REFERER') or ''
+    if target and url_has_allowed_host_and_scheme(
+        target,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return redirect(target)
+    return redirect(fallback)
 
 
 def _account_base(request):
@@ -77,6 +107,17 @@ def _membership(user):
     )
 
 
+def _membership_is_active(membership):
+    """The registry form unlocks only after an administrator approves."""
+    return membership is not None and membership.status == 'active'
+
+
+MEMBERSHIP_LOCKED_MESSAGE = (
+    'The membership registry form opens after the church office approves '
+    'your membership request.'
+)
+
+
 def _membership_snapshot(membership):
     if membership is None:
         return {
@@ -108,7 +149,11 @@ def _account_context(request, section):
         'account_section': section,
         'account_section_label': section_label,
         'account_page_title': page_title,
+        'member_avatar_url': _avatar_url(user),
+        'member_initials': _avatar_initials(user),
+        'member_display_name': user.get_full_name() or user.get_username(),
         'membership': membership,
+        'membership_editable': _membership_is_active(membership),
         'member_profile': profile,
         'membership_snapshot': _membership_snapshot(membership),
         'pending_change': services.pending_change_for(membership),
@@ -131,31 +176,192 @@ def _form_fragment(request, template, context):
     return render_to_string(template, context, request=request)
 
 
-# ---------------------------------------------------------------------------
-# Dashboard
-# ---------------------------------------------------------------------------
+def _avatar_url(user):
+    profile = getattr(user, 'member_profile', None)
+    if profile is not None and profile.avatar:
+        try:
+            return profile.avatar.url
+        except ValueError:
+            return ''
+    return ''
 
-@login_required
-def account_home(request):
-    context = _account_context(request, 'account')
+
+def _avatar_initials(user):
+    display_name = user.get_full_name() or user.get_username()
+    parts = [part for part in display_name.split() if part]
+    if not parts:
+        return 'S'
+    if len(parts) == 1:
+        return parts[0][:2].upper()
+    return (parts[0][0] + parts[-1][0]).upper()
+
+
+def _community_aside_context():
+    """Real church information only; the templates hide the aside when empty."""
+    today = timezone.localdate()
+    events = list(
+        Event.objects
+        .filter(is_published=True, date__gte=today)
+        .order_by('date', 'id')[:4]
+    )
+    announcements = list(
+        Announcement.objects
+        .filter(is_published=True)
+        .order_by('-date', '-id')[:3]
+    )
+    return {
+        'aside_events': events,
+        'aside_announcements': announcements,
+        'has_community_aside': bool(events or announcements),
+    }
+
+
+def _serialise_page(queryset, user, before=None, limit=FEED_PAGE_SIZE):
+    return feed_page_for(queryset, user, before=before, limit=limit)
+
+
+def _feed_context(request, section, posts, has_more=False, next_before=''):
+    context = _account_context(request, section)
     membership = context['membership']
     profile_form = AccountProfileForm(
         user=request.user,
         membership=membership,
         profile=context['member_profile'],
     )
-    membership_form = MembershipDetailsForm(instance=membership)
+    membership_form = (
+        MembershipDetailsForm(instance=membership)
+        if _membership_is_active(membership)
+        else None
+    )
     thread = list(services.member_thread(request.user))
     context.update({
         'profile_form': profile_form,
+        'posts': posts,
+        'post_reaction_choices': CommsReaction.REACTION_CHOICES,
+        'feed_latest_id': posts[0].pk if posts else '',
+        'feed_has_more': has_more,
+        'feed_next_before': next_before,
         'membership_form': membership_form,
         'message_form': MemberMessageForm(),
         'recent_messages': thread[-3:],
         'thread_count': len(thread),
         'children': services.child_names(membership),
         'account_type': 'Church Member' if membership else 'Regular User',
+        'feed_surface': 'community',
     })
+    context.update(_community_aside_context())
+    return context
+
+
+# ---------------------------------------------------------------------------
+# Community feed / dashboard
+# ---------------------------------------------------------------------------
+
+@login_required
+def account_home(request):
+    posts, has_more, next_before = feed_page(request.user)
+    context = _feed_context(
+        request, 'account', posts, has_more, next_before,
+    )
     return _render_account(request, 'members/account/dashboard.html', context)
+
+
+@login_required
+def account_posts(request):
+    queryset = feed_posts_for(request.user).filter(author=request.user)
+    before = request.GET.get('before', '')
+    posts, has_more, next_before = _serialise_page(
+        queryset, request.user, int(before) if before.isdigit() else None,
+    )
+    context = _feed_context(request, 'posts', posts, has_more, next_before)
+    return _render_account(request, 'members/account/posts.html', context)
+
+
+@login_required
+def account_saved(request):
+    from .models_comms import CommsPostSave
+
+    queryset = feed_posts_for(request.user).filter(saves__user=request.user)
+    before = request.GET.get('before', '')
+    posts, has_more, next_before = _serialise_page(
+        queryset, request.user, int(before) if before.isdigit() else None,
+    )
+    context = _feed_context(request, 'saved', posts, has_more, next_before)
+    context['saved_count'] = CommsPostSave.objects.filter(
+        user=request.user,
+    ).count()
+    return _render_account(request, 'members/account/saved.html', context)
+
+
+@login_required
+def account_profile(request):
+    context = _account_context(request, 'profile')
+    membership = context['membership']
+    context.update({
+        'profile_form': AccountProfileForm(
+            user=request.user,
+            membership=membership,
+            profile=context['member_profile'],
+        ),
+        'membership_form': (
+            MembershipDetailsForm(instance=membership)
+            if _membership_is_active(membership)
+            else None
+        ),
+        'children': services.child_names(membership),
+        'account_type': 'Church Member' if membership else 'Regular User',
+    })
+    return _render_account(request, 'members/account/profile.html', context)
+
+
+@login_required
+def account_member_profile(request, username):
+    """Public (signed-in only) member profile; never exposes private records."""
+    member = get_object_or_404(
+        get_user_model().objects.filter(is_active=True),
+        username=username,
+    )
+    membership = _membership(member)
+    visible_membership = (
+        membership if membership is not None and membership.status == 'active'
+        else None
+    )
+    queryset = (
+        feed_posts_for(request.user)
+        .filter(author=member)
+        .order_by('-created_at', '-pk')
+    )
+    before = request.GET.get('before', '')
+    posts, has_more, next_before = _serialise_page(
+        queryset, request.user, int(before) if before.isdigit() else None,
+    )
+    context = _account_context(request, 'account')
+    context.update({
+        'profile_member': member,
+        'profile_avatar_url': _avatar_url(member),
+        'profile_initials': _avatar_initials(member),
+        'profile_display_name': (
+            member.get_full_name() or member.get_username()
+        ),
+        'profile_membership': visible_membership,
+        'posts': posts,
+        'post_reaction_choices': CommsReaction.REACTION_CHOICES,
+        'feed_has_more': has_more,
+        'feed_next_before': next_before,
+        'feed_surface': 'community',
+        'is_own_profile': member.pk == request.user.pk,
+        'profile_online': services.is_user_online(member),
+        'profile_blocked': services.interaction_blocked(
+            request.user, member,
+        ),
+        'profile_blocked_by_me': CommsBlock.objects.filter(
+            blocker=request.user, blocked=member,
+        ).exists(),
+    })
+    context.update(_community_aside_context())
+    return _render_account(
+        request, 'members/account/member_profile.html', context,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -230,8 +436,80 @@ def account_profile_edit(request):
 
 @login_required
 @require_POST
+def account_membership_request(request):
+    """Ask the church office for a membership record.
+
+    A visitor only asks to join here; the full registry form stays locked
+    until an administrator approves the request. An earlier declined request
+    can be submitted again. The pending ``MembershipChangeRequest`` is what
+    the admin review screen and the member's notification feed already use.
+    """
+    membership = _membership(request.user)
+    message = ''
+    ok = False
+    status = 400
+
+    if membership is None:
+        membership = ChurchMembership.objects.create(
+            user=request.user, status='pending',
+        )
+        message = (
+            'Your church membership request has been sent to the church '
+            'office. You will be notified when it is approved.'
+        )
+        ok = True
+        status = 200
+    elif membership.status == 'rejected':
+        membership.status = 'pending'
+        membership.save(update_fields=['status', 'updated_at'])
+        message = (
+            'Your new church membership request has been sent to the church '
+            'office for review.'
+        )
+        ok = True
+        status = 200
+    elif membership.status == 'pending':
+        message = 'Your membership request is already with the church office.'
+        ok = True
+        status = 200
+    elif membership.status == 'active':
+        message = 'You are already an active church member.'
+    else:
+        message = (
+            'Your membership is currently inactive. Please message the church '
+            'office so they can help you.'
+        )
+
+    if ok:
+        services.record_membership_change(
+            membership,
+            request.user,
+            MembershipChangeRequest.KIND_APPLICATION,
+            'Church membership requested from the account menu.',
+        )
+
+    if _is_ajax(request):
+        return JsonResponse({'ok': ok, 'message': message}, status=status)
+    if ok:
+        messages.success(request, message)
+    else:
+        messages.error(request, message)
+    return redirect(reverse('members:account') + '#membership')
+
+
+@login_required
+@require_POST
 def account_membership_edit(request):
     membership = _membership(request.user)
+    if not _membership_is_active(membership):
+        if _is_ajax(request):
+            return JsonResponse({
+                'ok': False,
+                'message': MEMBERSHIP_LOCKED_MESSAGE,
+            }, status=403)
+        messages.error(request, MEMBERSHIP_LOCKED_MESSAGE)
+        return redirect(reverse('members:account') + '#membership')
+
     previous_status = membership.status if membership else 'pending'
     previous_exists = membership is not None
     form = MembershipDetailsForm(request.POST, instance=membership)
@@ -293,7 +571,11 @@ def _children_context(request, child_form=None):
     context.update({
         'children': services.child_names(membership),
         'child_form': child_form or ChildNameForm(),
-        'membership_form': MembershipDetailsForm(instance=membership),
+        'membership_form': (
+            MembershipDetailsForm(instance=membership)
+            if _membership_is_active(membership)
+            else None
+        ),
     })
     return context
 
@@ -318,8 +600,8 @@ def account_children(request):
 
 def _require_membership(user):
     membership = _membership(user)
-    if membership is None:
-        raise Http404('Complete your membership details first.')
+    if not _membership_is_active(membership):
+        raise Http404(MEMBERSHIP_LOCKED_MESSAGE)
     return membership
 
 
@@ -434,16 +716,268 @@ def account_activities(request):
 # Private messages (one unified member ↔ administration inbox)
 # ---------------------------------------------------------------------------
 
+def _purge_chat_retention():
+    from .retention import purge_expired_chats_once_per_hour
+
+    purge_expired_chats_once_per_hour()
+
+
 @login_required
 def account_messages(request):
+    _purge_chat_retention()
     services.mark_member_messages_read(request.user)
+
+    thread_rows = _direct_thread_rows(request.user)
+    thread_by_member = {
+        row['other'].pk: row['thread'] for row in thread_rows
+    }
+    online_rows = _online_rows(request.user, thread_by_member)
+
+    active_thread = None
+    active_other = None
+    direct_messages = []
+    thread_id = (request.GET.get('thread') or '').strip()
+    if thread_id.isdigit():
+        active_thread = get_object_or_404(
+            services.direct_threads_for(request.user),
+            pk=int(thread_id),
+        )
+        active_other = active_thread.other_user(request.user)
+        if (
+            active_other is None
+            or services.interaction_blocked(request.user, active_other)
+        ):
+            raise Http404('Conversation not found.')
+        active_thread.mark_read(request.user)
+        direct_messages = list(
+            active_thread.messages
+            .select_related('sender')
+            .order_by('created_at', 'pk')[:300]
+        )
+
     context = _account_context(request, 'messages')
     context.update({
-        'thread': services.member_thread(request.user),
+        'thread': list(services.member_thread(request.user)),
         'message_form': MemberMessageForm(),
-        'unread_messages': 0,
+        'unread_messages': services.unread_message_count(request.user),
+        'direct_threads': thread_rows,
+        'online_rows': online_rows,
+        'blocked_members': services.blocked_members(request.user),
+        'dm_thread': active_thread,
+        'dm_other': active_other,
+        'dm_other_online': (
+            services.is_user_online(active_other)
+            if active_other is not None else False
+        ),
+        'dm_messages': direct_messages,
+        'dm_avatar_url': _avatar_url(active_other) if active_other else '',
+        'dm_initials': _avatar_initials(active_other) if active_other else 'S',
     })
     return _render_account(request, 'members/account/messages.html', context)
+
+
+def _direct_thread_rows(user):
+    """Recent member-to-member conversations, newest first."""
+    rows = []
+    for thread in services.direct_threads_for(user)[:40]:
+        other = thread.other_user(user)
+        if other is None:
+            continue
+        last = (
+            thread.messages
+            .select_related('sender')
+            .order_by('-created_at', '-pk')
+            .first()
+        )
+        rows.append({
+            'thread': thread,
+            'other': other,
+            'display_name': other.get_full_name() or other.get_username(),
+            'avatar_url': _avatar_url(other),
+            'initials': _avatar_initials(other),
+            'online': services.is_user_online(other),
+            'last_body': last.body if last else '',
+            'last_at': last.created_at if last else None,
+            'unread': thread.unread_count(user),
+        })
+    return rows
+
+
+def _online_rows(user, thread_by_member):
+    """People who are online now, with a shortcut to any existing thread."""
+    rows = []
+    for person in services.online_members(user, limit=12):
+        thread = thread_by_member.get(person.pk)
+        rows.append({
+            'member': person,
+            'display_name': person.get_full_name() or person.get_username(),
+            'avatar_url': _avatar_url(person),
+            'initials': _avatar_initials(person),
+            'thread': thread,
+        })
+    return rows
+
+
+@login_required
+@require_POST
+def account_direct_start(request):
+    """Open (or create) a private conversation with another member."""
+    username = (request.POST.get('username') or '').strip()
+    member = get_object_or_404(
+        get_user_model().objects.filter(is_active=True),
+        username=username,
+    )
+    if member.pk == request.user.pk:
+        return redirect('members:account_messages')
+    if services.interaction_blocked(request.user, member):
+        messages.error(
+            request,
+            'You cannot start a conversation with this member.',
+        )
+        return redirect('members:account_messages')
+
+    thread = CommsDirectThread.for_users(request.user, member)
+    return redirect(
+        reverse('members:account_messages') + f'?thread={thread.pk}'
+    )
+
+
+@login_required
+@require_POST
+def account_direct_send(request, pk):
+    """Send one private message inside a member-to-member thread."""
+    thread = get_object_or_404(
+        CommsDirectThread.objects.select_related('user_a', 'user_b'),
+        pk=pk,
+    )
+    other = thread.other_user(request.user)
+    if other is None:
+        raise Http404('Conversation not found.')
+    if services.interaction_blocked(request.user, other):
+        if _is_ajax(request):
+            return JsonResponse({
+                'ok': False,
+                'message': 'This conversation is no longer available.',
+            }, status=403)
+        messages.error(request, 'This conversation is no longer available.')
+        return redirect('members:account_messages')
+
+    body = (request.POST.get('body') or '').replace('\x00', '').strip()[:2000]
+    if not body:
+        if _is_ajax(request):
+            return JsonResponse({
+                'ok': False,
+                'message': 'Write a message before sending.',
+            }, status=400)
+        messages.error(request, 'Write a message before sending.')
+        return redirect(
+            reverse('members:account_messages') + f'?thread={thread.pk}'
+        )
+
+    message = CommsDirectMessage.objects.create(
+        thread=thread,
+        sender=request.user,
+        body=body,
+    )
+    thread.last_message_at = message.created_at
+    thread.save(update_fields=['last_message_at', 'updated_at'])
+    thread.mark_read(request.user)
+    services.notify_direct_message(message)
+
+    if _is_ajax(request):
+        return JsonResponse({
+            'ok': True,
+            'id': message.pk,
+            'message': 'Message sent.',
+            'html': _form_fragment(
+                request,
+                'members/account/_direct_message_bubble.html',
+                {'message': message, 'is_own': True},
+            ),
+        })
+    return redirect(
+        reverse('members:account_messages') + f'?thread={thread.pk}'
+    )
+
+
+@login_required
+def account_direct_poll(request, pk):
+    """Poll one direct thread for new messages without a page reload."""
+    thread = get_object_or_404(
+        services.direct_threads_for(request.user),
+        pk=pk,
+    )
+    other = thread.other_user(request.user)
+    if other is None or services.interaction_blocked(request.user, other):
+        raise Http404('Conversation not found.')
+
+    after = (request.GET.get('after') or '').strip()
+    messages_qs = (
+        thread.messages
+        .select_related('sender')
+        .order_by('created_at', 'pk')
+    )
+    if after.isdigit():
+        messages_qs = messages_qs.filter(pk__gt=int(after))
+    if request.GET.get('read') == '1':
+        thread.mark_read(request.user)
+
+    payload = [
+        {
+            'id': message.pk,
+            'html': _form_fragment(
+                request,
+                'members/account/_direct_message_bubble.html',
+                {
+                    'message': message,
+                    'is_own': message.sender_id == request.user.pk,
+                },
+            ),
+        }
+        for message in messages_qs
+    ]
+    return JsonResponse({
+        'ok': True,
+        'messages': payload,
+        'unread': services.unread_message_count(request.user),
+    })
+
+
+@login_required
+@require_POST
+def account_block_member(request, username):
+    """Hide a member's posts and block messages in both directions."""
+    member = get_object_or_404(
+        get_user_model().objects.filter(is_active=True),
+        username=username,
+    )
+    if member.pk == request.user.pk:
+        raise Http404('You cannot block yourself.')
+    CommsBlock.objects.get_or_create(blocker=request.user, blocked=member)
+    if _is_ajax(request):
+        return JsonResponse({'ok': True, 'blocked': True})
+    messages.success(
+        request,
+        'You will no longer see this member\'s posts or messages.',
+    )
+    return _redirect_back(request, reverse('members:account'))
+
+
+@login_required
+@require_POST
+def account_unblock_member(request, username):
+    member = get_object_or_404(
+        get_user_model().objects.filter(is_active=True),
+        username=username,
+    )
+    CommsBlock.objects.filter(
+        blocker=request.user, blocked=member,
+    ).delete()
+    if _is_ajax(request):
+        return JsonResponse({'ok': True, 'blocked': False})
+    messages.success(request, 'This member has been unblocked.')
+    return _redirect_back(request, reverse('members:account_messages'))
+
 
 
 def _duplicate_message(user, body):
@@ -512,6 +1046,7 @@ def account_message_send(request):
 
 @login_required
 def account_message_poll(request):
+    _purge_chat_retention()
     after = (request.GET.get('after') or '').strip()
     queryset = services.member_thread(request.user)
     if after.isdigit():
@@ -646,6 +1181,7 @@ def account_settings(request):
             context.update({
                 'password_form': password_form,
                 'preference_form': preference_form,
+                'blocked_members': services.blocked_members(request.user),
             })
             return JsonResponse({
                 'ok': ok,
@@ -664,5 +1200,31 @@ def account_settings(request):
     context.update({
         'password_form': password_form,
         'preference_form': preference_form,
+        'blocked_members': services.blocked_members(request.user),
     })
     return _render_account(request, 'members/account/settings.html', context)
+
+
+@login_required
+@require_POST
+def account_delete(request):
+    """Permanently delete the signed-in user and everything linked to them.
+
+    Requires an explicit confirmation checkbox. The account is signed out
+    first so the session cannot keep pointing at a deleted user.
+    """
+    if request.POST.get('confirm_delete') != 'yes':
+        messages.error(
+            request,
+            'Tick the confirmation box before deleting your account.',
+        )
+        return redirect('members:account_settings')
+
+    user = request.user
+    logout(request)
+    user.delete()
+    messages.success(
+        request,
+        'Your account and all linked church records have been deleted.',
+    )
+    return redirect('home:home')

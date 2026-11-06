@@ -7,11 +7,22 @@
         <span class="account-count">{{ children|length }}</span>
     </header>
 
-    {% if not membership %}
+    {% if not membership_editable %}
     <div class="account-alert account-alert--info">
-        Children are part of your church membership record. Please
-        <button type="button" class="account-inline-link" data-account-open="membershipModalInline">join the church</button>
-        first, then add your children here.
+        {% if membership and membership.status == 'pending' %}
+        Your church membership request is being reviewed. You can add your
+        children here once an administrator approves it.
+        {% elif membership and membership.status == 'rejected' %}
+        Your church membership request was not approved. Request membership
+        again from your profile, then add your children here once it is approved.
+        {% elif membership and membership.status == 'inactive' %}
+        Your church membership is currently inactive. Please message the church
+        office if you would like it reviewed.
+        {% else %}
+        Children are part of your church membership record. Request church
+        membership from your profile first, then add your children here once it
+        is approved.
+        {% endif %}
     </div>
     {% endif %}
 
@@ -43,7 +54,7 @@
     <p class="account-empty">No children added yet.</p>
     {% endif %}
 
-    {% if membership %}
+    {% if membership_editable %}
     <form method="post" action="{% url 'members:account_child_add' %}" class="account-add-child" data-account-child-form>
         {% csrf_token %}
         <div class="account-form-field">
@@ -55,21 +66,3 @@
     </form>
     {% endif %}
 </section>
-
-{% if not membership %}
-<div class="account-modal" id="membershipModalInline" hidden>
-    <div class="account-modal-backdrop" data-account-modal-close></div>
-    <div class="account-modal-panel account-modal-panel--wide" role="dialog" aria-modal="true" aria-labelledby="membershipModalInlineTitle">
-        <header class="account-modal-head">
-            <div>
-                <p class="account-eyebrow">Church membership</p>
-                <h2 id="membershipModalInlineTitle">Join the church</h2>
-            </div>
-            <button type="button" class="account-modal-close" data-account-modal-close aria-label="Close">&times;</button>
-        </header>
-        <div class="account-modal-body" data-account-form-target="membership">
-            {% include 'members/account/_membership_form.html' %}
-        </div>
-    </div>
-</div>
-{% endif %}

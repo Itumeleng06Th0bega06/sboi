@@ -1,0 +1,88 @@
+{% load i18n admin_menu %}
+<section class="comms-chat sboi-dm" data-comms-chat>
+    <header class="comms-chat__head sboi-dm__head">
+        <a class="comms-iconbtn sboi-dm__back" href="{% url 'communications:inbox' %}?view=chat" aria-label="{% translate 'Back to conversations' %}">
+            {% admin_icon 'arrow-left' %}
+        </a>
+        <span class="comms-avatar comms-avatar--group" aria-hidden="true">
+            {{ dm_thread.user_a.get_full_name|default:dm_thread.user_a.get_username|first|upper }}{{ dm_thread.user_b.get_full_name|default:dm_thread.user_b.get_username|first|upper }}
+        </span>
+        <div class="comms-chat__identity">
+            <h2>{{ dm_thread.user_a.get_full_name|default:dm_thread.user_a.get_username }} &amp; {{ dm_thread.user_b.get_full_name|default:dm_thread.user_b.get_username }}</h2>
+            <p>{% translate 'Member-to-member conversation · superuser moderation view' %}</p>
+        </div>
+        <div class="comms-chat__actions">
+            <a class="sboi-comms-button sboi-comms-button--quiet sboi-comms-button--small"
+               href="{% url 'admin:auth_user_change' dm_thread.user_a.pk %}"
+               title="@{{ dm_thread.user_a.get_username }}">
+                {{ dm_thread.user_a.get_full_name|default:dm_thread.user_a.get_username }}
+            </a>
+            <a class="sboi-comms-button sboi-comms-button--quiet sboi-comms-button--small"
+               href="{% url 'admin:auth_user_change' dm_thread.user_b.pk %}"
+               title="@{{ dm_thread.user_b.get_username }}">
+                {{ dm_thread.user_b.get_full_name|default:dm_thread.user_b.get_username }}
+            </a>
+            <form method="post" action="{% url 'communications:dm_thread_delete' dm_thread.pk %}" onsubmit="return confirm('{% translate "Delete this entire member conversation?" %}');">
+                {% csrf_token %}
+                <button type="submit" class="sboi-comms-button sboi-comms-button--danger sboi-comms-button--small">
+                    {% admin_icon 'trash' %} {% translate 'Delete conversation' %}
+                </button>
+            </form>
+        </div>
+    </header>
+
+    <div class="comms-messages-wrap">
+        <div class="comms-messages sboi-dm__messages" id="dmModerationThread" aria-live="polite">
+            {% for message in dm_messages %}
+            <article class="sboi-bubble {% if message.sender_id == request.user.pk %}sboi-bubble--staff{% elif message.sender_id == dm_thread.user_a.pk %}sboi-bubble--member{% else %}sboi-bubble--member-alt{% endif %}" id="dm-message-{{ message.pk }}">
+                <header class="sboi-bubble__head">
+                    <strong>
+                        {% if message.sender_id == request.user.pk %}
+                            {% translate 'Church office moderation' %}
+                        {% else %}
+                            {{ message.sender.get_full_name|default:message.sender.get_username }}
+                        {% endif %}
+                    </strong>
+                    <time datetime="{{ message.created_at|date:'c' }}">{{ message.created_at|date:"j M Y, H:i" }}</time>
+                </header>
+                <div class="sboi-bubble__body">{{ message.body|linebreaksbr }}</div>
+                <footer class="sboi-bubble__foot">
+                    <span class="sboi-bubble__tag">
+                        {% if message.sender_id == request.user.pk %}{% translate 'Moderation message' %}{% else %}{% translate 'Member message' %}{% endif %}
+                    </span>
+                    <form method="post" action="{% url 'communications:dm_message_delete' dm_thread.pk message.pk %}" onsubmit="return confirm('{% translate "Delete this message?" %}');">
+                        {% csrf_token %}
+                        <button type="submit" class="sboi-link-danger">{% translate 'Delete message' %}</button>
+                    </form>
+                </footer>
+            </article>
+            {% empty %}
+            <div class="comms-thread-empty sboi-thread-empty">
+                <span class="comms-empty-state__icon">{% admin_icon 'message' %}</span>
+                <h2>{% translate 'No messages in this conversation' %}</h2>
+                <p>{% translate 'The thread is empty. Write a moderation message if the members need guidance.' %}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <form class="comms-composer sboi-dm__composer" method="post" action="{% url 'communications:dm_reply' dm_thread.pk %}">
+        {% csrf_token %}
+        <div class="comms-composer__row">
+            <textarea name="body"
+                      rows="1"
+                      maxlength="2000"
+                      placeholder="{% translate 'Write a moderation message to both members…' %}"
+                      aria-label="{% translate 'Moderation message' %}"
+                      required
+                      data-dm-textarea></textarea>
+            <button type="submit" class="comms-send">
+                {% admin_icon 'arrow-right' %}
+                <span>{% translate 'Send to members' %}</span>
+            </button>
+        </div>
+        <div class="comms-composer__hint">
+            <span>{% translate 'Both members receive a notification and see the message in their inbox.' %}</span>
+        </div>
+    </form>
+</section>

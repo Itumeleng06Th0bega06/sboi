@@ -2397,6 +2397,55 @@ body.sboi-auth {
   box-shadow: 0 0 0 3px rgba(210, 162, 78, 0.18);
 }
 
+/* Password visibility toggle. */
+.password-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 2.6rem;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--sboi-ink-soft, #b0a695);
+  cursor: pointer;
+}
+
+.password-toggle:hover,
+.password-toggle:focus-visible {
+  background: rgba(210, 162, 78, 0.14);
+  color: #d2a24e;
+  outline: none;
+}
+
+.password-toggle svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.password-toggle.is-visible {
+  color: #d2a24e;
+}
+
 .sboi-auth .callout {
   margin: 0;
   padding: 0.65rem 0.8rem;

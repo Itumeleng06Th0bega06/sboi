@@ -216,6 +216,81 @@ class NotificationFilteringTests(TestCase):
         self.assertNotContains(response, 'Public history')
 
 
+    def test_opening_a_notification_marks_it_read_and_follows_its_link(self):
+        notification = self.make(
+            title='Read on open',
+            audience=Notification.AUDIENCE_MEMBER,
+            recipient=self.member,
+            url=reverse('members:account_messages'),
+        )
+        self.client.force_login(self.member)
+        response = self.client.get(
+            reverse('notifications:open', args=[notification.pk]),
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('members:account_messages'))
+        state = NotificationState.objects.get(
+            notification=notification, user=self.member,
+        )
+        self.assertIsNotNone(state.read_at)
+
+        feed = self.client.get(reverse('notifications:feed')).json()
+        self.assertNotIn('Read on open', [item['title'] for item in feed['items']])
+        self.assertEqual(feed['badge'], 0)
+
+    def test_member_cannot_open_another_members_notification(self):
+        notification = self.make(
+            audience=Notification.AUDIENCE_MEMBER,
+            recipient=self.other_member,
+        )
+        self.client.force_login(self.member)
+        response = self.client.get(
+            reverse('notifications:open', args=[notification.pk]),
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(
+            NotificationState.objects.filter(
+                notification=notification, user=self.member,
+            ).exists()
+        )
+
+    def test_open_never_redirects_to_an_external_site(self):
+        notification = self.make(
+            audience=Notification.AUDIENCE_MEMBER,
+            recipient=self.member,
+            url='https://example.com/phishing',
+        )
+        self.client.force_login(self.member)
+        response = self.client.get(
+            reverse('notifications:open', args=[notification.pk]),
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('members:account_notifications'))
+
+        public = self.make(title='Public external', url='https://example.com')
+        self.client.logout()
+        response = self.client.get(
+            reverse('notifications:open', args=[public.pk]),
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('notifications:history'))
+
+    def test_bell_payload_includes_the_safe_open_link(self):
+        notification = self.make(
+            audience=Notification.AUDIENCE_MEMBER,
+            recipient=self.member,
+            url=reverse('members:account_messages'),
+        )
+        data = self.feed(self.member)
+        item = next(
+            row for row in data['items'] if row['title'] == notification.title
+        )
+        self.assertEqual(
+            item['open_url'],
+            reverse('notifications:open', args=[notification.pk]),
+        )
+
+
 class NotificationSourceSyncTests(TestCase):
     def setUp(self):
         self.member = User.objects.create_user(
@@ -260,7 +335,9 @@ class NotificationSourceSyncTests(TestCase):
         self.assertTrue(created)
         self.assertEqual(notification.audience, Notification.AUDIENCE_MEMBER)
         self.assertEqual(notification.recipient, self.member)
-        self.assertEqual(len(mail.outbox), 1)
+        # One email from sync_contact_message (member message) + one from
+        # notify_member_reply (admin reply).
+        self.assertEqual(len(mail.outbox), 2)
 
     def test_membership_decision_creates_one_member_notice(self):
         from members.models import ChurchMembership, MembershipChangeRequest

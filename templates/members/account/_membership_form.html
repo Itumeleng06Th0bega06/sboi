@@ -1,10 +1,10 @@
 <form method="post"
       action="{% url 'members:account_membership_edit' %}"
-      class="account-form account-form--membership"
+      class="account-form account-form--membership church-form"
       data-account-form="membership">
     {% csrf_token %}
     {% if membership_form.non_field_errors %}
-    <div class="account-alert account-alert--error">{{ membership_form.non_field_errors }}</div>
+    <div class="form-errors">{{ membership_form.non_field_errors }}</div>
     {% endif %}
 
     <div class="account-alert account-alert--info">
@@ -20,21 +20,19 @@
 
     {% for section in membership_form.sections %}
     {% if section.fields %}
-    <section class="account-form-section" id="{{ section.id }}">
-        <h3>{{ section.title }}</h3>
-        {% if section.blurb %}<p class="account-muted">{{ section.blurb }}</p>{% endif %}
-        <div class="account-form-grid">
-            {% for field in section.fields %}
-            {% include 'members/account/_account_field.html' with field=field %}
-            {% endfor %}
+    <section class="form-section" id="{{ section.id }}">
+        <h2 class="form-section-title">{{ section.title }}</h2>
+        {% if section.blurb %}<p class="form-section-note">{{ section.blurb }}</p>{% endif %}
+        <div class="form-grid">
+            {% for field in section.fields %}{% include 'members/_church_field.html' with field=field %}{% endfor %}
         </div>
     </section>
     {% endif %}
     {% endfor %}
 
-    <div class="account-form-actions">
+    <div class="form-actions">
         <button type="submit" class="btn btn-gold">
-            {% if membership %}Submit changes for review{% else %}Submit membership application{% endif %}
+            {% if membership %}Save my details{% else %}Create Account &amp; Register{% endif %}
         </button>
         <button type="button" class="btn btn-ghost" data-account-modal-close>Cancel</button>
     </div>

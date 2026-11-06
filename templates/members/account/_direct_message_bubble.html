@@ -1,0 +1,7 @@
+<article class="account-bubble {% if is_own or message.sender_id == request.user.pk %}account-bubble--member{% else %}account-bubble--admin account-bubble--direct{% endif %}" id="message-{{ message.pk }}" data-message-id="{{ message.pk }}">
+    <header class="account-bubble-head">
+        <strong>{% if is_own or message.sender_id == request.user.pk %}You{% else %}{{ message.sender_name }}{% endif %}</strong>
+        <time datetime="{{ message.created_at|date:'c' }}">{{ message.created_at|date:"d M Y, H:i" }}</time>
+    </header>
+    <div class="account-bubble-body">{{ message.body|linebreaksbr }}</div>
+</article>

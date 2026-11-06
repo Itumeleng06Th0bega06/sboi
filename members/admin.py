@@ -20,6 +20,7 @@ from .models import (
     ChurchMembership,
     MembershipChangeRequest,
 )
+from .models_comms import CommsComment, CommsPost, CommsPostSave, CommsReport
 
 
 class MinistryFilter(admin.SimpleListFilter):
@@ -543,11 +544,11 @@ def obj_value(value):
 
 class MembershipReviewForm(forms.Form):
     admin_note = forms.CharField(
-        label='Note to the member (optional)',
+        label='Note (optional)',
         required=False,
         widget=forms.Textarea(attrs={
-            'rows': 3,
-            'placeholder': 'Explain the decision or ask for any correction…',
+            'rows': 2,
+            'placeholder': 'Optional note',
         }),
     )
 
@@ -561,14 +562,13 @@ class MembershipProfileStatusForm(forms.Form):
 
 class MembershipProfileMessageForm(forms.Form):
     message = forms.CharField(
-        label='Message to the member',
+        label='Comment',
         max_length=5000,
         widget=forms.Textarea(attrs={
-            'rows': 5,
-            'placeholder': (
-                'Write a private comment to this member. It appears in their '
-                'account inbox and notification bell.'
-            ),
+            'class': 'cm-comment-input',
+            'rows': 1,
+            'placeholder': 'Write a comment…',
+            'aria-label': 'Comment',
         }),
     )
 
@@ -728,3 +728,39 @@ class MembershipChangeRequestAdmin(AreaPermissionMixin, admin.ModelAdmin):
             request, f'{count} request(s) rejected and members notified.',
             messages.SUCCESS,
         )
+
+
+@admin.register(CommsReport)
+class CommsReportAdmin(AreaPermissionMixin, admin.ModelAdmin):
+    """Member moderation reports, reviewable without the extra chat workspace."""
+
+    area_permission = 'communications.manage_communications'
+    list_display = [
+        'id', 'reason', 'post', 'comment', 'reporter', 'status',
+        'created_at', 'reviewed_by',
+    ]
+    list_filter = ['status', 'reason', 'created_at']
+    search_fields = [
+        'reporter__username', 'note', 'post__body', 'comment__body',
+    ]
+    date_hierarchy = 'created_at'
+    raw_id_fields = ['post', 'comment', 'reporter', 'reviewed_by']
+    readonly_fields = ['created_at']
+
+
+@admin.register(CommsPostSave)
+class CommsPostSaveAdmin(AreaPermissionMixin, admin.ModelAdmin):
+    """Read-only bookmarks. They are private and never notify anybody."""
+
+    area_permission = 'communications.manage_communications'
+    list_display = ['id', 'post', 'user', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['user__username']
+    raw_id_fields = ['post', 'user']
+    date_hierarchy = 'created_at'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

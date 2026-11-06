@@ -3,7 +3,7 @@
 
 {% block extrastyle %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'admin/css/church_membership.css' %}?v=11">
+    <link rel="stylesheet" href="{% static 'admin/css/church_membership.css' %}?v=12">
 {% endblock %}
 
 {% block content_title %}{% endblock %}
@@ -41,7 +41,7 @@
 
     <div class="cm-profile-layout">
         <section class="cm-card cm-profile-summary-card cm-profile-summary">
-            <span class="cm-profile-avatar">{{ profile.initials|default:'M' }}</span>
+            <span class="cm-profile-avatar">{% if profile.avatar_url %}<img src="{{ profile.avatar_url }}" alt="{{ membership.full_name }}" class="cm-profile-avatar-img">{% else %}{{ profile.initials|default:'M' }}{% endif %}</span>
             <div class="cm-profile-summary-copy">
                 <h2>{{ membership.full_name|default:'Unnamed member' }}</h2>
                 <p>{{ profile.email|default:'No email address' }} · {{ profile.phone|default:'No phone number' }}</p>
@@ -121,83 +121,94 @@
             {% endif %}
         </div>
 
+        {% if can_change or pending_change or membership.status != 'active' %}
         <aside class="cm-profile-side">
-            {% if pending_change or membership.status != 'active' %}
-            <section class="cm-card cm-profile-section">
-                <h2>{% translate 'Membership decision' %}</h2>
-                {% if pending_change %}
-                <p class="cm-profile-note">
-                    {% blocktrans with kind=pending_change.get_kind_display submitted=pending_change.created_at|date:"d M Y, H:i" %}
-                    Pending {{ kind }} submitted {{ submitted }}.
-                    {% endblocktrans %}
-                </p>
-                {% if summary_lines %}
-                <ul class="cm-review-summary">
-                    {% for line in summary_lines %}<li>{{ line }}</li>{% endfor %}
-                </ul>
-                {% endif %}
-                {% elif membership.status == 'pending' %}
-                <p class="cm-profile-note">{% translate 'This membership is waiting for approval.' %}</p>
-                {% else %}
-                <p class="cm-profile-note">{% translate 'Approve this profile to make the member active.' %}</p>
-                {% endif %}
-
-                {% if can_change %}
-                <form method="post" class="cm-profile-form">
-                    {% csrf_token %}
-                    <label for="{{ review_form.admin_note.id_for_label }}">{{ review_form.admin_note.label }}</label>
-                    {{ review_form.admin_note }}
-                    <div class="cm-profile-form-actions">
-                        <button type="submit" name="action" value="approve" class="cm-primary-button">
-                            {% translate 'Approve membership' %}
-                        </button>
-                        <button type="submit" name="action" value="reject" class="cm-secondary-button cm-danger-button">
-                            {% translate 'Not approved' %}
-                        </button>
-                    </div>
-                </form>
-                {% endif %}
-            </section>
-            {% endif %}
-
             {% if can_change %}
-            <section class="cm-card cm-profile-section">
-                <h2>{% translate 'Change status' %}</h2>
-                <form method="post" class="cm-profile-form">
+            <section class="cm-card cm-profile-section cm-profile-status-card">
+                <h2>{% translate 'Status' %}</h2>
+                <form method="post" class="cm-inline-form">
                     {% csrf_token %}
-                    <label for="{{ status_form.status.id_for_label }}">{{ status_form.status.label }}</label>
+                    <label class="cm-visually-hidden" for="{{ status_form.status.id_for_label }}">{{ status_form.status.label }}</label>
                     <select name="status" id="{{ status_form.status.id_for_label }}" class="cm-status-select">
                         {% for option in status_options %}
                         <option value="{{ option.value }}"{% if membership.status == option.value %} selected{% endif %}>{{ option.label }}</option>
                         {% endfor %}
                     </select>
-                    {{ status_form.status.errors }}
-                    <div class="cm-profile-form-actions">
-                        <button type="submit" name="action" value="status" class="cm-secondary-button">
-                            {% translate 'Update status' %}
-                        </button>
-                    </div>
+                    <button type="submit" name="action" value="status" class="cm-secondary-button">
+                        {% translate 'Update' %}
+                    </button>
                 </form>
+                {{ status_form.status.errors }}
             </section>
+            {% endif %}
 
-            <section class="cm-card cm-profile-section">
-                <h2>{% translate 'Message the member' %}</h2>
-                <p class="cm-profile-note">
-                    {% translate 'This comment goes straight to the member’s private account inbox and notification bell.' %}
+            {% if pending_change or membership.status != 'active' %}
+            <section class="cm-card cm-profile-section cm-profile-review-card">
+                <h2>{% translate 'Review' %}</h2>
+                {% if pending_change %}
+                <p class="cm-review-meta">
+                    {{ pending_change.get_kind_display }} · {{ pending_change.created_at|date:'d M Y' }}
                 </p>
+                {% if summary_lines %}
+                <details class="cm-review-details">
+                    <summary>{% translate 'Submitted changes' %}</summary>
+                    <ul class="cm-review-summary">
+                        {% for line in summary_lines %}<li>{{ line }}</li>{% endfor %}
+                    </ul>
+                </details>
+                {% endif %}
+                {% elif membership.status == 'pending' %}
+                <p class="cm-review-meta">{% translate 'Waiting for approval' %}</p>
+                {% else %}
+                <p class="cm-review-meta">{% translate 'Not currently active' %}</p>
+                {% endif %}
+
+                {% if can_change %}
                 <form method="post" class="cm-profile-form">
                     {% csrf_token %}
-                    {{ message_form.message }}
-                    {{ message_form.message.errors }}
+                    <label class="cm-visually-hidden" for="{{ review_form.admin_note.id_for_label }}">{{ review_form.admin_note.label }}</label>
+                    {{ review_form.admin_note }}
                     <div class="cm-profile-form-actions">
-                        <button type="submit" name="action" value="message" class="cm-primary-button">
-                            {% translate 'Send message' %}
+                        <button type="submit" name="action" value="approve" class="cm-primary-button">
+                            {% translate 'Approve' %}
+                        </button>
+                        <button type="submit" name="action" value="reject" class="cm-secondary-button cm-danger-button">
+                            {% translate 'Reject' %}
                         </button>
                     </div>
                 </form>
+                {% endif %}
             </section>
             {% endif %}
         </aside>
+        {% endif %}
     </div>
+
+    {% if can_change %}
+    <section class="cm-card cm-profile-section cm-comment-card" aria-labelledby="cm-comment-title">
+        <h2 id="cm-comment-title">{% translate 'Comment' %}</h2>
+        <form method="post" class="cm-comment-form">
+            {% csrf_token %}
+            <label class="cm-visually-hidden" for="{{ message_form.message.id_for_label }}">{{ message_form.message.label }}</label>
+            {{ message_form.message }}
+            <button type="submit" name="action" value="message" class="cm-icon-button" aria-label="{% translate 'Send comment' %}" title="{% translate 'Send comment' %}">
+                <svg class="sboi-ico" aria-hidden="true" focusable="false"><use href="#sboi-i-send"></use></svg>
+            </button>
+        </form>
+        {{ message_form.message.errors }}
+    </section>
+    {% endif %}
 </section>
+<script>
+(function () {
+    var input = document.querySelector('.cm-comment-input');
+    if (!input) return;
+    function resize() {
+        input.style.height = 'auto';
+        input.style.height = Math.min(input.scrollHeight, 140) + 'px';
+    }
+    input.addEventListener('input', resize);
+    resize();
+})();
+</script>
 {% endblock %}

@@ -1,0 +1,55 @@
+{% load i18n admin_menu %}
+<div class="sboi-community__body">
+    <section class="cf-feed-page sboi-community__feed" aria-label="{% translate 'Community feed' %}">
+        {% include "members/account/_post_feed.html" with admin_community=True %}
+    </section>
+
+    <aside class="cf-aside sboi-community__aside" aria-label="{% translate 'Community information' %}">
+        <section class="cf-aside-card">
+            <header class="cf-aside-head">
+                <h2>{% translate 'Community' %}</h2>
+                <a href="{% url 'communications:inbox' %}?view=members">{% translate 'All' %}</a>
+            </header>
+            <ul class="sboi-stat-list">
+                <li><span>{% translate 'Members' %}</span><strong>{{ member_total }}</strong></li>
+                <li><span>{% translate 'Staff accounts' %}</span><strong>{{ staff_total }}</strong></li>
+                <li><span>{% translate 'Church office unread' %}</span><strong>{{ office_unread_total }}</strong></li>
+            </ul>
+        </section>
+
+        <section class="cf-aside-card">
+            <header class="cf-aside-head">
+                <h2>{% translate 'People' %}</h2>
+                <a href="{% url 'communications:inbox' %}?view=members">{% translate 'Directory' %}</a>
+            </header>
+            <ul class="sboi-people-mini">
+                {% for row in member_directory|slice:':8' %}
+                <li>
+                    <a href="{% if row.membership %}{% url 'admin:members_churchmembership_profile' row.membership.pk %}{% else %}{% url 'admin:auth_user_change' row.user.pk %}{% endif %}">
+                        {% if row.avatar_url %}
+                        <img src="{{ row.avatar_url }}" alt="" class="cf-avatar cf-avatar--sm cf-avatar-img" loading="lazy">
+                        {% else %}
+                        <span class="cf-avatar cf-avatar--sm" aria-hidden="true">{{ row.initials }}</span>
+                        {% endif %}
+                        <span>
+                            <strong>{{ row.display_name }}</strong>
+                            <small>{% if row.is_staff %}{% translate 'Staff' %}{% else %}{{ row.status_label }}{% endif %}</small>
+                        </span>
+                    </a>
+                </li>
+                {% empty %}
+                <li class="sboi-people-mini__empty">{% translate 'No accounts yet.' %}</li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <section class="cf-aside-card">
+            <header class="cf-aside-head">
+                <h2>{% translate 'Moderation' %}</h2>
+            </header>
+            <p class="cf-panel-note">
+                {% translate 'Staff can remove any post or comment from the feed. Open a member conversation from Chat only when a moderation issue needs review.' %}
+            </p>
+        </section>
+    </aside>
+</div>

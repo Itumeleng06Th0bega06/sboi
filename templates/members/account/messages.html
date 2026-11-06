@@ -1,59 +1,258 @@
 {% extends account_base|default:'members/account/base_account.html' %}
 {% load static %}
 
-{% block title %}Messages · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
+{% block title %}Inbox · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
 
 {% block account_content %}
-<section class="account-message-shell">
-    <header class="account-message-header">
-        <div>
-            <p class="account-eyebrow">Private conversation</p>
-            <h1>Messages</h1>
-            <p class="account-muted">
+<section class="cf-inbox{% if dm_thread %} is-thread-open{% endif %}" data-cf-inbox>
+    <aside class="cf-inbox-list" aria-label="Conversations">
+        <header class="cf-inbox-head">
+            <div>
+                <p class="cf-eyebrow">Private</p>
+                <h1>Inbox</h1>
+            </div>
+            <span class="cf-inbox-count" aria-hidden="true">{{ direct_threads|length }}</span>
+        </header>
+
+        <div class="cf-inbox-scroll">
+            <p class="cf-inbox-label">Church office</p>
+            <a class="cf-conversation{% if not dm_thread %} is-active{% endif %}"
+               href="{% url 'members:account_messages' %}"
+               data-account-ajax="off"
+               data-cf-open-thread
+               aria-label="Open conversation with church administration">
+                <span class="cf-conversation-avatar" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M12 3 4 7v5c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V7l-8-4Z"/><path d="M9 12h6M12 9v6"/></svg>
+                </span>
+                <span class="cf-conversation-copy">
+                    <strong>Church administration</strong>
+                    {% with last_message=thread|last %}
+                    {% if last_message %}<span>{{ last_message.message|striptags|truncatechars:68 }}</span>{% else %}<span>Start a private conversation</span>{% endif %}
+                    {% endwith %}
+                </span>
+                {% with last_message=thread|last %}
+                {% if last_message %}<time datetime="{{ last_message.created_at|date:'c' }}">{{ last_message.created_at|date:"j M" }}</time>{% endif %}
+                {% endwith %}
+                <span class="cf-conversation-dot" aria-hidden="true"></span>
+            </a>
+
+            <p class="cf-inbox-label">Members you have messaged</p>
+            {% for row in direct_threads %}
+            <a class="cf-conversation{% if dm_thread.pk == row.thread.pk %} is-active{% endif %}"
+               href="{% url 'members:account_messages' %}?thread={{ row.thread.pk }}"
+               data-account-ajax="off"
+               aria-label="Open conversation with {{ row.display_name }}">
+                <span class="cf-conversation-avatar cf-conversation-avatar--person{% if row.online %} is-online{% endif %}">
+                    {% if row.avatar_url %}
+                    <img src="{{ row.avatar_url }}" alt="" class="cf-avatar cf-avatar-img" loading="lazy">
+                    {% else %}
+                    <span class="cf-avatar" aria-hidden="true">{{ row.initials }}</span>
+                    {% endif %}
+                    {% if row.online %}<span class="cf-presence-dot" title="Online now"></span>{% endif %}
+                </span>
+                <span class="cf-conversation-copy">
+                    <strong>{{ row.display_name }}</strong>
+                    {% if row.last_body %}
+                    <span>{{ row.last_body|striptags|truncatechars:68 }}</span>
+                    {% else %}
+                    <span>Say hello privately</span>
+                    {% endif %}
+                </span>
+                {% if row.last_at %}<time datetime="{{ row.last_at|date:'c' }}">{{ row.last_at|date:"j M" }}</time>{% endif %}
+                {% if row.unread %}<span class="cf-conversation-unread">{{ row.unread }}</span>{% endif %}
+            </a>
+            {% empty %}
+            <p class="cf-inbox-hint">No member conversations yet. Choose someone online below to say hello.</p>
+            {% endfor %}
+
+            <p class="cf-inbox-label">Online now <span>{{ online_rows|length }}</span></p>
+            <ul class="cf-online-list">
+                {% for row in online_rows %}
+                <li>
+                    <span class="cf-conversation-avatar cf-conversation-avatar--xs cf-conversation-avatar--person is-online">
+                        {% if row.avatar_url %}
+                        <img src="{{ row.avatar_url }}" alt="" class="cf-avatar cf-avatar-img" loading="lazy">
+                        {% else %}
+                        <span class="cf-avatar" aria-hidden="true">{{ row.initials }}</span>
+                        {% endif %}
+                    </span>
+                    <span class="cf-online-copy">
+                        <strong>{{ row.display_name }}</strong>
+                        <span>@{{ row.member.username }}</span>
+                    </span>
+                    {% if row.thread %}
+                    <a class="cf-online-action" href="{% url 'members:account_messages' %}?thread={{ row.thread.pk }}" data-account-ajax="off" aria-label="Message {{ row.display_name }}">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/></svg>
+                    </a>
+                    {% else %}
+                    <form method="post" action="{% url 'members:account_direct_start' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="username" value="{{ row.member.username }}">
+                        <button type="submit" class="cf-online-action" aria-label="Message {{ row.display_name }}">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/></svg>
+                        </button>
+                    </form>
+                    {% endif %}
+                </li>
+                {% empty %}
+                <li class="cf-inbox-hint">No one else is online right now. New conversations will appear here.</li>
+                {% endfor %}
+            </ul>
+
+            {% if blocked_members %}
+            <details class="cf-blocked">
+                <summary>Blocked members ({{ blocked_members|length }})</summary>
+                <ul>
+                    {% for member in blocked_members %}
+                    <li>
+                        <span>{{ member.get_full_name|default:member.get_username }}</span>
+                        <form method="post" action="{% url 'members:account_unblock_member' member.username %}">
+                            {% csrf_token %}
+                            <button type="submit">Unblock</button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </details>
+            {% endif %}
+
+            <p class="cf-inbox-note">
                 One private inbox for testimonies, prayer requests, questions and concerns.
-                Only you and the church administration can read this conversation.
+                Only you and the person you write to can read a member conversation.
             </p>
         </div>
-        <span class="account-secure-badge">Private</span>
-    </header>
+    </aside>
 
-    <div class="account-thread"
-         id="accountThread"
-         data-account-thread
-         data-after="{% if thread %}{{ thread.last.pk }}{% endif %}"
-         data-poll-url="{% url 'members:account_message_poll' %}"
-         aria-live="polite">
-        {% for message in thread %}
-        {% include 'members/account/_message_bubble.html' %}
-        {% empty %}
-        <div class="account-thread-empty" data-account-thread-empty>
-            <h2>Start the conversation</h2>
-            <p>Nothing has been sent yet. Whenever you are ready, write below. The church office will reply here.</p>
-        </div>
-        {% endfor %}
-    </div>
+    <section class="cf-thread-panel" data-cf-thread-panel aria-label="{% if dm_thread %}Conversation with {{ dm_other.get_full_name|default:dm_other.get_username }}{% else %}Conversation with church administration{% endif %}">
+        {% if dm_thread %}
+        <header class="cf-thread-head">
+            <a class="cf-thread-back" href="{% url 'members:account_messages' %}" data-cf-close-thread aria-label="Back to conversations">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m15 5-7 7 7 7"/></svg>
+            </a>
+            <span class="cf-conversation-avatar cf-conversation-avatar--sm cf-conversation-avatar--person{% if dm_other_online %} is-online{% endif %}">
+                {% if dm_avatar_url %}
+                <img src="{{ dm_avatar_url }}" alt="" class="cf-avatar cf-avatar-img">
+                {% else %}
+                <span class="cf-avatar" aria-hidden="true">{{ dm_initials }}</span>
+                {% endif %}
+                {% if dm_other_online %}<span class="cf-presence-dot" title="Online now"></span>{% endif %}
+            </span>
+            <div class="cf-thread-title">
+                <strong>{{ dm_other.get_full_name|default:dm_other.get_username }}</strong>
+                <span>{% if dm_other_online %}Online now{% else %}Community member{% endif %}</span>
+            </div>
+            <details class="cf-thread-menu">
+                <summary aria-label="Conversation options">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+                </summary>
+                <div class="cf-thread-menu-panel">
+                    <a href="{% url 'members:member_profile' dm_other.username %}">View profile</a>
+                    <form method="post" action="{% url 'members:account_block_member' dm_other.username %}">
+                        {% csrf_token %}
+                        <button type="submit" class="cf-thread-menu-danger">Block this member</button>
+                    </form>
+                </div>
+            </details>
+        </header>
 
-    <form method="post"
-          action="{% url 'members:account_message_send' %}"
-          enctype="multipart/form-data"
-          class="account-composer"
-          data-account-message-form>
-        {% csrf_token %}
-        <div class="account-composer-field">
-            <label class="sr-only" for="{{ message_form.message.id_for_label }}">Message</label>
-            {{ message_form.message }}
-            {% for error in message_form.message.errors %}<p class="account-error">{{ error }}</p>{% endfor %}
+        <div class="account-thread cf-thread"
+             id="directThread"
+             data-cf-dm-thread
+             data-thread-id="{{ dm_thread.pk }}"
+             data-after="{% if dm_messages %}{{ dm_messages.last.pk }}{% endif %}"
+             data-poll-url="{% url 'members:account_direct_poll' dm_thread.pk %}"
+             aria-live="polite">
+            {% for message in dm_messages %}
+            {% include 'members/account/_direct_message_bubble.html' with message=message %}
+            {% empty %}
+            <div class="account-thread-empty cf-thread-empty" data-cf-dm-empty>
+                <span class="cf-thread-empty-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/></svg>
+                </span>
+                <h2>Say hello</h2>
+                <p>This conversation is private between you and {{ dm_other.get_full_name|default:dm_other.get_username }}. Write the first message below.</p>
+            </div>
+            {% endfor %}
         </div>
-        <div class="account-composer-actions">
-            <label class="account-attach-button" for="{{ message_form.attachment.id_for_label }}">
-                <span aria-hidden="true">＋</span> Attach a file
-                {{ message_form.attachment }}
+
+        <form method="post"
+              action="{% url 'members:account_direct_send' dm_thread.pk %}"
+              class="cf-thread-composer"
+              data-cf-dm-form>
+            {% csrf_token %}
+            <label class="cf-thread-input-wrap">
+                <span class="sr-only">Message {{ dm_other.get_full_name|default:dm_other.get_username }}</span>
+                <textarea name="body" rows="1" maxlength="2000" placeholder="Message…" required class="cf-thread-input" data-cf-dm-input></textarea>
             </label>
-            <span class="account-composer-note" data-account-attachment-name></span>
-            <button type="submit" class="btn btn-gold">Send privately</button>
+            <button type="submit" class="cf-thread-send" aria-label="Send message" title="Send">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m4 12 16-8-5 16-3-7-8-1Z"/></svg>
+            </button>
+            <div class="cf-thread-status" data-cf-dm-status role="status" aria-live="polite"></div>
+        </form>
+        {% else %}
+        <header class="cf-thread-head">
+            <button type="button" class="cf-thread-back" data-cf-close-thread aria-label="Back to conversations">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m15 5-7 7 7 7"/></svg>
+            </button>
+            <span class="cf-conversation-avatar cf-conversation-avatar--sm" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M12 3 4 7v5c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V7l-8-4Z"/><path d="M9 12h6M12 9v6"/></svg>
+            </span>
+            <div class="cf-thread-title">
+                <strong>Church administration</strong>
+                <span>Private and confidential</span>
+            </div>
+            <span class="cf-thread-lock" title="Only you and the church office can read this">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            </span>
+        </header>
+
+        <div class="account-thread cf-thread"
+             id="accountThread"
+             data-account-thread
+             data-after="{% if thread %}{{ thread.last.pk }}{% endif %}"
+             data-poll-url="{% url 'members:account_message_poll' %}"
+             aria-live="polite">
+            {% for message in thread %}
+            {% include 'members/account/_message_bubble.html' %}
+            {% empty %}
+            <div class="account-thread-empty cf-thread-empty" data-account-thread-empty>
+                <span class="cf-thread-empty-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/></svg>
+                </span>
+                <h2>Start the conversation</h2>
+                <p>Nothing has been sent yet. Whenever you are ready, write below. The church office will reply here.</p>
+            </div>
+            {% endfor %}
         </div>
-        <div class="account-composer-status" data-account-message-status role="status" aria-live="polite"></div>
-        {% for error in message_form.attachment.errors %}<p class="account-error">{{ error }}</p>{% endfor %}
-    </form>
+
+        <form method="post"
+              action="{% url 'members:account_message_send' %}"
+              enctype="multipart/form-data"
+              class="cf-thread-composer"
+              data-account-message-form>
+            {% csrf_token %}
+            <input type="file" name="attachment" id="cfMessageAttachment" class="cf-thread-file"
+                   data-account-message-attachment
+                   accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.rtf,.odt,.ods,.jpg,.jpeg,.png,.gif,.webp">
+            <label for="cfMessageAttachment" class="cf-thread-attach" title="Attach a file">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>
+                <span class="sr-only">Attach a file</span>
+            </label>
+            <label class="cf-thread-input-wrap">
+                <span class="sr-only">Message</span>
+                <textarea name="message" rows="1" maxlength="5000" placeholder="Message…" required class="cf-thread-input"></textarea>
+            </label>
+            <button type="submit" class="cf-thread-send" aria-label="Send message" title="Send">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m4 12 16-8-5 16-3-7-8-1Z"/></svg>
+            </button>
+            <div class="cf-thread-attachment-row">
+                <span class="cf-thread-attachment-name" data-account-attachment-name></span>
+            </div>
+            <div class="cf-thread-status" data-account-message-status role="status" aria-live="polite"></div>
+            {% for error in message_form.message.errors %}<p class="cf-field-error">{{ error }}</p>{% endfor %}
+            {% for error in message_form.attachment.errors %}<p class="cf-field-error">{{ error }}</p>{% endfor %}
+        </form>
+        {% endif %}
+    </section>
 </section>
 {% endblock %}

@@ -50,9 +50,6 @@
                     <span class="sboi-tile__icon">{% model_icon section_label model.object_name %}</span>
                     <span class="sboi-tile__body">
                         <span class="sboi-tile__name">{{ model.name }}</span>
-                        {% with desc=model|module_description:section_label %}
-                            {% if desc %}<span class="sboi-tile__desc">{{ desc }}</span>{% endif %}
-                        {% endwith %}
                     </span>
                     {% if model.admin_url or model.add_url %}
                         <span class="sboi-tile__go">{% if model.has_permission %}{% admin_icon 'arrow-right' %}{% else %}{% admin_icon 'lock' %}{% endif %}</span>

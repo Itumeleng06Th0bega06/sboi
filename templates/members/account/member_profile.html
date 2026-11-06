@@ -1,0 +1,83 @@
+{% extends account_base|default:'members/account/base_account.html' %}
+{% load static %}
+
+{% block title %}{{ profile_display_name }} · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
+
+{% block account_content %}
+<section class="cf-profile-page cf-public-profile">
+    <header class="cf-public-hero">
+        {% if profile_avatar_url %}
+        <img src="{{ profile_avatar_url }}" alt="{{ profile_display_name }}" class="cf-avatar cf-avatar--xl cf-avatar-img">
+        {% else %}
+        <span class="cf-avatar cf-avatar--xl" aria-hidden="true">{{ profile_initials }}</span>
+        {% endif %}
+        <div class="cf-public-identity">
+            <p class="cf-eyebrow">Community member</p>
+            <h1>{{ profile_display_name }}</h1>
+            <p class="cf-public-handle">@{{ profile_member.username }}</p>
+            <div class="cf-profile-pills">
+                {% if profile_membership %}
+                <span class="cf-pill cf-pill--active">Church member</span>
+                {% if profile_membership.date_joined_church %}
+                <span class="cf-pill cf-pill--quiet">Member since {{ profile_membership.date_joined_church|date:"M Y" }}</span>
+                {% endif %}
+                {% else %}
+                <span class="cf-pill cf-pill--quiet">Community member</span>
+                {% endif %}
+                {% if profile_online %}<span class="cf-pill cf-pill--online">Online now</span>{% endif %}
+                <span class="cf-pill cf-pill--quiet">Joined {{ profile_member.date_joined|date:"M Y" }}</span>
+            </div>
+        </div>
+        <div class="cf-public-actions">
+            <a class="cf-btn cf-btn--quiet" href="{% url 'members:account' %}">Back to feed</a>
+            {% if is_own_profile %}
+            <a class="cf-btn cf-btn--gold" href="{% url 'members:account_profile' %}">Edit my profile</a>
+            {% elif not profile_blocked %}
+            <form method="post" action="{% url 'members:account_direct_start' %}">
+                {% csrf_token %}
+                <input type="hidden" name="username" value="{{ profile_member.username }}">
+                <button type="submit" class="cf-btn cf-btn--gold">Message</button>
+            </form>
+            {% endif %}
+            {% if not is_own_profile %}
+                {% if profile_blocked_by_me %}
+                <form method="post" action="{% url 'members:account_unblock_member' profile_member.username %}">
+                    {% csrf_token %}
+                    <button type="submit" class="cf-btn cf-btn--quiet">Unblock</button>
+                </form>
+                {% elif not profile_blocked %}
+                <form method="post" action="{% url 'members:account_block_member' profile_member.username %}">
+                    {% csrf_token %}
+                    <button type="submit" class="cf-btn cf-btn--quiet">Block</button>
+                </form>
+                {% endif %}
+            {% endif %}
+        </div>
+    </header>
+
+    <div class="cf-public-posts">
+        <header class="cf-section-head">
+            <h2>Posts</h2>
+            <span>{{ posts|length }}{% if feed_has_more %}+{% endif %}</span>
+        </header>
+        <div class="cf-feed">
+            <div class="cf-feed-list">
+                {% for post in posts %}
+                {% include 'members/account/_community_post.html' with post=post %}
+                {% empty %}
+                <div class="cf-feed-empty">
+                    <span class="cf-feed-empty-mark" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
+                    </span>
+                    <h2>No public posts yet</h2>
+                    <p>{{ profile_display_name }} has not shared a community post yet.</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% if feed_has_more %}
+            <a class="cf-load-more" href="?before={{ feed_next_before }}">Load earlier posts</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

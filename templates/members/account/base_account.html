@@ -1,33 +1,247 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}My account · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
-{% block body_class %}account-page{% endblock %}
+{% block title %}Community · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
+{% block body_class %}account-page community-app{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/account.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'css/account.css' %}?v=13">
+<link rel="stylesheet" href="{% static 'css/community-feed.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/community-app.css' %}?v=9">
+{% endblock %}
+
+{% block nav %}
+<header class="cf-topbar" id="cfTopbar">
+    <div class="cf-topbar-inner">
+        <a class="cf-brand" href="{% url 'members:account' %}" aria-label="{{ site_profile.church_name|default:'Shekinah Blaze' }} community home">
+            <img src="{% static 'images/home/Logo.png.png' %}" alt="" class="cf-brand-logo">
+            <span class="cf-brand-copy">
+                <strong>{{ site_profile.church_name|default:'Shekinah Blaze' }}</strong>
+                <small>Community</small>
+            </span>
+        </a>
+
+        <div class="cf-topbar-actions">
+            <a class="cf-site-link" href="{% url 'home:home' %}" title="Go to the public website" aria-label="Go to the public website">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15.3 15.3 0 0 1 0 18a15.3 15.3 0 0 1 0-18Z"/></svg>
+            </a>
+            {% include 'notifications/_public_bell.html' %}
+            <details class="cf-user">
+                <summary class="cf-user-summary" aria-label="Account menu">
+                    {% if member_avatar_url %}
+                    <img src="{{ member_avatar_url }}" alt="" class="cf-avatar cf-avatar--sm cf-avatar-img">
+                    {% else %}
+                    <span class="cf-avatar cf-avatar--sm" aria-hidden="true">{{ member_initials|default:'S' }}</span>
+                    {% endif %}
+                    <span class="cf-user-name">{{ member_display_name|default:request.user.username }}</span>
+                    <svg class="cf-user-chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41Z"/></svg>
+                </summary>
+                <div class="cf-user-panel">
+                    <div class="cf-user-identity">
+                        {% if member_avatar_url %}
+                        <img src="{{ member_avatar_url }}" alt="" class="cf-avatar cf-avatar--md cf-avatar-img">
+                        {% else %}
+                        <span class="cf-avatar cf-avatar--md" aria-hidden="true">{{ member_initials|default:'S' }}</span>
+                        {% endif %}
+                        <div>
+                            <strong>{{ member_display_name|default:request.user.username }}</strong>
+                            <span>@{{ request.user.username }}{% if request.user.email %} · {{ request.user.email }}{% endif %}</span>
+                        </div>
+                    </div>
+                    <nav class="cf-user-links" aria-label="Personal account">
+                        {% if request.user.is_staff %}
+                        <a href="{% url 'admin:index' %}">Admin console</a>
+                        {% endif %}
+                        <a href="{% url 'home:home' %}">Public website</a>
+                    </nav>
+                    <form method="post" action="{% url 'members:logout' %}" class="nav-account-logout">
+                        {% csrf_token %}
+                        <button type="submit" class="cf-user-signout">Sign out</button>
+                    </form>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <nav class="cf-tabbar" aria-label="Community navigation"
+         data-account-base="{% url 'members:account' %}"
+         data-account-counts-url="{% url 'members:account_counts' %}">
+    <a href="{% url 'members:account' %}" class="cf-tab account-nav-link{% if account_section == 'account' %} active{% endif %}">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2v-9Z"/></svg>
+        <span class="account-nav-label">Home</span>
+    </a>
+    <a href="{% url 'members:account_messages' %}" class="cf-tab account-nav-link{% if account_section == 'messages' %} active{% endif %}">
+        <span class="cf-tab-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/></svg>
+            <span class="cf-tab-badge" data-account-count="messages"{% if not unread_messages %} hidden{% endif %}>{{ unread_messages|default:0 }}</span>
+        </span>
+        <span class="account-nav-label">Inbox</span>
+    </a>
+    <a href="{% url 'members:account_posts' %}" class="cf-tab account-nav-link{% if account_section == 'posts' %} active{% endif %}">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
+        <span class="account-nav-label">My posts</span>
+    </a>
+    <a href="{% url 'members:account_profile' %}" class="cf-tab account-nav-link{% if account_section == 'profile' %} active{% endif %}">
+        {% if member_avatar_url %}
+        <img src="{{ member_avatar_url }}" alt="" class="cf-tab-avatar">
+        {% else %}
+        <span class="cf-tab-avatar cf-tab-avatar--initials" aria-hidden="true">{{ member_initials|default:'S' }}</span>
+        {% endif %}
+        <span class="account-nav-label">Profile</span>
+    </a>
+    </nav>
+</header>
 {% endblock %}
 
 {% block content %}
-<div class="account-shell container" data-account-base="{% url 'members:account' %}" data-account-counts-url="{% url 'members:account_counts' %}">
-    <section class="account-main">
+<div class="cf-app-shell container"
+     data-account-base="{% url 'members:account' %}"
+     data-account-counts-url="{% url 'members:account_counts' %}">
+    <aside class="cf-rail" aria-label="Community sections">
+        <nav class="cf-rail-nav">
+            <p class="cf-rail-label">Community</p>
+            <a href="{% url 'members:account' %}" class="cf-nav-item account-nav-link{% if account_section == 'account' %} active{% endif %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2v-9Z"/></svg>
+                <span class="account-nav-label">Community feed</span>
+            </a>
+            <a href="{% url 'members:account_posts' %}" class="cf-nav-item account-nav-link{% if account_section == 'posts' %} active{% endif %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
+                <span class="account-nav-label">My posts</span>
+            </a>
+            <a href="{% url 'members:account_saved' %}" class="cf-nav-item account-nav-link{% if account_section == 'saved' %} active{% endif %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 4h12v17l-6-4-6 4V4Z"/></svg>
+                <span class="account-nav-label">Saved posts</span>
+            </a>
+            <a href="{% url 'members:account_messages' %}" class="cf-nav-item account-nav-link{% if account_section == 'messages' %} active{% endif %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/></svg>
+                <span class="account-nav-label">Inbox</span>
+                <span class="cf-nav-badge" data-account-count="messages"{% if not unread_messages %} hidden{% endif %}>{{ unread_messages|default:0 }}</span>
+            </a>
+            <a href="{% url 'members:account_profile' %}" class="cf-nav-item account-nav-link{% if account_section == 'profile' %} active{% endif %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
+                <span class="account-nav-label">My profile</span>
+            </a>
+
+            <p class="cf-rail-label cf-rail-label--space">Church life</p>
+            <a href="{% url 'members:account_settings' %}" class="cf-nav-item account-nav-link{% if account_section == 'settings' %} active{% endif %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1V21h-4v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1-.4H3v-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1V3h4v.09A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.14.35.35.68.6 1 .28.3.63.45 1 .4h.09v4h-.09a1.7 1.7 0 0 0-1.6.6Z"/></svg>
+                <span>Account settings</span>
+            </a>
+        </nav>
+
+        <div class="cf-rail-identity">
+            {% if member_avatar_url %}
+            <img src="{{ member_avatar_url }}" alt="" class="cf-avatar cf-avatar--md cf-avatar-img">
+            {% else %}
+            <span class="cf-avatar cf-avatar--md" aria-hidden="true">{{ member_initials|default:'S' }}</span>
+            {% endif %}
+            <div class="cf-rail-identity-copy">
+                <strong>{{ member_display_name|default:request.user.username }}</strong>
+                <span>@{{ request.user.username }}</span>
+                <span class="cf-rail-membership">Church membership <b>{{ membership.get_status_display|default:'Visitor' }}</b></span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="cf-main account-main">
         {% if messages %}
-        <div class="account-flashes" role="status" aria-live="polite">
+        <div class="account-flashes cf-flashes" role="status" aria-live="polite">
             {% for message in messages %}
             <p class="account-flash account-flash--{{ message.tags|default:'info' }}">{{ message }}</p>
             {% endfor %}
         </div>
         {% endif %}
 
-        <div data-account-section data-account-title="{{ account_page_title|default:'My account' }}">
+        <div data-account-section data-account-title="{{ account_page_title|default:'Community' }}">
             {% block account_content %}{% endblock %}
             {% block account_modals %}{% endblock %}
         </div>
-    </section>
+    </main>
+
+    {% if has_community_aside %}
+    <aside class="cf-aside" aria-label="Church information">
+        {% if aside_events %}
+        <section class="cf-aside-card">
+            <header class="cf-aside-head">
+                <h2>Upcoming</h2>
+                <a href="{% url 'blackboard:blackboard' %}">Calendar</a>
+            </header>
+            <ul class="cf-event-list">
+                {% for event in aside_events %}
+                <li>
+                    <time datetime="{{ event.date|date:'Y-m-d' }}" class="cf-event-date">
+                        <b>{{ event.date|date:"d" }}</b>
+                        <span>{{ event.date|date:"M" }}</span>
+                    </time>
+                    <div>
+                        <strong>{{ event.title|default:"Church activity" }}</strong>
+                        {% if event.description %}<span>{{ event.description|striptags|truncatechars:95 }}</span>{% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
+        {% if aside_announcements %}
+        <section class="cf-aside-card">
+            <header class="cf-aside-head">
+                <h2>Announcements</h2>
+                <a href="{% url 'blackboard:blackboard' %}">More</a>
+            </header>
+            <ul class="cf-announcement-list">
+                {% for announcement in aside_announcements %}
+                <li>
+                    <span>{{ announcement.date|date:"d M" }}</span>
+                    <strong>{{ announcement.title|default:"Church notice" }}</strong>
+                    {% if announcement.body %}<p>{{ announcement.body|striptags|truncatechars:120 }}</p>{% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+    </aside>
+    {% endif %}
 </div>
+
+<dialog class="cf-report-dialog" data-cf-report-dialog aria-labelledby="cfReportTitle">
+    <form method="post" action="{% url 'members:feed_report' %}" data-cf-report-form>
+        {% csrf_token %}
+        <input type="hidden" name="post_id" value="" data-cf-report-post>
+        <input type="hidden" name="comment_id" value="" data-cf-report-comment>
+        <header class="cf-dialog-head">
+            <h2 id="cfReportTitle">Report content</h2>
+            <button type="button" class="cf-dialog-close" data-cf-report-close aria-label="Close">&times;</button>
+        </header>
+        <p class="cf-dialog-copy">Reports are private. The church office will review this content.</p>
+        <label class="cf-field">
+            <span>What is wrong?</span>
+            <select name="reason" required>
+                <option value="spam">Spam or advertising</option>
+                <option value="abuse">Abusive or disrespectful content</option>
+                <option value="harassment">Harassment or bullying</option>
+                <option value="misinformation">False or misleading information</option>
+                <option value="other">Something else</option>
+            </select>
+        </label>
+        <label class="cf-field">
+            <span>Anything else we should know? <em>Optional</em></span>
+            <textarea name="note" rows="3" maxlength="1000"></textarea>
+        </label>
+        <p class="cf-field-error" data-cf-report-error hidden></p>
+        <div class="cf-dialog-actions">
+            <button type="button" class="cf-btn cf-btn--quiet" data-cf-report-close>Cancel</button>
+            <button type="submit" class="cf-btn cf-btn--gold">Send report</button>
+        </div>
+    </form>
+</dialog>
+
+<div class="cf-toast" data-cf-toast role="status" aria-live="polite" hidden></div>
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="{% static 'js/account.js' %}?v=7" defer></script>
+<script src="{% static 'js/account.js' %}?v=9" defer></script>
+<script src="{% static 'js/community-feed.js' %}?v=7" defer></script>
+<script src="{% static 'js/community-inbox.js' %}?v=1" defer></script>
 {% block account_scripts %}{% endblock %}
 {% endblock %}
