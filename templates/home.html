@@ -239,7 +239,15 @@
         <p class="section-sub center light">We would love to hear what God is doing in your life.</p>
         <form method="post" action="{% url 'home:testimony' %}" class="form-stack" data-ajax-form>
             {% csrf_token %}
-            {{ testimony_form.as_p }}
+            {% for field in testimony_form %}
+            <div class="form-field">
+                {% if field.name == 'preferred_contact' %}
+                <label for="{{ field.id_for_label }}">How would you like to be contacted?</label>
+                {% endif %}
+                {{ field }}
+                {% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+            </div>
+            {% endfor %}
             <button type="submit" class="btn btn-gold btn-block">Submit Testimony</button>
         </form>
     </div>

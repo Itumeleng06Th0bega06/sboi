@@ -34,13 +34,50 @@ class ContactMessageAdmin(AreaPermissionMixin, admin.ModelAdmin):
     list_editable = ['is_read']
     search_fields = ['name', 'email', 'subject', 'message', 'user__email']
     readonly_fields = [
-        'name', 'email', 'phone', 'subject', 'message', 'created_at',
-        'user', 'sender', 'is_from_admin', 'read_by_member', 'attachment_link',
+        'name', 'email', 'phone', 'preferred_contact', 'subject', 'message',
+        'created_at', 'user', 'sender', 'is_from_admin', 'read_by_member',
+        'attachment_link',
     ]
+    fieldsets = (
+        ('Message', {
+            'fields': (
+                'name', 'email', 'phone', 'preferred_contact', 'subject',
+                'message', 'attachment_link', 'created_at',
+            ),
+        }),
+        ('Conversation', {
+            'fields': (
+                'user', 'sender', 'is_from_admin', 'read_by_member', 'parent',
+            ),
+        }),
+        ('Status & WhatsApp', {
+            'fields': (
+                'is_read', 'has_whatsapp', 'whatsapp_checked',
+                'whatsapp_checked_at',
+            ),
+        }),
+    )
     exclude = ['attachment']
     date_hierarchy = 'created_at'
     actions = ['mark_read', 'mark_unread']
     change_list_template = 'admin/contact/contactmessage/change_list.html'
+    change_form_template = 'admin/contact/contactmessage/change_form.html'
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if obj is None or not obj.is_from_admin:
+            return fieldsets
+        # A staff reply has no visitor contact preference, so don't show a
+        # meaningless "Email" value on its change page.
+        filtered = []
+        for title, options in fieldsets:
+            options = dict(options)
+            options['fields'] = [
+                name for name in options.get('fields', ())
+                if name != 'preferred_contact'
+            ]
+            filtered.append((title, options))
+        return filtered
 
     def get_urls(self):
         custom = [

@@ -74,11 +74,23 @@ class ContactMessage(models.Model):
     system while keeping the public contact form untouched.
     """
 
+    CONTACT_EMAIL = 'email'
+    CONTACT_WHATSAPP = 'whatsapp'
+    CONTACT_PHONE = 'phone'
+    CONTACT_CHOICES = [
+        (CONTACT_EMAIL, 'Email'),
+        (CONTACT_WHATSAPP, 'WhatsApp'),
+        (CONTACT_PHONE, 'Phone call'),
+    ]
+
     name = models.CharField(max_length=120)
     email = models.EmailField()
     phone = models.CharField(max_length=60, blank=True)
     subject = models.CharField(max_length=200, blank=True)
     message = models.TextField()
+    preferred_contact = models.CharField(
+        max_length=10, choices=CONTACT_CHOICES, default=CONTACT_EMAIL,
+    )
     # --- Private member conversation -------------------------------------
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

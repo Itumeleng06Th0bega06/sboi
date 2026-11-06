@@ -92,7 +92,7 @@
           action="{% url 'communications:office_reply' office_member.pk %}"
           enctype="multipart/form-data">
         {% csrf_token %}
-        <div class="comms-composer__row">
+        <div class="comms-composer__box">
             <label class="comms-attach" title="{% translate 'Attach a document or image' %}">
                 {% admin_icon 'file' %}
                 <input type="file" name="attachment" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.rtf,.odt,.ods,.jpg,.jpeg,.png,.gif,.webp" data-office-file>
@@ -105,9 +105,8 @@
                       aria-label="{% translate 'Reply' %}"
                       required
                       data-office-textarea></textarea>
-            <button type="submit" class="comms-send">
+            <button type="submit" class="comms-send" aria-label="{% translate 'Send reply' %}" title="{% translate 'Send reply' %}">
                 {% admin_icon 'arrow-right' %}
-                <span>{% translate 'Send reply' %}</span>
             </button>
         </div>
         <div class="comms-composer__hint">

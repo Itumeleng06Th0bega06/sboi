@@ -132,20 +132,29 @@ class PortalAccessTests(CommunicationsBase):
         response = self.client.get(reverse('communications:inbox'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Admin Communications')
-        self.assertContains(response, 'comms-shell')
-        self.assertContains(response, 'comms-sidebar')
-        self.assertContains(response, 'data-comms-root')
         self.assertContains(response, 'communications.css')
         self.assertContains(response, 'communications.js')
-        # The portal renders inside the admin shell, so Django's shared admin
-        # context (account menu, notification bell, logout) must be present.
+        # The merged default view is the unified iChat timeline.
+        self.assertContains(response, 'iChat')
+        self.assertContains(response, 'sboi-ichat__filters')
+        self.assertContains(response, 'data-cf-composer')
         self.assertTrue(response.context['has_permission'])
         self.assertIn('admin_dashboard', response.context)
+        # The three-column conversation workspace lives behind a selection.
+        group = self.make_group(members=[self.member])
+        response = self.client.get(
+            reverse('communications:inbox'),
+            {'view': 'chat', 'conversation': group.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'comms-shell')
+        self.assertContains(response, 'comms-workspace')
+        self.assertContains(response, 'data-comms-root')
         # Staff can start new conversations from the portal dialogs.
-        self.assertContains(response, 'New message')
         self.assertContains(response, 'New group')
         self.assertContains(response, 'Create a group')
-        self.assertContains(response, 'Start a direct message')
+        # The standalone "New message" affordance was intentionally removed.
+        self.assertNotContains(response, 'New message')
 
     def test_superuser_passes_without_explicit_permission_row(self):
         superuser = self.make_user('root', allowed=False, superuser=True)
@@ -541,6 +550,86 @@ class GroupManagementTests(CommunicationsBase):
         self.assertFalse(Conversation.objects.filter(pk=solo.pk).exists())
 
 
+class GroupDeletionTests(CommunicationsBase):
+    """Only group managers may delete a group, and the delete is thorough."""
+
+    def setUp(self):
+        super().setUp()
+        self.group = self.make_group(members=[self.member])
+        self.message = self.send(self.group, self.owner, 'Budget notes for the team')
+
+    def test_manager_can_delete_the_group_and_everything_it_created(self):
+        # Posting in the group notifies the other participants.
+        self.assertTrue(
+            Notification.objects.filter(
+                source_type='admin_message', source_id=self.message.pk,
+            ).exists()
+        )
+
+        response = self.client.post(
+            reverse('communications:delete_group', args=[self.group.pk]),
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Conversation.objects.filter(pk=self.group.pk).exists())
+        self.assertFalse(Message.objects.filter(pk=self.message.pk).exists())
+        self.assertFalse(
+            ConversationParticipant.objects.filter(
+                conversation_id=self.group.pk,
+            ).exists()
+        )
+        self.assertFalse(
+            Notification.objects.filter(
+                source_type='admin_message', source_id=self.message.pk,
+            ).exists()
+        )
+
+    def test_group_admin_can_delete_the_group(self):
+        participant = self.group.participants.get(user=self.member)
+        participant.role = ConversationParticipant.ROLE_ADMIN
+        participant.save(update_fields=['role'])
+        client = self.login(self.member)
+        response = client.post(
+            reverse('communications:delete_group', args=[self.group.pk]),
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Conversation.objects.filter(pk=self.group.pk).exists())
+
+    def test_plain_member_cannot_delete_the_group(self):
+        client = self.login(self.member)
+        response = client.post(
+            reverse('communications:delete_group', args=[self.group.pk]),
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Conversation.objects.filter(pk=self.group.pk).exists())
+
+    def test_direct_conversation_cannot_be_deleted(self):
+        thread, _created = get_or_create_direct(self.owner, self.member)
+        response = self.client.post(
+            reverse('communications:delete_group', args=[thread.pk]),
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Conversation.objects.filter(pk=thread.pk).exists())
+
+    def test_danger_zone_is_offered_to_managers_only(self):
+        response = self.client.get(
+            reverse('communications:inbox'),
+            {'view': 'chat', 'conversation': self.group.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Danger zone')
+        self.assertContains(response, 'Delete group')
+        self.assertContains(response, 'Leave group')
+
+        client = self.login(self.member)
+        response = client.get(
+            reverse('communications:inbox'),
+            {'view': 'chat', 'conversation': self.group.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Delete group')
+        self.assertContains(response, 'Leave group')
+
+
 class AttachmentTests(CommunicationsBase):
     def setUp(self):
         super().setUp()
@@ -704,8 +793,8 @@ class AdminCommunityTests(CommunicationsBase):
 
     def test_each_community_section_renders_for_staff(self):
         expected = {
-            'feed': 'Community feed',
-            'chat': 'Chat',
+            'feed': 'iChat',
+            'chat': 'iChat',
             'members': 'Members',
             'profile': 'Profile',
         }
@@ -716,6 +805,7 @@ class AdminCommunityTests(CommunicationsBase):
             self.assertEqual(response.status_code, 200, view)
             self.assertContains(response, 'Admin Communications')
             self.assertContains(response, heading)
+            self.assertContains(response, 'sboi-community-dock')
 
     def test_members_directory_lists_accounts_and_can_be_searched(self):
         response = self.client.get(

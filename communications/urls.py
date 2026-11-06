@@ -66,6 +66,11 @@ urlpatterns = [
         views.leave_group_view,
         name='leave_group',
     ),
+    path(
+        'conversation/<int:pk>/delete/',
+        views.delete_group_view,
+        name='delete_group',
+    ),
     path('groups/create/', views.create_group_view, name='create_group'),
     path('direct/start/', views.start_direct_view, name='start_direct'),
     path(

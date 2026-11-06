@@ -35,7 +35,21 @@ class FeaturedSection(models.Model):
 
 
 class Testimony(models.Model):
+    CONTACT_EMAIL = 'email'
+    CONTACT_WHATSAPP = 'whatsapp'
+    CONTACT_PHONE = 'phone'
+    CONTACT_CHOICES = [
+        (CONTACT_EMAIL, 'Email'),
+        (CONTACT_WHATSAPP, 'WhatsApp'),
+        (CONTACT_PHONE, 'Phone call'),
+    ]
+
     name = models.CharField(max_length=120)
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=60, blank=True)
+    preferred_contact = models.CharField(
+        max_length=10, choices=CONTACT_CHOICES, default=CONTACT_EMAIL,
+    )
     message = models.TextField()
     submitted_at = models.DateTimeField(auto_now_add=True)
     is_approved = models.BooleanField(default=False)

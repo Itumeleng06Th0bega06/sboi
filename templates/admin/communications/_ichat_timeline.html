@@ -1,7 +1,7 @@
 {% load i18n admin_menu %}
 <div class="sboi-community__body">
-    <section class="cf-feed-page sboi-community__feed" aria-label="{% translate 'Community feed' %}">
-        {% include "members/account/_post_feed.html" with admin_community=True %}
+    <section class="cf-feed-page sboi-community__feed sboi-ichat" aria-label="{% translate 'iChat' %}">
+        {% include "members/account/_post_feed.html" with admin_community=True feed_surface="admin_feed" %}
     </section>
 
     <aside class="cf-aside sboi-community__aside" aria-label="{% translate 'Community information' %}">
@@ -48,7 +48,7 @@
                 <h2>{% translate 'Moderation' %}</h2>
             </header>
             <p class="cf-panel-note">
-                {% translate 'Staff can remove any post or comment from the feed. Open a member conversation from Chat only when a moderation issue needs review.' %}
+                {% translate 'Staff can remove any post or comment from the feed. Open a member conversation from iChat only when a moderation issue needs review.' %}
             </p>
         </section>
     </aside>

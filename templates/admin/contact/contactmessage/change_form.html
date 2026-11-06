@@ -1,10 +1,46 @@
 {% extends "admin/change_form.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/contact-message-change.css' %}?v=2">
+{% endblock %}
 
 {% block object-tools-items %}
 {% if original.user_id %}
 <li>
-    <a href="{% url 'admin:contact_contactmessage_conversation' original.pk %}" class="viewsitelink">Open conversation</a>
+    <a href="{% url 'admin:contact_contactmessage_conversation' original.pk %}" class="viewsitelink">{% translate 'Open conversation' %}</a>
 </li>
+{% endif %}
+{{ block.super }}
+{% endblock %}
+
+{# The summary belongs inside Django's own #content-main/form wrapper. #}
+{# Overriding field_sets avoids nesting a second #content-main element. #}
+{% block field_sets %}
+{% if original %}
+<div class="sboi-contact-change__summary">
+    <div>
+        <h3>{{ original.sender_name }}{% if original.subject %} · {{ original.subject }}{% endif %}</h3>
+        <p class="sboi-contact-change__meta">
+            <span>{{ original.email }}</span>
+            {% if original.phone %}<span>{{ original.phone }}</span>{% endif %}
+            {% if not original.is_from_admin %}<span>{% translate 'Prefers' %} {{ original.get_preferred_contact_display }}</span>{% endif %}
+            <span>{{ original.created_at|date:"d M Y, H:i" }}</span>
+        </p>
+        <p class="sboi-contact-change__body">{{ original.message|linebreaksbr }}</p>
+    </div>
+    <div class="sboi-contact-change__pills">
+        <span class="sboi-contact-status{% if original.is_read %} is-read{% else %} is-unread{% endif %}">{% if original.is_read %}{% translate 'Read' %}{% else %}{% translate 'Unread' %}{% endif %}</span>
+        <span class="sboi-contact-change__actions">
+            {% if original.user_id %}
+            <a class="button" href="{% url 'admin:contact_contactmessage_conversation' original.pk %}">{% translate 'Open conversation' %}</a>
+            {% endif %}
+            {% if original.attachment %}
+            <a class="button" href="{{ original.attachment_url }}" target="_blank" rel="noopener">{{ original.attachment_name }}</a>
+            {% endif %}
+        </span>
+    </div>
+</div>
 {% endif %}
 {{ block.super }}
 {% endblock %}

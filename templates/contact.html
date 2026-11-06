@@ -19,7 +19,9 @@
                     {% csrf_token %}
                     {% for field in form %}
                     <div class="form-field">
-                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {% if field.name == 'preferred_contact' %}
+                        <label for="{{ field.id_for_label }}">How would you like to be contacted?</label>
+                        {% endif %}
                         {{ field }}
                         {% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
                     </div>

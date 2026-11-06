@@ -477,8 +477,9 @@ a:not([role='button'], #header a, #content-main.app-list a, .object-tools a):hov
   height: 18px;
   padding: 0 0.3rem;
   border-radius: 999px;
-  background: var(--sboi-gold);
+  background: #f5f1e8;
   color: #14111e;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   font-size: 0.62rem;
   font-weight: 700;
   line-height: 1;
@@ -2732,4 +2733,88 @@ body.sboi-auth {
     transition: none !important;
     animation: none !important;
   }
+}
+
+/* ---------- Community menu (admin communications) ---------- */
+.sboi-community-panel {
+  min-width: 276px;
+  border-color: rgba(210, 162, 78, 0.3);
+  background:
+    radial-gradient(140% 90% at 50% -20%, rgba(210, 162, 78, 0.12), transparent 60%),
+    #1b1729;
+}
+
+.sboi-community-panel__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.sboi-community-panel__nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.sboi-community-panel__nav .sboi-menu__item {
+  position: relative;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0.62rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.sboi-community-panel__nav .sboi-menu__item:hover {
+  border-color: rgba(210, 162, 78, 0.4);
+  background: rgba(210, 162, 78, 0.14);
+  color: #f6e3b8;
+}
+
+.sboi-community-panel__nav .sboi-menu__item .sboi-ico {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+.sboi-community-panel__nav .sboi-menu__item .sboi-comms-badge--large {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  min-width: 22px;
+  height: 22px;
+  font-size: 0.68rem;
+}
+
+.sboi-community-panel__office {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--sboi-line);
+}
+
+.sboi-menu__item--compact {
+  flex: 1;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid var(--sboi-line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--sboi-ink-soft);
+}
+
+.sboi-menu__item--compact:hover {
+  border-color: rgba(210, 162, 78, 0.4);
+  background: rgba(210, 162, 78, 0.12);
+}
+
+.sboi-menu__item--compact .sboi-ico {
+  width: 0.95rem;
+  height: 0.95rem;
 }

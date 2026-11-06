@@ -1,9 +1,9 @@
 {% load i18n admin_menu %}
 <section class="comms-chat" data-comms-chat>
     <header class="comms-chat__head">
-        <button type="button" class="comms-iconbtn comms-back" data-comms-back aria-label="{% translate 'Back to conversations' %}">
+        <a class="comms-iconbtn comms-back" href="{% url 'communications:inbox' %}?view=chat" aria-label="{% translate 'Back to conversations' %}">
             {% admin_icon 'arrow-left' %}
-        </button>
+        </a>
         <span class="comms-avatar{% if selected.is_group %} comms-avatar--group{% endif %}" aria-hidden="true">{{ conversation_initials }}</span>
         <div class="comms-chat__identity">
             <h2>{{ display_name }}</h2>
@@ -20,7 +20,7 @@
                 {% admin_icon 'users' %}
                 <span>{{ participants|length }}</span>
             </span>
-            <button type="button" class="comms-iconbtn" data-comms-info-toggle aria-label="{% translate 'Conversation information' %}" title="{% translate 'Conversation information' %}">
+            <button type="button" class="comms-iconbtn" data-comms-info-toggle aria-expanded="false" aria-controls="comms-info" aria-label="{% translate 'Conversation information' %}" title="{% translate 'Conversation information' %}">
                 {% admin_icon 'info' %}
             </button>
         </div>
@@ -58,7 +58,7 @@
             <span class="comms-reply-preview__text"></span>
             <button type="button" class="comms-iconbtn" data-comms-reply-cancel aria-label="{% translate 'Cancel reply' %}">{% admin_icon 'close' %}</button>
         </div>
-        <div class="comms-composer__row">
+        <div class="comms-composer__box">
             <label class="comms-attach" title="{% translate 'Attach a document or image' %}">
                 {% admin_icon 'file' %}
                 <input type="file" name="attachment" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.rtf,.odt,.ods,.jpg,.jpeg,.png,.gif,.webp" data-comms-file>
@@ -70,9 +70,8 @@
                       placeholder="{% translate 'Write a message…' %}"
                       aria-label="{% translate 'Message' %}"
                       data-comms-textarea></textarea>
-            <button type="submit" class="comms-send">
+            <button type="submit" class="comms-send" aria-label="{% translate 'Send message' %}" title="{% translate 'Send message' %}">
                 {% admin_icon 'arrow-right' %}
-                <span>{% translate 'Send' %}</span>
             </button>
         </div>
         <div class="comms-composer__hint">
@@ -202,10 +201,25 @@
         {% endif %}
 
         {% if selected.is_group %}
-            <form method="post" action="{% url 'communications:leave_group' selected.pk %}" class="comms-leave" onsubmit="return confirm('{% translate "Leave this group?" %}');">
-                {% csrf_token %}
-                <button type="submit" class="comms-linkbutton comms-linkbutton--danger">{% translate 'Leave group' %}</button>
-            </form>
+            <section class="comms-info__section comms-danger" aria-label="{% translate 'Danger zone' %}">
+                <div class="comms-info__section-head">
+                    <h4>{% translate 'Danger zone' %}</h4>
+                </div>
+                <div class="comms-danger__panel">
+                    {% if can_manage %}
+                        <form method="post" action="{% url 'communications:delete_group' selected.pk %}"
+                              onsubmit="return confirm('{% translate "Delete this group and everything in it? This cannot be undone." %}');">
+                            {% csrf_token %}
+                            <button type="submit" class="comms-linkbutton comms-linkbutton--danger">{% translate 'Delete group' %}</button>
+                        </form>
+                    {% endif %}
+                    <form method="post" action="{% url 'communications:leave_group' selected.pk %}"
+                          onsubmit="return confirm('{% translate "Leave this group?" %}');">
+                        {% csrf_token %}
+                        <button type="submit" class="comms-linkbutton">{% translate 'Leave group' %}</button>
+                    </form>
+                </div>
+            </section>
         {% endif %}
     </div>
 </aside>

@@ -690,6 +690,10 @@ def leave_group(conversation, user):
         raise ValidationError('You are not a member of this group.')
     remaining = conversation.participants.exclude(pk=participant.pk)
     if not remaining.exists():
+        # The last participant is leaving, so the group is deleted. Purge the
+        # same artefacts as an explicit delete instead of leaving orphaned
+        # notifications and private attachment files behind.
+        _purge_group_artefacts(conversation)
         conversation.delete()
         return
     if participant.role == ConversationParticipant.ROLE_OWNER:
@@ -702,3 +706,49 @@ def leave_group(conversation, user):
     Conversation.objects.filter(pk=conversation.pk).update(
         updated_at=timezone.now(),
     )
+
+
+def _purge_group_artefacts(conversation):
+    """Remove notifications and private files created by a group's messages."""
+    from notifications.models import Notification
+
+    message_ids = list(
+        conversation.messages.values_list('pk', flat=True),
+    )
+    if message_ids:
+        Notification.objects.filter(
+            source_type='admin_message',
+            source_id__in=message_ids,
+        ).delete()
+
+    for attachment in MessageAttachment.objects.filter(
+        message__conversation=conversation,
+    ):
+        try:
+            attachment.file.delete(save=False)
+        except (FileNotFoundError, OSError, ValueError):
+            # Storage already missing the file — not worth blocking the delete.
+            continue
+
+
+@transaction.atomic
+def delete_group(conversation, actor):
+    """Hard-delete a group, its messages and every artefact it produced.
+
+    Managers (owner/admin) only. Member notifications that referenced the
+    group's messages are removed, and attachment files are unlinked from
+    storage so nothing private survives the delete. Direct conversations
+    are never deleted this way — they belong to both participants.
+    """
+    if not conversation.is_group:
+        raise ValidationError(
+            'Only group conversations can be deleted.',
+        )
+    participant = participant_for(conversation, actor)
+    if participant is None or not participant.is_manager:
+        raise ValidationError(
+            'Only a group owner or admin can delete the group.',
+        )
+
+    _purge_group_artefacts(conversation)
+    conversation.delete()

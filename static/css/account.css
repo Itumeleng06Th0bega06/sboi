@@ -160,13 +160,13 @@
   height: 18px;
   padding: 0 5px;
   border-radius: 999px;
-  background: rgba(210, 162, 78, 0.18);
-  color: var(--gold);
+  background: #f5f1e8;
+  color: #171226;
   font-size: 0.62rem;
   font-weight: 700;
 }
 
-.account-nav-link.active .account-nav-badge { background: var(--gold); color: var(--green); }
+.account-nav-link.active .account-nav-badge { background: #f5f1e8; color: #171226; }
 
 .account-nav-divider {
   height: 1px;

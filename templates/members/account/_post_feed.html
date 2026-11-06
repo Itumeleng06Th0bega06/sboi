@@ -1,3 +1,4 @@
+{% load i18n %}
 <div class="cf-feed"
      id="comms-feed"
      data-feed-root
@@ -5,60 +6,40 @@
      data-feed-poll-url="{% url 'members:feed_poll' %}"
      data-feed-latest-id="{{ feed_latest_id|default:'' }}">
 
-    <form method="post"
-          action="{% url 'members:feed_post_create' %}"
-          enctype="multipart/form-data"
-          class="cf-composer"
-          data-feed-composer
-          data-cf-composer
-          data-surface="{{ feed_surface|default:'community' }}">
-        {% csrf_token %}
-        <input type="hidden" name="surface" value="{{ feed_surface|default:'community' }}">
-        <div class="cf-composer-row">
-            {% if member_avatar_url %}
-            <img src="{{ member_avatar_url }}" alt="" class="cf-avatar cf-avatar--sm cf-avatar-img cf-composer-avatar">
-            {% else %}
-            <span class="cf-avatar cf-avatar--sm cf-composer-avatar" aria-hidden="true">{{ member_initials|default:'S' }}</span>
-            {% endif %}
-            <label class="cf-composer-field">
-                <span class="sr-only">Share a post with the community</span>
-                <textarea name="body" rows="1" maxlength="8000" data-feed-textarea placeholder="{% if feed_surface == 'admin_feed' %}Share an update…{% else %}Share something with the community…{% endif %}"></textarea>
-            </label>
-            {% if feed_audience_choices %}
-            <label class="cf-composer-audience">
-                <span class="sr-only">Audience</span>
-                <select name="audience">
-                    {% for value, label in feed_audience_choices %}
-                    <option value="{{ value }}">{{ label }}</option>
-                    {% endfor %}
-                </select>
-            </label>
-            {% endif %}
-            <button type="button" class="cf-composer-attach" data-cf-attach aria-label="Attach a file" title="Attach a file">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>
-            </button>
-            <button type="submit" class="cf-composer-send" aria-label="Post to the community" title="Post">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m4 12 16-8-5 16-3-7-8-1Z"/></svg>
-            </button>
-        </div>
-        <input type="file" name="attachment" class="cf-composer-file" data-feed-file
-               accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.rtf,.odt,.ods,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.mov,.m4v"
-               aria-label="Attach a file">
-        <div class="cf-composer-preview" data-cf-composer-preview hidden>
-            <span class="cf-composer-preview-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
-            </span>
-            <span data-feed-file-name></span>
-            <button type="button" class="cf-composer-preview-clear" data-cf-attach-clear aria-label="Remove attachment">&times;</button>
-        </div>
-        <p class="cf-composer-hint">{% if feed_surface == 'admin_feed' %}Staff posts can be audience-scoped · Enter to post, Shift + Enter for a new line{% else %}Visible to signed-in members · Enter to post, Shift + Enter for a new line{% endif %}</p>
-        <p class="cf-field-error" data-feed-error data-cf-composer-error hidden></p>
-        <p class="cf-composer-status" data-cf-composer-status role="status" aria-live="polite"></p>
-    </form>
+    {% if timeline_filter != 'chats' %}
+    {% include 'members/account/_feed_composer.html' %}
+    {% endif %}
 
+    {% if timeline_items is not None %}
+    <nav class="sboi-ichat__filters" aria-label="{% translate 'Timeline filter' %}">
+        <a class="sboi-chip{% if timeline_filter == 'all' %} is-active{% endif %}" href="{{ request.path }}?filter=all">{% translate 'All' %}</a>
+        <a class="sboi-chip{% if timeline_filter == 'posts' %} is-active{% endif %}" href="{{ request.path }}?filter=posts">{% translate 'Posts' %}</a>
+        <a class="sboi-chip{% if timeline_filter == 'chats' %} is-active{% endif %}" href="{{ request.path }}?filter=chats">{% translate 'Inbox' %}</a>
+    </nav>
+    {% endif %}
+
+    {% if timeline_filter != 'chats' %}
     <button type="button" class="cf-new-posts" data-cf-new-posts hidden>New community posts · Refresh</button>
+    {% endif %}
 
     <div class="cf-feed-list" data-feed-list data-cf-feed-list>
+        {% if timeline_items is not None %}
+        {% for item in timeline_items %}
+        {% if item.kind == 'post' %}
+        {% include 'members/account/_community_post.html' with post=item.post %}
+        {% else %}
+        {% include 'members/account/_thread_card.html' with item=item %}
+        {% endif %}
+        {% empty %}
+        <div class="cf-feed-empty" data-feed-empty>
+            <span class="cf-feed-empty-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/></svg>
+            </span>
+            <h2>{% if timeline_filter == 'chats' %}No conversations yet{% else %}Be the first to share{% endif %}</h2>
+            <p>{% if timeline_filter == 'chats' %}New church-office and direct messages will appear here as they come in.{% else %}Post a testimony, a prayer request or a church update. Your words will appear here for the community.{% endif %}</p>
+        </div>
+        {% endfor %}
+        {% else %}
         {% for post in posts %}
         {% include 'members/account/_community_post.html' with post=post %}
         {% empty %}
@@ -70,8 +51,10 @@
             <p>Post a testimony, a prayer request or a church update. Your words will appear here for the community.</p>
         </div>
         {% endfor %}
+        {% endif %}
     </div>
 
+    {% if timeline_filter != 'chats' %}
     <button type="button"
             class="cf-load-more"
             data-cf-load-more
@@ -81,5 +64,6 @@
             {% if not feed_has_more %}hidden{% endif %}>
         Load earlier posts
     </button>
+    {% endif %}
     <p class="cf-load-status" data-cf-load-status role="status" aria-live="polite"></p>
 </div>

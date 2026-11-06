@@ -88,6 +88,39 @@ class MemberInboxTests(TestCase):
             ).exists()
         )
 
+    def test_contact_preference_defaults_to_email_when_omitted(self):
+        self.client.post(
+            reverse('contact:contact'),
+            {
+                'name': 'Visitor',
+                'email': 'default@example.com',
+                'phone': '',
+                'subject': 'General',
+                'message': 'No preference supplied',
+            },
+        )
+        msg = ContactMessage.objects.get(email='default@example.com')
+        self.assertEqual(msg.preferred_contact, ContactMessage.CONTACT_EMAIL)
+
+    def test_contact_whatsapp_preference_requires_phone(self):
+        response = self.client.post(
+            reverse('contact:contact'),
+            {
+                'name': 'Visitor',
+                'email': 'nophone@example.com',
+                'phone': '',
+                'preferred_contact': ContactMessage.CONTACT_WHATSAPP,
+                'subject': 'General',
+                'message': 'Call me, maybe',
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('phone', response.json()['message'].lower())
+        self.assertFalse(
+            ContactMessage.objects.filter(email='nophone@example.com').exists()
+        )
+
     def test_member_message_creates_staff_notification(self):
         self.client.force_login(self.member_user)
         self.client.post(

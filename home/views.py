@@ -77,8 +77,18 @@ def submit_testimony(request):
                 return JsonResponse({'ok': True, 'message': message})
             messages.success(request, message)
         else:
-            message = 'Please provide your name and a message.'
+            message = next(
+                (
+                    str(error)
+                    for errors in form.errors.values()
+                    for error in errors
+                ),
+                'Please provide your name and a message.',
+            )
             if AJAX(request):
-                return JsonResponse({'ok': False, 'message': message}, status=400)
+                return JsonResponse({
+                    'ok': False,
+                    'message': message,
+                }, status=400)
             messages.error(request, message)
     return redirect('home:home')

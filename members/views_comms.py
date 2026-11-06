@@ -296,11 +296,6 @@ def feed_post_create(request):
     title = _clean_text(request.POST.get('title'), 200)
     body = _clean_text(request.POST.get('body'), 8000)
     upload = request.FILES.get('attachment')
-    audience = request.POST.get('audience', CommsPost.AUDIENCE_ALL)
-    if audience not in {CommsPost.AUDIENCE_ALL, CommsPost.AUDIENCE_STAFF}:
-        audience = CommsPost.AUDIENCE_ALL
-    if not _is_staff_user(request.user):
-        audience = CommsPost.AUDIENCE_ALL
 
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     error = _moderation_error(title, body) or _attachment_error(upload)
@@ -318,7 +313,7 @@ def feed_post_create(request):
             author=request.user,
             title=title,
             body=body,
-            audience=audience,
+            audience=CommsPost.AUDIENCE_ALL,
         )
         _store_attachment(post, upload)
 

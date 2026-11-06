@@ -43,6 +43,28 @@ class SiteSmokeTests(TestCase):
         self.client.post(url, {'email': 'a@example.com'})
         self.assertEqual(Subscriber.objects.filter(email='a@example.com').count(), 1)
 
+    def test_testimony_preference_defaults_to_email_when_omitted(self):
+        self.client.post(
+            reverse('home:testimony'),
+            {'name': 'Visitor', 'message': 'God is faithful.'},
+        )
+        testimony = Testimony.objects.get(name='Visitor')
+        self.assertEqual(testimony.preferred_contact, Testimony.CONTACT_EMAIL)
+
+    def test_testimony_phone_preference_requires_phone(self):
+        response = self.client.post(
+            reverse('home:testimony'),
+            {
+                'name': 'Visitor',
+                'message': 'God is faithful.',
+                'preferred_contact': Testimony.CONTACT_PHONE,
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('phone', response.json()['message'].lower())
+        self.assertFalse(Testimony.objects.filter(name='Visitor').exists())
+
     def test_admin_notifications_present_for_staff(self):
         user = User.objects.create_superuser('admin', 'admin@example.com', 'pw')
         ContactMessage.objects.create(name='N', email='n@example.com', message='Hi')

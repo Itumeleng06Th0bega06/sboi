@@ -260,10 +260,89 @@ def _feed_context(request, section, posts, has_more=False, next_before=''):
 @login_required
 def account_home(request):
     posts, has_more, next_before = feed_page(request.user)
+
+    timeline_filter = (request.GET.get('filter') or 'all').strip().lower()
+    if timeline_filter not in {'all', 'posts', 'chats'}:
+        timeline_filter = 'all'
+    timeline_items = _member_timeline_items(request.user, posts, timeline_filter)
+
     context = _feed_context(
         request, 'account', posts, has_more, next_before,
     )
+    context['timeline_items'] = timeline_items
+    context['timeline_filter'] = timeline_filter
     return _render_account(request, 'members/account/dashboard.html', context)
+
+
+def _member_timeline_items(user, posts, timeline_filter):
+    """Merge community posts with the member's own conversations.
+
+    Privacy: only threads the member participates in ever appear here, and
+    only on the member's own timeline — everyone else sees posts only.
+    """
+    from contact.models import ContactMessage
+
+    items = []
+    if timeline_filter in {'all', 'posts'}:
+        for post in posts:
+            items.append({
+                'kind': 'post',
+                'sort': post.created_at,
+                'post': post,
+            })
+
+    if timeline_filter in {'all', 'chats'}:
+        office_latest = (
+            services.member_thread(user)
+            .order_by('-created_at', '-pk')
+            .first()
+        )
+        if office_latest is not None:
+            office_unread = ContactMessage.objects.filter(
+                user=user, is_from_admin=True, read_by_member=False,
+            ).count()
+            preview = (office_latest.message or '').strip().replace('\n', ' ')
+            items.append({
+                'kind': 'chat',
+                'sort': office_latest.created_at,
+                'kind_label': 'Church office',
+                'name': 'Church office',
+                'initials': 'SB',
+                'avatar_url': '',
+                'preview': preview or 'Church office reply',
+                'time': office_latest.created_at,
+                'unread': office_unread,
+                'url': reverse('members:account_messages'),
+            })
+
+        for row in _direct_thread_rows(user):
+            last_at = row['last_at']
+            preview = (row['last_body'] or '').strip().replace('\n', ' ')
+            items.append({
+                'kind': 'chat',
+                'sort': last_at,
+                'kind_label': 'Direct message',
+                'name': row['display_name'],
+                'initials': row['initials'],
+                'avatar_url': row['avatar_url'],
+                'preview': preview or 'No messages yet',
+                'time': last_at,
+                'unread': row['unread'],
+                'url': (
+                    reverse('members:account_messages')
+                    + f'?thread={row["thread"].pk}'
+                ),
+            })
+
+    items.sort(
+        key=lambda item: item['sort'] or timezone.now(),
+        reverse=True,
+    )
+    if timeline_filter == 'posts':
+        items = [item for item in items if item['kind'] == 'post']
+    elif timeline_filter == 'chats':
+        items = [item for item in items if item['kind'] == 'chat']
+    return items
 
 
 @login_required

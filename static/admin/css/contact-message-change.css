@@ -1,0 +1,114 @@
+/* Contact message change page — clean, readable record view.
+   The message itself is the hero; internal flags collapse to the bottom. */
+
+.sboi-contact-change__summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: start;
+  margin-bottom: 1rem;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--sboi-line, rgba(210, 162, 78, 0.24));
+  border-radius: 16px;
+  background: linear-gradient(180deg, #1a1630, #141024);
+}
+
+.sboi-contact-change__summary h3 {
+  margin: 0 0 0.3rem;
+  color: #f4efe4;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.sboi-contact-change__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 1rem;
+  color: rgba(244, 239, 228, 0.72);
+  font-size: 0.78rem;
+}
+
+.sboi-contact-change__pills {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+/* The change page does not load church_membership.css, so keep its own
+   status pill styles here rather than relying on the cm-status-* classes. */
+.sboi-contact-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.62rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sboi-contact-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.sboi-contact-status.is-read {
+  border-color: rgba(244, 239, 228, 0.22);
+  background: rgba(244, 239, 228, 0.1);
+  color: rgba(244, 239, 228, 0.78);
+}
+
+.sboi-contact-status.is-unread {
+  border-color: rgba(210, 162, 78, 0.42);
+  background: rgba(210, 162, 78, 0.18);
+  color: #f0d9a6;
+}
+
+.sboi-contact-change__body {
+  margin: 0.35rem 0 0;
+  color: #f4efe4;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.sboi-contact-change__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+#contactmessage_form .module {
+  margin-bottom: 0.9rem;
+}
+
+#contactmessage_form .form-row.field-message .readonly {
+  max-width: 72ch;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  line-height: 1.65;
+}
+
+#contactmessage_form .form-row.field-message .readonly p {
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .sboi-contact-change__summary {
+    grid-template-columns: 1fr;
+  }
+  .sboi-contact-change__pills {
+    align-items: flex-start;
+  }
+}

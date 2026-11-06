@@ -392,15 +392,17 @@
 
         if (event.target.closest('[data-comms-back]')) {
             event.preventDefault();
-            root.classList.remove('has-selection');
-            history.pushState({}, '', inboxUrl);
+            // The conversation-list sidebar is gone, so go back to the
+            // timeline instead of leaving the old thread on screen.
+            window.location.href = inboxUrl;
             return;
         }
 
         if (event.target.closest('[data-comms-info-toggle]')) {
             var info = qs('[data-comms-info]');
             if (info) {
-                info.classList.add('is-open');
+                var infoOpen = info.classList.toggle('is-open');
+                event.target.closest('[data-comms-info-toggle]').setAttribute('aria-expanded', infoOpen ? 'true' : 'false');
             }
             return;
         }
@@ -409,6 +411,10 @@
             var openInfo = qs('[data-comms-info]');
             if (openInfo) {
                 openInfo.classList.remove('is-open');
+                var infoToggle = qs('[data-comms-info-toggle]');
+                if (infoToggle) {
+                    infoToggle.setAttribute('aria-expanded', 'false');
+                }
             }
             return;
         }

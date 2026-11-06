@@ -13,14 +13,47 @@ from .models import (
 class ContactMessageForm(forms.ModelForm):
     class Meta:
         model = ContactMessage
-        fields = ['name', 'email', 'phone', 'subject', 'message']
+        fields = ['name', 'email', 'phone', 'preferred_contact', 'subject', 'message']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'input', 'placeholder': 'Your full name'}),
             'email': forms.EmailInput(attrs={'class': 'input', 'placeholder': 'Your email'}),
-            'phone': forms.TextInput(attrs={'class': 'input', 'placeholder': 'Phone (optional)'}),
+            'phone': forms.TextInput(attrs={'class': 'input', 'placeholder': 'Contact number / WhatsApp'}),
             'subject': forms.TextInput(attrs={'class': 'input', 'placeholder': 'Subject'}),
             'message': forms.Textarea(attrs={'class': 'input', 'placeholder': 'How can we help you?', 'rows': 6}),
+            'preferred_contact': forms.Select(attrs={'class': 'input'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Older clients and API posts may omit the preference; fall back to
+        # the model default (email) instead of rejecting the message.
+        self.fields['preferred_contact'].required = False
+        self.fields['preferred_contact'].initial = ContactMessage.CONTACT_EMAIL
+
+    def clean_preferred_contact(self):
+        return (
+            self.cleaned_data.get('preferred_contact')
+            or ContactMessage.CONTACT_EMAIL
+        )
+
+    def clean(self):
+        cleaned = super().clean()
+        preferred = (
+            cleaned.get('preferred_contact') or ContactMessage.CONTACT_EMAIL
+        )
+        phone = (cleaned.get('phone') or '').strip()
+        if (
+            preferred in {
+                ContactMessage.CONTACT_WHATSAPP,
+                ContactMessage.CONTACT_PHONE,
+            }
+            and not phone
+        ):
+            self.add_error(
+                'phone',
+                'Add a phone or WhatsApp number so we can reach you this way.',
+            )
+        return cleaned
 
 
 class MemberMessageForm(forms.Form):

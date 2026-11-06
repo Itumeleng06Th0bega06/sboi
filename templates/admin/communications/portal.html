@@ -7,15 +7,15 @@
 
 {% block responsive %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'css/community-app.css' %}?v=9">
-    <link rel="stylesheet" href="{% static 'css/community-feed.css' %}?v=6">
-    <link rel="stylesheet" href="{% static 'admin/css/communications.css' %}?v=7">
+    <link rel="stylesheet" href="{% static 'css/community-app.css' %}?v=14">
+    <link rel="stylesheet" href="{% static 'css/community-feed.css' %}?v=9">
+    <link rel="stylesheet" href="{% static 'admin/css/communications.css' %}?v=15">
 {% endblock %}
 
 {% block extrahead %}
     {{ block.super }}
-    <script src="{% static 'admin/js/communications.js' %}?v=3" defer></script>
-    <script src="{% static 'js/community-feed.js' %}?v=7" defer></script>
+    <script src="{% static 'admin/js/communications.js' %}?v=5" defer></script>
+    <script src="{% static 'js/community-feed.js' %}?v=9" defer></script>
 {% endblock %}
 
 {% block content %}
@@ -40,16 +40,29 @@
 
         <nav class="cf-rail-nav">
             <p class="cf-rail-label">{% translate 'Community' %}</p>
-            <a href="{% url 'communications:inbox' %}?view=feed"
-               class="cf-nav-item{% if community_view == 'feed' %} active{% endif %}">
-                {% admin_icon 'bullhorn' %}
-                <span>{% translate 'Feed' %}</span>
-            </a>
             <a href="{% url 'communications:inbox' %}?view=chat"
-               class="cf-nav-item{% if community_view == 'chat' %} active{% endif %}">
+               class="cf-nav-item{% if community_view == 'chat' or community_view == 'feed' %}{% if timeline_filter != 'chats' and not selected and not office_member and not dm_thread %} active{% endif %}{% endif %}">
                 {% admin_icon 'message' %}
-                <span>{% translate 'Chat' %}</span>
+                <span>{% translate 'iChat' %}</span>
                 {% if chat_unread_total %}<span class="cf-nav-badge">{{ chat_unread_total }}</span>{% endif %}
+            </a>
+            {% if group_rows %}
+            <div class="sboi-community__groups" aria-label="{% translate 'Groups' %}">
+                <p class="cf-rail-label">{% translate 'Groups' %}</p>
+                {% for row in group_rows %}
+                <a href="{% url 'communications:inbox' %}?view=chat&conversation={{ row.conversation.pk }}"
+                   class="cf-nav-item sboi-community__group{% if selected_id == row.conversation.pk %} active{% endif %}">
+                    <span class="sboi-community__group-avatar" aria-hidden="true">{{ row.initials }}</span>
+                    <span class="sboi-community__group-name">{{ row.display_name }}</span>
+                    {% if row.unread_count %}<span class="cf-nav-badge">{{ row.unread_count }}</span>{% endif %}
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <a href="{% url 'communications:inbox' %}?view=chat&filter=chats"
+               class="cf-nav-item{% if timeline_filter == 'chats' or office_member or dm_thread %} active{% endif %}">
+                {% admin_icon 'mail' %}
+                <span>{% translate 'Inbox' %}</span>
             </a>
             <a href="{% url 'communications:inbox' %}?view=members"
                class="cf-nav-item{% if community_view == 'members' %} active{% endif %}">
@@ -68,19 +81,6 @@
                 <span>{% translate 'Dashboard' %}</span>
             </a>
         </nav>
-
-        <div class="cf-rail-identity">
-            {% if member_avatar_url %}
-            <img src="{{ member_avatar_url }}" alt="" class="cf-avatar cf-avatar--md cf-avatar-img">
-            {% else %}
-            <span class="cf-avatar cf-avatar--md" aria-hidden="true">{{ member_initials|default:'A' }}</span>
-            {% endif %}
-            <div class="cf-rail-identity-copy">
-                <strong>{{ member_display_name|default:request.user.get_username }}</strong>
-                <span>@{{ request.user.get_username }}</span>
-                <span class="cf-rail-membership">{% translate 'Staff account' %} <b>{% if request.user.is_superuser %}{% translate 'Superuser' %}{% else %}{% translate 'Communications' %}{% endif %}</b></span>
-            </div>
-        </div>
     </aside>
 
     <main class="sboi-community__main">
@@ -91,23 +91,18 @@
                 <p class="sboi-comms__lead">{{ community_lead }}</p>
             </div>
             <div class="sboi-comms__topbar-actions">
-                {% if community_view == 'feed' %}
+                {% if community_view == 'feed' or community_view == 'chat' %}
                 <a class="sboi-comms-button sboi-comms-button--quiet sboi-comms-button--small"
                    href="{% url 'communications:inbox' %}?view=members">
                     {% admin_icon 'users' %} {% translate 'Members' %}
                 </a>
                 {% elif community_view == 'members' %}
                 <a class="sboi-comms-button sboi-comms-button--quiet sboi-comms-button--small"
-                   href="{% url 'communications:inbox' %}?view=feed">
-                    {% admin_icon 'bullhorn' %} {% translate 'Feed' %}
+                   href="{% url 'communications:inbox' %}?view=chat">
+                    {% admin_icon 'message' %} {% translate 'iChat' %}
                 </a>
                 {% endif %}
                 {% if community_view == 'chat' %}
-                <button type="button"
-                        class="sboi-comms-button sboi-comms-button--quiet sboi-comms-button--small"
-                        data-comms-dialog-open="direct">
-                    {% admin_icon 'message' %} {% translate 'New message' %}
-                </button>
                 <button type="button"
                         class="sboi-comms-button sboi-comms-button--small"
                         data-comms-dialog-open="group">
@@ -117,8 +112,8 @@
             </div>
         </header>
 
-        {% if community_view == 'feed' %}
-            {% include "admin/communications/_admin_feed.html" %}
+        {% if timeline_mode %}
+            {% include "admin/communications/_ichat_timeline.html" %}
         {% elif community_view == 'members' %}
             {% include "admin/communications/_members_directory.html" %}
         {% elif community_view == 'profile' %}
@@ -126,6 +121,30 @@
         {% else %}
             {% include "admin/communications/_chat_workspace.html" %}
         {% endif %}
+
+        {# Mobile-only floating dock — replaces the rail on phones so the page #}
+        {# never crops the conversation list or feed behind a squeezed sidebar. #}
+        <nav class="sboi-community-dock" aria-label="{% translate 'Community sections' %}">
+            <a href="{% url 'communications:inbox' %}?view=chat"
+               class="sboi-dock__item{% if community_view == 'chat' or community_view == 'feed' %} active{% endif %}"
+               {% if community_view == 'chat' or community_view == 'feed' %}aria-current="page"{% endif %}>
+                {% admin_icon 'message' %}
+                <span>{% translate 'iChat' %}</span>
+                {% if chat_unread_total %}<span class="sboi-dock__badge">{{ chat_unread_total }}</span>{% endif %}
+            </a>
+            <a href="{% url 'communications:inbox' %}?view=members"
+               class="sboi-dock__item{% if community_view == 'members' %} active{% endif %}"
+               {% if community_view == 'members' %}aria-current="page"{% endif %}>
+                {% admin_icon 'users' %}
+                <span>{% translate 'Members' %}</span>
+            </a>
+            <a href="{% url 'communications:inbox' %}?view=profile"
+               class="sboi-dock__item{% if community_view == 'profile' %} active{% endif %}"
+               {% if community_view == 'profile' %}aria-current="page"{% endif %}>
+                {% admin_icon 'user' %}
+                <span>{% translate 'Profile' %}</span>
+            </a>
+        </nav>
     </main>
 
     {% include "admin/communications/_dialogs.html" %}

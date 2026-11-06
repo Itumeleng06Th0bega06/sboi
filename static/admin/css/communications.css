@@ -391,7 +391,7 @@
 /* ---------- Middle + right columns ---------- */
 .comms-workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 310px;
+  grid-template-columns: minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
   background: var(--sboi-surface);
@@ -763,10 +763,23 @@
   background: #151126;
 }
 
-.comms-composer__row {
+/* The attach button, textarea and send button all live inside one
+   WhatsApp-style box; the border and focus ring belong to the box,
+   never to the individual children. */
+.comms-composer__box {
   display: flex;
   align-items: flex-end;
-  gap: 0.45rem;
+  gap: 0.3rem;
+  padding: 0.3rem 0.35rem;
+  border: 1px solid var(--sboi-line);
+  border-radius: 16px;
+  background: #100d1e;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.comms-composer__box:focus-within {
+  border-color: var(--sboi-gold-2);
+  box-shadow: 0 0 0 3px rgba(210, 162, 78, 0.12);
 }
 
 .comms-attach {
@@ -776,15 +789,16 @@
   flex: 0 0 auto;
   width: 36px;
   height: 36px;
-  border: 1px solid var(--sboi-line);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.035);
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
   color: var(--sboi-muted);
   cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .comms-attach:hover {
-  border-color: var(--sboi-line-strong);
+  background: rgba(210, 162, 78, 0.12);
   color: var(--sboi-gold-soft);
 }
 
@@ -814,10 +828,10 @@
   min-width: 0;
   min-height: 36px;
   max-height: 140px;
-  padding: 0.5rem 0.7rem;
-  border: 1px solid var(--sboi-line);
-  border-radius: 9px;
-  background: #100d1e;
+  padding: 0.42rem 0.25rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--sboi-ink);
   font: inherit;
   font-size: 0.8rem;
@@ -826,31 +840,36 @@
 }
 
 .comms-composer textarea:focus {
-  border-color: var(--sboi-gold-2);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(210, 162, 78, 0.1);
 }
 
 .comms-send {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.3rem;
   flex: 0 0 auto;
-  height: 36px;
-  padding: 0 0.85rem;
+  width: 38px;
+  height: 38px;
+  padding: 0;
   border: 0;
-  border-radius: 8px;
+  border-radius: 999px;
   background: linear-gradient(160deg, var(--sboi-gold-soft), var(--sboi-gold));
   color: #14111e;
-  font: inherit;
-  font-size: 0.75rem;
-  font-weight: 700;
   cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.comms-send .sboi-ico {
+  width: 1.05rem;
+  height: 1.05rem;
 }
 
 .comms-send:hover {
   background: linear-gradient(160deg, var(--sboi-gold-pale), var(--sboi-gold-soft));
+}
+
+.comms-send:active {
+  transform: scale(0.94);
 }
 
 .comms-send:disabled {
@@ -898,14 +917,31 @@
   white-space: nowrap;
 }
 
-/* ---------- Right column: conversation information ---------- */
+/* ---------- Right column: conversation information ----------
+   Hidden by default at every width; the info toggle slides it in as an
+   overlay. Never rendered as a static column. */
 .comms-info {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 25;
   display: flex;
   flex-direction: column;
+  width: min(340px, 100%);
   min-width: 0;
   min-height: 0;
   border-left: 1px solid var(--sboi-line);
   background: #1a1630;
+  box-shadow: -20px 0 50px rgba(0, 0, 0, 0.45);
+  transform: translateX(105%);
+  visibility: hidden;
+  transition: transform 0.2s ease, visibility 0.2s;
+}
+
+.comms-info.is-open {
+  transform: translateX(0);
+  visibility: visible;
 }
 
 .comms-info__head {
@@ -927,7 +963,7 @@
 }
 
 .comms-info__close {
-  display: none;
+  display: inline-flex;
 }
 
 .comms-info__scroll {
@@ -1173,10 +1209,36 @@
   margin: 0;
 }
 
-.comms-leave {
-  margin-top: 0.8rem;
-  padding-top: 0.7rem;
-  border-top: 1px solid rgba(210, 162, 78, 0.1);
+.comms-danger .comms-info__section-head {
+  margin-bottom: 0.45rem;
+}
+
+.comms-danger h4 {
+  color: var(--sboi-danger);
+}
+
+.comms-danger__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid rgba(214, 88, 88, 0.22);
+  border-radius: 12px;
+  background: rgba(214, 88, 88, 0.06);
+}
+
+.comms-danger__panel form {
+  margin: 0;
+}
+
+.comms-danger__panel .comms-linkbutton {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 0.15rem;
+  font-size: 0.62rem;
+  font-weight: 600;
 }
 
 .comms-linkbutton {
@@ -1354,32 +1416,6 @@
 }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 1024px) {
-  .comms-workspace {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .comms-info {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 25;
-    width: min(340px, 90vw);
-    transform: translateX(105%);
-    transition: transform 0.2s ease;
-    box-shadow: -20px 0 50px rgba(0, 0, 0, 0.45);
-  }
-
-  .comms-info.is-open {
-    transform: translateX(0);
-  }
-
-  .comms-info__close {
-    display: inline-flex;
-  }
-}
-
 @media (max-width: 900px) {
   .comms-shell {
     grid-template-columns: 255px minmax(0, 1fr);
@@ -1455,15 +1491,6 @@
 
   .comms-composer {
     padding: 0.5rem 0.55rem 0.6rem;
-  }
-
-  .comms-send span {
-    display: none;
-  }
-
-  .comms-send {
-    width: 36px;
-    padding: 0;
   }
 
   .comms-composer__hint {
@@ -1561,8 +1588,9 @@
   height: 18px;
   padding: 0 0.3rem;
   border-radius: 999px;
-  background: var(--sboi-gold);
+  background: #f5f1e8;
   color: #14111e;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   font-size: 0.6rem;
   font-weight: 800;
 }
@@ -1750,6 +1778,10 @@
   align-items: start;
 }
 
+.sboi-community-dock {
+  display: none;
+}
+
 .sboi-community__rail {
   position: sticky;
   top: 0.85rem;
@@ -1804,13 +1836,56 @@
   text-transform: uppercase;
 }
 
-.sboi-community__rail .cf-rail-identity {
-  margin-top: 0.6rem;
-}
-
 .sboi-community__rail .cf-nav-item svg {
   width: 18px;
   height: 18px;
+}
+
+/* Active staff groups, nested under the iChat entry. */
+.sboi-community__groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: 0.1rem 0 0.2rem 0.85rem;
+  padding: 0.5rem 0 0.2rem 0.6rem;
+  border-left: 1px solid var(--sboi-line);
+}
+
+.sboi-community__groups .cf-rail-label {
+  margin: 0 0 0.3rem;
+}
+
+.sboi-community__group {
+  min-height: 32px;
+  padding: 0.25rem 0.5rem;
+  gap: 0.5rem;
+}
+
+.sboi-community__group-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #e8c98d, #b8862f);
+  color: #14111e;
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+
+.sboi-community__group-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.76rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sboi-community__group .cf-nav-badge {
+  flex: 0 0 auto;
 }
 
 .sboi-community__main {
@@ -1907,8 +1982,9 @@
   margin-left: auto;
   padding: 0.08rem 0.38rem;
   border-radius: 999px;
-  background: var(--sboi-gold);
+  background: #f5f1e8;
   color: #14111e;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   font-size: 0.58rem;
   letter-spacing: 0;
 }
@@ -1949,6 +2025,7 @@
 }
 
 .sboi-chat-shell {
+  grid-template-columns: minmax(0, 1fr);
   height: calc(100vh - 228px);
   min-height: 540px;
 }
@@ -2366,45 +2443,85 @@
 @media (max-width: 900px) {
   .sboi-community {
     grid-template-columns: minmax(0, 1fr);
+    padding-bottom: calc(104px + env(safe-area-inset-bottom));
   }
 
+  /* The rail is replaced on phones by the floating dock below — no cropped
+     horizontal nav, and the conversation list or feed gets the full page. */
   .sboi-community__rail {
-    position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    max-height: none;
-    padding: 0.5rem;
+    display: none;
   }
 
-  .sboi-community__rail .cf-rail-brand {
-    padding: 0;
+  .sboi-community-dock {
+    position: fixed;
+    z-index: 110;
+    bottom: calc(18px + env(safe-area-inset-bottom));
+    left: 50%;
+    display: flex;
+    align-items: stretch;
+    gap: 0.15rem;
+    padding: 0.32rem;
+    border: 1px solid rgba(210, 162, 78, 0.28);
+    border-radius: 999px;
+    background: rgba(22, 18, 38, 0.82);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 22px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.25);
+    transform: translateX(-50%);
   }
 
-  .sboi-community__rail .cf-rail-nav {
+  .sboi-dock__item {
+    position: relative;
+    display: flex;
     flex: 1 1 auto;
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-direction: column;
     align-items: center;
+    gap: 0.06rem;
+    min-width: 62px;
+    padding: 0.38rem 0.55rem 0.32rem;
+    border-radius: 999px;
+    color: rgba(244, 239, 228, 0.55);
+    font-size: 0.52rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.18s ease, color 0.18s ease;
   }
 
-  .sboi-community__rail .cf-rail-label {
-    display: none;
+  .sboi-dock__item .sboi-ico {
+    width: 1.2rem;
+    height: 1.2rem;
   }
 
-  .sboi-community__rail .cf-nav-item {
-    min-height: 36px;
-    padding: 0.4rem 0.55rem;
-    font-size: 0.74rem;
+  .sboi-dock__item:hover,
+  .sboi-dock__item:focus-visible {
+    color: #f4efe4;
   }
 
-  .sboi-community__rail .cf-nav-item svg {
-    width: 16px;
+  .sboi-dock__item.active {
+    color: #fbe3a4;
+    background: linear-gradient(160deg, rgba(210, 162, 78, 0.32), rgba(210, 162, 78, 0.12));
+    box-shadow: inset 0 0 0 1px rgba(210, 162, 78, 0.38);
+  }
+
+  .sboi-dock__badge {
+    position: absolute;
+    top: 0.08rem;
+    right: 0.32rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
     height: 16px;
-  }
-
-  .sboi-community__rail .cf-rail-identity {
-    display: none;
+    padding: 0 0.28rem;
+    border-radius: 999px;
+    background: #f5f1e8;
+    color: #14111e;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-size: 0.5rem;
+    font-weight: 800;
   }
 
   .sboi-chat-shell {
@@ -2484,6 +2601,16 @@
     min-height: 40px;
     padding: 0.45rem 0.3rem;
   }
+
+  /* Lift the feed composer above the floating dock so it never covers the
+     publish box or the attach buttons. */
+  .sboi-community .cf-composer {
+    bottom: calc(92px + env(safe-area-inset-bottom));
+  }
+
+  .sboi-community .cf-feed {
+    padding-bottom: 168px;
+  }
 }
 
 /* Django admin gives every ``ul > li`` a square marker. The community
@@ -2493,30 +2620,8 @@
   padding: 0;
 }
 
-/* The admin composer adds an audience picker that member composers do not
-   have. Keep it compact so the post field keeps most of the row. */
-.sboi-community .cf-composer-audience {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  min-width: 0;
-}
-
-.sboi-community .cf-composer-audience select {
-  max-width: 118px;
-  min-height: 32px;
-  padding: 0 0.45rem;
-  border-radius: 9px;
-  font-size: 0.68rem;
-}
-
 @media (max-width: 640px) {
   .sboi-community .cf-composer-avatar {
     display: none;
-  }
-
-  .sboi-community .cf-composer-audience select {
-    max-width: 98px;
-    font-size: 0.64rem;
   }
 }

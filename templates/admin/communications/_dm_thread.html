@@ -68,7 +68,7 @@
 
     <form class="comms-composer sboi-dm__composer" method="post" action="{% url 'communications:dm_reply' dm_thread.pk %}">
         {% csrf_token %}
-        <div class="comms-composer__row">
+        <div class="comms-composer__box">
             <textarea name="body"
                       rows="1"
                       maxlength="2000"
@@ -76,9 +76,8 @@
                       aria-label="{% translate 'Moderation message' %}"
                       required
                       data-dm-textarea></textarea>
-            <button type="submit" class="comms-send">
+            <button type="submit" class="comms-send" aria-label="{% translate 'Send to members' %}" title="{% translate 'Send to members' %}">
                 {% admin_icon 'arrow-right' %}
-                <span>{% translate 'Send to members' %}</span>
             </button>
         </div>
         <div class="comms-composer__hint">

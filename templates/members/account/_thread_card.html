@@ -1,0 +1,27 @@
+{% load i18n %}
+{# A conversation entry in a unified feed timeline: avatar, kind, preview and an #}
+{# unread badge, linking straight into the thread. Rendered on both the admin #}
+{# iChat timeline and the member community page. #}
+<article class="sboi-thread-card{% if item.unread %} is-unread{% endif %}">
+    <a class="sboi-thread-card__link" href="{{ item.url }}">
+        <span class="sboi-thread-card__avatar">
+            {% if item.avatar_url %}
+            <img src="{{ item.avatar_url }}" alt="" class="cf-avatar cf-avatar--md cf-avatar-img" loading="lazy">
+            {% else %}
+            <span class="cf-avatar cf-avatar--md" aria-hidden="true">{{ item.initials|default:'S' }}</span>
+            {% endif %}
+        </span>
+        <span class="sboi-thread-card__body">
+            <span class="sboi-thread-card__meta">
+                <span class="sboi-thread-kind">{{ item.kind_label }}</span>
+                {% if item.time %}<time class="sboi-thread-card__time" datetime="{{ item.time|date:'c' }}">{{ item.time|timesince }} ago</time>{% endif %}
+            </span>
+            <strong class="sboi-thread-card__name">{{ item.name }}</strong>
+            <span class="sboi-thread-card__preview">{{ item.preview|truncatechars:110 }}</span>
+        </span>
+        {% if item.unread %}<span class="cf-nav-badge sboi-thread-card__badge" aria-label="{{ item.unread }} unread">{{ item.unread }}</span>{% endif %}
+        <span class="sboi-thread-card__chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false"><path d="m9 6 6 6-6 6"/></svg>
+        </span>
+    </a>
+</article>

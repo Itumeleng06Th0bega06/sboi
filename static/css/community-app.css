@@ -361,6 +361,10 @@
   max-width: 980px;
 }
 
+.cf-app-shell--no-aside .cf-aside {
+  display: none;
+}
+
 .cf-main {
   min-width: 0;
 }
@@ -481,12 +485,14 @@
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 999px;
-  background: var(--cf-gold);
+  background: #f5f1e8;
   color: #171226;
   font-size: 0.62rem;
   font-weight: 800;
   line-height: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .cf-nav-badge[hidden],
@@ -497,47 +503,6 @@
 
 .cf-nav-badge {
   margin-left: -0.4rem;
-}
-
-.cf-rail-identity {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
-  margin-top: auto;
-  padding: 0.8rem;
-  border: 1px solid var(--cf-line-soft);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.025);
-}
-
-.cf-rail-identity-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-width: 0;
-}
-
-.cf-rail-identity-copy strong {
-  overflow: hidden;
-  font-size: 0.8rem;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.cf-rail-identity-copy > span {
-  color: var(--cf-muted);
-  font-size: 0.66rem;
-}
-
-.cf-rail-membership {
-  margin-top: 0.35rem;
-  color: rgba(244, 239, 228, 0.5) !important;
-  font-size: 0.62rem !important;
-}
-
-.cf-rail-membership b {
-  color: var(--cf-gold);
-  font-weight: 650;
 }
 
 /* ---------- Right aside -------------------------------------------------- */
@@ -763,6 +728,19 @@
   font-size: 0.62rem;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.cf-membership-strip-manage {
+  flex: 0 0 auto;
+  color: var(--cf-gold);
+  font-size: 0.62rem;
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.cf-membership-strip-manage:hover {
+  text-decoration: underline;
 }
 
 .cf-membership-strip-details {
@@ -2479,11 +2457,13 @@ a.cf-conversation {
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 999px;
-  background: var(--cf-gold);
+  background: #f5f1e8;
   color: #171226;
   font-size: 0.6rem;
   font-weight: 800;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .cf-online-list {
@@ -2797,6 +2777,43 @@ a.cf-conversation {
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(210, 162, 78, 0.25) transparent;
+}
+
+/* ---------- Larger conversation on desktop -------------------------------
+   The member inbox keeps its compact layout on phones and tablets, but on a
+   desktop screen the thread fills most of the viewport height with a wide
+   reading area and generous bubbles. */
+@media (min-width: 1100px) {
+  .cf-app-shell--no-aside .cf-main {
+    max-width: 1120px;
+  }
+
+  .cf-inbox {
+    grid-template-columns: 340px minmax(0, 1fr);
+    min-height: calc(100vh - 96px);
+  }
+
+  .account-thread.cf-thread {
+    min-height: 580px;
+    max-height: calc(100vh - 180px);
+    gap: 0.85rem;
+    padding: 1.5rem 1.75rem;
+  }
+
+  .community-app .account-bubble {
+    max-width: min(78%, 820px);
+    padding: 0.85rem 1rem;
+  }
+
+  .account-bubble-body {
+    font-size: 0.94rem;
+  }
+}
+
+@media (min-width: 1500px) {
+  .cf-inbox {
+    grid-template-columns: 380px minmax(0, 1fr);
+  }
 }
 
 .cf-thread-empty {

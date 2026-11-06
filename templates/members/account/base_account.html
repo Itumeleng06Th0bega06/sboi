@@ -5,9 +5,9 @@
 {% block body_class %}account-page community-app{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/account.css' %}?v=13">
-<link rel="stylesheet" href="{% static 'css/community-feed.css' %}?v=6">
-<link rel="stylesheet" href="{% static 'css/community-app.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'css/account.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'css/community-feed.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'css/community-app.css' %}?v=14">
 {% endblock %}
 
 {% block nav %}
@@ -49,6 +49,7 @@
                         </div>
                     </div>
                     <nav class="cf-user-links" aria-label="Personal account">
+                        <a href="{% url 'members:account_profile' %}">Profile</a>
                         {% if request.user.is_staff %}
                         <a href="{% url 'admin:index' %}">Admin console</a>
                         {% endif %}
@@ -94,15 +95,15 @@
 {% endblock %}
 
 {% block content %}
-<div class="cf-app-shell container"
+<div class="cf-app-shell container{% if account_section == 'messages' %} cf-app-shell--no-aside{% endif %}"
      data-account-base="{% url 'members:account' %}"
      data-account-counts-url="{% url 'members:account_counts' %}">
     <aside class="cf-rail" aria-label="Community sections">
         <nav class="cf-rail-nav">
             <p class="cf-rail-label">Community</p>
             <a href="{% url 'members:account' %}" class="cf-nav-item account-nav-link{% if account_section == 'account' %} active{% endif %}">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2v-9Z"/></svg>
-                <span class="account-nav-label">Community feed</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/><circle cx="9" cy="12" r="0.9" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="0.9" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="0.9" fill="currentColor" stroke="none"/></svg>
+                <span class="account-nav-label">iChat</span>
             </a>
             <a href="{% url 'members:account_posts' %}" class="cf-nav-item account-nav-link{% if account_section == 'posts' %} active{% endif %}">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
@@ -117,10 +118,6 @@
                 <span class="account-nav-label">Inbox</span>
                 <span class="cf-nav-badge" data-account-count="messages"{% if not unread_messages %} hidden{% endif %}>{{ unread_messages|default:0 }}</span>
             </a>
-            <a href="{% url 'members:account_profile' %}" class="cf-nav-item account-nav-link{% if account_section == 'profile' %} active{% endif %}">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
-                <span class="account-nav-label">My profile</span>
-            </a>
 
             <p class="cf-rail-label cf-rail-label--space">Church life</p>
             <a href="{% url 'members:account_settings' %}" class="cf-nav-item account-nav-link{% if account_section == 'settings' %} active{% endif %}">
@@ -128,19 +125,6 @@
                 <span>Account settings</span>
             </a>
         </nav>
-
-        <div class="cf-rail-identity">
-            {% if member_avatar_url %}
-            <img src="{{ member_avatar_url }}" alt="" class="cf-avatar cf-avatar--md cf-avatar-img">
-            {% else %}
-            <span class="cf-avatar cf-avatar--md" aria-hidden="true">{{ member_initials|default:'S' }}</span>
-            {% endif %}
-            <div class="cf-rail-identity-copy">
-                <strong>{{ member_display_name|default:request.user.username }}</strong>
-                <span>@{{ request.user.username }}</span>
-                <span class="cf-rail-membership">Church membership <b>{{ membership.get_status_display|default:'Visitor' }}</b></span>
-            </div>
-        </div>
     </aside>
 
     <main class="cf-main account-main">
@@ -241,7 +225,7 @@
 
 {% block extra_scripts %}
 <script src="{% static 'js/account.js' %}?v=9" defer></script>
-<script src="{% static 'js/community-feed.js' %}?v=7" defer></script>
+<script src="{% static 'js/community-feed.js' %}?v=9" defer></script>
 <script src="{% static 'js/community-inbox.js' %}?v=1" defer></script>
 {% block account_scripts %}{% endblock %}
 {% endblock %}

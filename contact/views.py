@@ -7,6 +7,13 @@ from .forms import ContactMessageForm
 from .models import ContactInfo, ContactMessage
 
 
+def _first_form_error(form, fallback):
+    for errors in form.errors.values():
+        for error in errors:
+            return str(error)
+    return fallback
+
+
 def contact(request):
     info = ContactInfo.objects.first()
     if request.method == 'POST':
@@ -19,7 +26,12 @@ def contact(request):
             messages.success(request, message)
             return redirect('contact:contact')
         elif request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'ok': False, 'message': 'Please check the form and try again.'}, status=400)
+            return JsonResponse({
+                'ok': False,
+                'message': _first_form_error(
+                    form, 'Please check the form and try again.',
+                ),
+            }, status=400)
     else:
         form = ContactMessageForm()
     context = {

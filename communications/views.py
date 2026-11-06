@@ -49,6 +49,7 @@ from .services import (
     dm_moderation_rows,
     get_or_create_direct,
     leave_group,
+    delete_group,
     mark_conversation_read,
     mark_office_thread_read,
     message_queryset,
@@ -250,21 +251,104 @@ def _inbox_context(request, group_form=None, direct_form=None, open_dialog=''):
     office_unread = office_unread_total()
     dm_rows = dm_moderation_rows(query) if user.is_superuser else []
 
+    timeline_filter = (request.GET.get('filter') or 'all').strip().lower()
+    if timeline_filter not in {'all', 'posts', 'chats'}:
+        timeline_filter = 'all'
+
     posts = []
     feed_has_more = False
     feed_next_before = ''
-    if community_view == 'feed':
+    if community_view in {'feed', 'chat'}:
         posts, feed_has_more, feed_next_before = feed_page_for(
             feed_posts_for(user), user,
         )
 
     member_directory = []
-    if community_view in {'feed', 'members'}:
+    if community_view in {'feed', 'chat', 'members'}:
         member_directory = _member_directory(query)
 
     member_total = get_user_model().objects.filter(
         is_active=True, is_staff=False,
     ).count()
+
+    # Unified iChat timeline: community posts and conversation activity,
+    # merged chronologically. Conversation previews only render for people who
+    # are allowed to see them (office/staff for comms staff, member DMs for
+    # superusers); nobody else ever receives this content.
+    timeline_mode = community_view in {'feed', 'chat'} and not (
+        selected or office_member or dm_thread
+    )
+    timeline_items = [] if timeline_mode else None
+    if timeline_mode:
+        for post in posts:
+            timeline_items.append({
+                'kind': 'post',
+                'sort': post.created_at,
+                'post': post,
+            })
+        if timeline_filter in {'all', 'chats'}:
+            timeline_base = reverse('communications:inbox')
+            for row in rows:
+                conversation = row['conversation']
+                timeline_items.append({
+                    'kind': 'chat',
+                    'sort': row['last_activity'],
+                    'kind_label': (
+                        'Direct message' if conversation.is_direct else 'Staff group'
+                    ),
+                    'name': row['display_name'],
+                    'initials': row['initials'],
+                    'avatar_url': '',
+                    'preview': row['preview'],
+                    'time': row['last_activity'],
+                    'unread': row['unread_count'],
+                    'url': f'{timeline_base}?view=chat&conversation={conversation.pk}',
+                })
+            for row in office_rows:
+                latest = row['latest']
+                text = (latest.message or '').strip().replace('\n', ' ')
+                timeline_items.append({
+                    'kind': 'chat',
+                    'sort': latest.created_at,
+                    'kind_label': 'Church office',
+                    'name': row['display_name'],
+                    'initials': row['initials'],
+                    'avatar_url': row.get('avatar_url', ''),
+                    'preview': text or 'Attachment',
+                    'time': latest.created_at,
+                    'unread': row['unread'],
+                    'url': (
+                        f'{timeline_base}?view=chat&channel=office&member={row["user"].pk}'
+                    ),
+                })
+            for row in dm_rows:
+                latest = row.get('latest')
+                text = (
+                    latest.body.strip().replace('\n', ' ')
+                    if latest is not None else 'No messages yet'
+                )
+                timeline_items.append({
+                    'kind': 'chat',
+                    'sort': row['last_activity'],
+                    'kind_label': 'Members · Moderation',
+                    'name': row['display_name'],
+                    'initials': row['initials'],
+                    'avatar_url': '',
+                    'preview': text,
+                    'time': row['last_activity'],
+                    'unread': 0,
+                    'url': (
+                        f'{timeline_base}?view=chat&channel=dm&thread={row["thread"].pk}'
+                    ),
+                })
+        timeline_items.sort(
+            key=lambda item: item['sort'] or timezone.now(),
+            reverse=True,
+        )
+        if timeline_filter == 'posts':
+            timeline_items = [i for i in timeline_items if i['kind'] == 'post']
+        elif timeline_filter == 'chats':
+            timeline_items = [i for i in timeline_items if i['kind'] == 'chat']
     staff_total = get_user_model().objects.filter(
         is_active=True, is_staff=True,
     ).count()
@@ -282,14 +366,14 @@ def _inbox_context(request, group_form=None, direct_form=None, open_dialog=''):
         'section_label': 'communications',
         'community_view': community_view,
         'community_heading': {
-            'feed': 'Community feed',
-            'chat': 'Chat',
+            'feed': 'iChat',
+            'chat': 'iChat',
             'members': 'Members',
             'profile': 'Profile',
-        }.get(community_view, 'Chat'),
+        }.get(community_view, 'iChat'),
         'community_lead': {
-            'feed': 'Share updates and keep the community feed healthy.',
-            'chat': 'Church office conversations, staff chat and member moderation.',
+            'feed': 'Community posts and every conversation, in one stream.',
+            'chat': 'Community posts and every conversation, in one stream.',
             'members': 'Everyone who belongs to the church community.',
             'profile': 'Your staff account and communication access.',
         }.get(community_view, ''),
@@ -306,6 +390,7 @@ def _inbox_context(request, group_form=None, direct_form=None, open_dialog=''):
             ),
         },
         'conversation_rows': rows,
+        'group_rows': [row for row in rows if not row['conversation'].is_direct],
         'conversation_query': query,
         'selected_id': selected.pk if selected else None,
         'group_form': group_form or GroupForm(portal_queryset=users),
@@ -327,13 +412,15 @@ def _inbox_context(request, group_form=None, direct_form=None, open_dialog=''):
         'member_total': member_total,
         'staff_total': staff_total,
         'inbox_url': reverse('communications:inbox'),
+        'timeline_items': timeline_items,
+        'timeline_mode': timeline_mode,
+        'timeline_filter': timeline_filter,
         'posts': posts,
         'feed_posts': posts,
         'feed_member_accounts': member_directory,
         'feed_view': community_view == 'feed',
         'feed_member_count': member_total,
         'feed_staff_count': staff_total,
-        'feed_audience_choices': CommsPost.AUDIENCE_CHOICES,
         'feed_latest_id': posts[0].pk if posts else '',
         'feed_has_more': feed_has_more,
         'feed_next_before': feed_next_before,
@@ -456,7 +543,7 @@ def send_message(request, pk):
             return JsonResponse({'error': error}, status=400)
         messages.error(request, error)
         return redirect(
-            f"{reverse('communications:inbox')}?conversation={conversation.pk}"
+            f"{reverse('communications:inbox')}?view=chat&conversation={conversation.pk}"
         )
 
     reply_to = None
@@ -489,7 +576,7 @@ def send_message(request, pk):
             status=201,
         )
     return redirect(
-        f"{reverse('communications:inbox')}?conversation={conversation.pk}"
+        f"{reverse('communications:inbox')}?view=chat&conversation={conversation.pk}"
     )
 
 
@@ -746,7 +833,7 @@ def create_group_view(request):
         )
         messages.success(request, f'Group “{conversation.name}” created.')
         return redirect(
-            f"{reverse('communications:inbox')}?conversation={conversation.pk}"
+            f"{reverse('communications:inbox')}?view=chat&conversation={conversation.pk}"
         )
 
     context = _inbox_context(
@@ -774,7 +861,7 @@ def start_direct_view(request):
             messages.error(request, exc.messages[0])
             return redirect('communications:inbox')
         return redirect(
-            f"{reverse('communications:inbox')}?conversation={conversation.pk}"
+            f"{reverse('communications:inbox')}?view=chat&conversation={conversation.pk}"
         )
 
     context = _inbox_context(
@@ -812,7 +899,7 @@ def update_group_view(request, pk):
     else:
         messages.error(request, 'Group details could not be updated.')
     return redirect(
-        f"{reverse('communications:inbox')}?conversation={conversation.pk}"
+        f"{reverse('communications:inbox')}?view=chat&conversation={conversation.pk}"
     )
 
 
@@ -841,7 +928,7 @@ def add_members_view(request, pk):
     else:
         messages.error(request, 'Choose at least one staff member to add.')
     return redirect(
-        f"{reverse('communications:inbox')}?conversation={conversation.pk}"
+        f"{reverse('communications:inbox')}?view=chat&conversation={conversation.pk}"
     )
 
 
@@ -861,7 +948,7 @@ def remove_member_view(request, pk):
     if participant.user_id == request.user.pk:
         messages.error(request, 'Use “Leave group” to remove yourself.')
         return redirect(
-            f"{reverse('communications:inbox')}?conversation={conversation.pk}"
+            f"{reverse('communications:inbox')}?view=chat&conversation={conversation.pk}"
         )
     try:
         remove_member(conversation, participant)
@@ -872,7 +959,7 @@ def remove_member_view(request, pk):
     except ValidationError as exc:
         messages.error(request, exc.messages[0])
     return redirect(
-        f"{reverse('communications:inbox')}?conversation={conversation.pk}"
+        f"{reverse('communications:inbox')}?view=chat&conversation={conversation.pk}"
     )
 
 
@@ -887,6 +974,30 @@ def leave_group_view(request, pk):
         messages.success(request, 'You left the group.')
     except ValidationError as exc:
         messages.error(request, exc.messages[0])
+    return redirect('communications:inbox')
+
+
+@portal_view
+@require_POST
+def delete_group_view(request, pk):
+    conversation = conversation_for_user(request.user, pk)
+    if conversation is None:
+        raise Http404('Conversation not found.')
+    if not conversation.is_group:
+        raise PermissionDenied('Only group conversations can be deleted.')
+    if not can_manage_group(request.user, conversation):
+        raise PermissionDenied('Only a group owner or admin can delete it.')
+    try:
+        delete_group(conversation, request.user)
+    except ValidationError as exc:
+        messages.error(
+            request,
+            exc.messages[0],
+        )
+        return redirect(
+            f"{reverse('communications:inbox')}?view=chat&conversation={conversation.pk}"
+        )
+    messages.success(request, 'The group was deleted.')
     return redirect('communications:inbox')
 
 
