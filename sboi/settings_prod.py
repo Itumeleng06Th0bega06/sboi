@@ -170,11 +170,22 @@ EMAIL_BACKEND = (
     if os.environ.get('SMTP_HOST')
     else 'django.core.mail.backends.console.EmailBackend'
 )
+SMTP_PORT = int(os.environ.get('SMTP_PORT', '587'))
+# Port 465 is implicit TLS (SSL) and must not be combined with STARTTLS.
+# Port 587 (and 25) use STARTTLS. SMTP_USE_SSL overrides the port-based guess.
+EMAIL_USE_SSL = os.environ.get(
+    'SMTP_USE_SSL', 'true' if SMTP_PORT == 465 else 'false'
+).lower() == 'true'
 EMAIL_HOST = os.environ.get('SMTP_HOST', '')
-EMAIL_PORT = int(os.environ.get('SMTP_PORT', '587'))
+EMAIL_PORT = SMTP_PORT
 EMAIL_HOST_USER = os.environ.get('SMTP_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
-EMAIL_USE_TLS = os.environ.get('SMTP_USE_TLS', 'true').lower() == 'true'
+EMAIL_USE_TLS = (
+    False
+    if EMAIL_USE_SSL
+    else os.environ.get('SMTP_USE_TLS', 'true').lower() == 'true'
+)
+EMAIL_TIMEOUT = int(os.environ.get('SMTP_TIMEOUT', '15'))
 
 # Admin/site email address. Receives Django error reports (when DEBUG=False)
 # and is used as the "from" address for outgoing mail. Override via

@@ -1,6 +1,11 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path, reverse_lazy
 
+from sboi.password_reset import (
+    DebugLinkPasswordResetDoneView,
+    DebugLinkPasswordResetView,
+)
+
 from . import account, views, views_comms
 from .forms import MemberSetPasswordForm
 
@@ -62,17 +67,18 @@ urlpatterns = [
     ),
     path(
         'password-reset/',
-        auth_views.PasswordResetView.as_view(
+        DebugLinkPasswordResetView.as_view(
             template_name='members/password_reset_form.html',
             email_template_name='members/password_reset_email.txt',
             subject_template_name='members/password_reset_subject.txt',
             success_url=reverse_lazy('members:password_reset_done'),
+            reset_url_name='members:password_reset_confirm',
         ),
         name='password_reset',
     ),
     path(
         'password-reset/done/',
-        auth_views.PasswordResetDoneView.as_view(
+        DebugLinkPasswordResetDoneView.as_view(
             template_name='members/password_reset_done.html',
         ),
         name='password_reset_done',

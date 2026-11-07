@@ -6,6 +6,10 @@ from django.urls import include, path, reverse_lazy
 
 from . import views
 from .admin_forms import EmailOrUsernameAdminAuthenticationForm
+from .password_reset import (
+    DebugLinkPasswordResetDoneView,
+    DebugLinkPasswordResetView,
+)
 
 # Staff sign in to the admin with a username *or* an email address.
 admin.site.login_form = EmailOrUsernameAdminAuthenticationForm
@@ -29,17 +33,18 @@ urlpatterns = [
     # templates/admin/login.html ({% url 'admin_password_reset' %}).
     path(
         settings.ADMIN_URL + 'password_reset/',
-        auth_views.PasswordResetView.as_view(
+        DebugLinkPasswordResetView.as_view(
             template_name='registration/password_reset_form.html',
             email_template_name='registration/password_reset_email.html',
             subject_template_name='registration/password_reset_subject.txt',
             success_url=reverse_lazy('admin_password_reset_done'),
+            reset_url_name='admin_password_reset_confirm',
         ),
         name='admin_password_reset',
     ),
     path(
         settings.ADMIN_URL + 'password_reset/done/',
-        auth_views.PasswordResetDoneView.as_view(
+        DebugLinkPasswordResetDoneView.as_view(
             template_name='registration/password_reset_done.html',
         ),
         name='admin_password_reset_done',
