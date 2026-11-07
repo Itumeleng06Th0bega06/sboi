@@ -479,6 +479,8 @@ def account_profile_edit(request):
                         profile=profile,
                     ),
                     'membership': membership,
+                    'member_avatar_url': _avatar_url(request.user),
+                    'member_initials': _avatar_initials(request.user),
                 },
             )
             return JsonResponse({
@@ -502,7 +504,12 @@ def account_profile_edit(request):
         html = _form_fragment(
             request,
             'members/account/_profile_form.html',
-            {'profile_form': form, 'membership': membership},
+            {
+                'profile_form': form,
+                'membership': membership,
+                'member_avatar_url': _avatar_url(request.user),
+                'member_initials': _avatar_initials(request.user),
+            },
         )
         return JsonResponse({'ok': False, 'html': html}, status=400)
     messages.error(request, 'Please correct the errors below and try again.')

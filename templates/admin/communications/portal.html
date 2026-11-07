@@ -7,13 +7,15 @@
 
 {% block responsive %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'css/community-app.css' %}?v=14">
+    <link rel="stylesheet" href="{% static 'css/account.css' %}?v=15">
+    <link rel="stylesheet" href="{% static 'css/community-app.css' %}?v=15">
     <link rel="stylesheet" href="{% static 'css/community-feed.css' %}?v=9">
     <link rel="stylesheet" href="{% static 'admin/css/communications.css' %}?v=15">
 {% endblock %}
 
 {% block extrahead %}
     {{ block.super }}
+    <script src="{% static 'js/account.js' %}?v=10" defer></script>
     <script src="{% static 'admin/js/communications.js' %}?v=5" defer></script>
     <script src="{% static 'js/community-feed.js' %}?v=9" defer></script>
 {% endblock %}
@@ -148,5 +150,21 @@
     </main>
 
     {% include "admin/communications/_dialogs.html" %}
+
+    <div class="account-modal" id="adminProfileModal" hidden>
+        <div class="account-modal-backdrop" data-account-modal-close></div>
+        <div class="account-modal-panel" role="dialog" aria-modal="true" aria-labelledby="adminProfileModalTitle">
+            <header class="account-modal-head">
+                <div>
+                    <p class="account-eyebrow">{% translate 'Personal details' %}</p>
+                    <h2 id="adminProfileModalTitle">{% translate 'Edit my profile' %}</h2>
+                </div>
+                <button type="button" class="account-modal-close" data-account-modal-close aria-label="{% translate 'Close' %}">&times;</button>
+            </header>
+            <div class="account-modal-body" data-account-form-target="admin-profile">
+                {% include 'admin/communications/_admin_profile_form.html' %}
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

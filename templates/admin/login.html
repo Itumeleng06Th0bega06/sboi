@@ -49,10 +49,7 @@
             <div class="password-field">
                 <input type="password" name="password" class="input" id="id_password"
                        placeholder="{{ form.password.label }}" required autocomplete="current-password">
-                <button type="button" class="password-toggle" aria-label="Show password" aria-pressed="false"
-                        onclick="var i=this.parentNode.querySelector('input');var show=i.type==='password';i.type=show?'text':'password';this.setAttribute('aria-pressed',show?'true':'false');this.setAttribute('aria-label',show?'Hide password':'Show password');this.classList.toggle('is-visible',show);">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>
-                </button>
+                {% include 'partials/_password_toggle.html' %}
                 <input type="hidden" name="next" value="{{ next }}">
             </div>
         </div>

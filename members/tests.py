@@ -213,8 +213,11 @@ class MemberPasswordResetTests(TestCase):
         response = self.client.get(reverse('members:login'))
         self.assertContains(response, 'Login to your account')
         self.assertContains(response, 'password-toggle')
+        self.assertContains(response, 'password-toggle-icon--show')
+        self.assertContains(response, 'password-toggle-icon--hide')
         self.assertContains(response, reverse('members:password_reset'))
         self.assertNotContains(response, 'auth-logo')
+        self.assertNotContains(response, 'data-sboi-public-bell')
 
     @override_settings(
         EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
@@ -1078,6 +1081,53 @@ class AccountPortalTests(TestCase):
         response = self.client.post(reverse('members:logout'))
         self.assertEqual(response.status_code, 302)
         self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_merged_header_controls_and_anonymous_bell(self):
+        self.client.logout()
+        public = self.client.get(reverse('home:home'))
+        self.assertNotContains(public, 'data-sboi-public-bell')
+
+        self.client.force_login(self.member)
+        public = self.client.get(reverse('home:home'))
+        self.assertContains(public, 'nav-auth-combo')
+        self.assertContains(public, 'data-sboi-public-bell')
+        self.assertNotContains(public, 'Admin console')
+
+        member_home = self.client.get(reverse('members:account'))
+        self.assertContains(member_home, 'cf-topbar-combo')
+        self.assertContains(member_home, 'data-sboi-public-bell')
+
+    def test_profile_avatar_opens_the_edit_modal(self):
+        response = self.client.get(reverse('members:account_profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'cf-avatar-edit')
+        self.assertContains(response, 'data-account-open="profileModal"')
+        self.assertNotContains(
+            response,
+            f'href="{reverse("members:account_profile_edit")}" class="cf-avatar-link"',
+        )
+
+    def test_profile_form_offers_avatar_cropping(self):
+        response = self.client.get(reverse('members:account_profile'))
+        self.assertEqual(response.status_code, 200)
+        for marker in (
+            'data-avatar-cropper',
+            'data-avatar-input',
+            'data-avatar-preview',
+            'data-avatar-stage',
+            'data-avatar-zoom',
+            'data-avatar-apply',
+            'Crop &amp; use',
+            'Drag to frame your photo',
+        ):
+            self.assertContains(response, marker)
+        self.assertEqual(response.content.decode().count('name="avatar"'), 1)
+
+    def test_staff_account_menu_exposes_the_admin_console(self):
+        self.member.is_staff = True
+        self.member.save(update_fields=['is_staff'])
+        response = self.client.get(reverse('home:home'))
+        self.assertContains(response, 'Admin console')
 
     def test_dashboard_shows_status_and_no_self_approval(self):
         response = self.client.get(reverse('members:account'))

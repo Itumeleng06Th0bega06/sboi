@@ -2,13 +2,21 @@
 <section class="cf-profile-page sboi-community__profile" aria-label="{% translate 'Profile' %}">
     <header class="cf-profile-hero">
         {% if admin_profile.avatar_url %}
-        <span class="cf-avatar-link">
+        <button type="button" class="cf-avatar-link" data-account-open="adminProfileModal" aria-label="{% translate 'Edit profile photo' %}" title="{% translate 'Edit profile photo' %}">
             <img src="{{ admin_profile.avatar_url }}" alt="{{ admin_profile.display_name }}" class="cf-avatar cf-avatar--xl cf-avatar-img">
-        </span>
+            <span class="cf-avatar-edit" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M4 20h4L18.5 9.5a2.12 2.12 0 0 0-3-3L5 17v3Z"/><path d="m13.5 6.5 3 3"/></svg>
+            </span>
+            <span class="sr-only">{% translate 'Edit profile photo' %}</span>
+        </button>
         {% else %}
-        <span class="cf-avatar-link">
+        <button type="button" class="cf-avatar-link" data-account-open="adminProfileModal" aria-label="{% translate 'Add profile photo' %}" title="{% translate 'Add profile photo' %}">
             <span class="cf-avatar cf-avatar--xl" aria-hidden="true">{{ admin_profile.initials|default:'A' }}</span>
-        </span>
+            <span class="cf-avatar-edit" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M4 20h4L18.5 9.5a2.12 2.12 0 0 0-3-3L5 17v3Z"/><path d="m13.5 6.5 3 3"/></svg>
+            </span>
+            <span class="sr-only">{% translate 'Add profile photo' %}</span>
+        </button>
         {% endif %}
         <div class="cf-profile-identity">
             <h1>{{ admin_profile.display_name }}</h1>

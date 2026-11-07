@@ -10,8 +10,9 @@ from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
-from django.http import FileResponse, Http404, JsonResponse
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
@@ -441,6 +442,59 @@ def inbox(request):
         'admin/communications/portal.html',
         _inbox_context(request),
     )
+
+
+@portal_view
+def admin_profile_edit(request):
+    """Edit the signed-in staff member's admin profile (avatar, name, etc.)."""
+    from members.forms import AccountProfileForm
+
+    profile = getattr(request.user, 'member_profile', None)
+    membership = getattr(request.user, 'church_membership', None)
+
+    if request.method == 'POST':
+        form = AccountProfileForm(
+            request.POST,
+            request.FILES,
+            user=request.user,
+            membership=membership,
+            profile=profile,
+        )
+        if form.is_valid():
+            form.save()
+            if _is_ajax(request):
+                identity = _admin_identity(request.user)
+                return JsonResponse({
+                    'ok': True,
+                    'message': 'Your profile has been updated.',
+                    'avatar_url': identity['avatar_url'],
+                    'initials': identity['initials'],
+                    'display_name': identity['display_name'],
+                })
+            messages.success(request, 'Your profile has been updated.')
+            return redirect('communications:inbox')
+
+        if _is_ajax(request):
+            return JsonResponse({'ok': False, 'errors': form.errors}, status=400)
+        messages.error(request, 'Please correct the errors below and try again.')
+        return redirect('communications:inbox')
+
+    # GET - return form fragment for modal
+    form = AccountProfileForm(user=request.user, membership=membership, profile=profile)
+    identity = _admin_identity(request.user)
+    html = render_to_string(
+        'admin/communications/_admin_profile_form.html',
+        {
+            'profile_form': form,
+            'membership': membership,
+            'admin_avatar_url': identity['avatar_url'],
+            'admin_initials': identity['initials'],
+        },
+        request=request,
+    )
+    if _is_ajax(request):
+        return JsonResponse({'ok': True, 'html': html})
+    return HttpResponse(html)
 
 
 @portal_view

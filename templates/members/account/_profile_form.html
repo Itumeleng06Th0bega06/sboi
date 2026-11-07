@@ -9,7 +9,11 @@
     {% endif %}
     <div class="account-form-grid">
         {% for field in profile_form %}
+        {% if field.name == 'avatar' %}
+        {% include 'members/account/_avatar_field.html' %}
+        {% else %}
         {% include 'members/account/_account_field.html' with field=field %}
+        {% endif %}
         {% endfor %}
     </div>
     <div class="account-form-actions">

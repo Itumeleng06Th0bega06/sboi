@@ -10,8 +10,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=83">
-  <link rel="stylesheet" href="{% static 'css/notifications.css' %}?v=3">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=86">
+  <link rel="stylesheet" href="{% static 'css/notifications.css' %}?v=4">
   {% block extra_head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -47,9 +47,10 @@
                     <li><a href="{% url 'contact:contact' %}" class="nav-tab{% if request.resolver_match.namespace == 'contact' %} active{% endif %}"><img src="{% static 'images/3d/envelope.png' %}" alt="" class="nav-tab-ico" loading="lazy" decoding="async">Contact</a></li>
                 </ul>
                 <div class="nav-auth">
-                    {% include 'notifications/_public_bell.html' %}
                     {% if request.user.is_authenticated %}
-                    <details class="nav-account">
+                    <div class="nav-auth-combo">
+                        {% include 'notifications/_public_bell.html' %}
+                        <details class="nav-account">
                         <summary class="nav-account-toggle" aria-label="My account" title="My account">
                             <span class="nav-account-identity">
                                 {% if member_avatar_url %}
@@ -83,7 +84,7 @@
                             <a href="{% url 'members:account' %}#membership" class="nav-account-link">Membership request pending</a>
                             {% endif %}
                             <a href="{% url 'members:account_messages' %}" class="nav-account-link">
-                                <span>Chat</span>
+                                <span>iChat</span>
                                 {% if member_unread_messages %}<span class="nav-menu-badge">{{ member_unread_messages }}</span>{% endif %}
                             </a>
                             <a href="{% url 'members:account_settings' %}" class="nav-account-link">Account settings</a>
@@ -96,6 +97,7 @@
                             </form>
                         </div>
                     </details>
+                    </div>
                     {% else %}
                     <a href="{% url 'members:login' %}" class="nav-subtab"><img src="{% static 'images/3d/person.png' %}" alt="" class="nav-tab-ico" loading="lazy" decoding="async">Login</a>
                     {% endif %}
@@ -183,7 +185,7 @@
                 {% elif member_membership_status == 'pending' %}
                 <li><a href="{% url 'members:account' %}#membership">Membership request pending</a></li>
                 {% endif %}
-                <li><a href="{% url 'members:account_messages' %}">Chat</a></li>
+                <li><a href="{% url 'members:account_messages' %}">iChat</a></li>
                 <li><a href="{% url 'members:account_settings' %}">Account settings</a></li>
                 {% if request.user.is_staff %}
                 <li><a href="{% url 'admin:index' %}">Admin console</a></li>

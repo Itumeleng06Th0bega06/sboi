@@ -115,6 +115,60 @@
   gap: 0.45rem;
 }
 
+/* Bell + account controls share one pill beside the site link. */
+.cf-topbar-combo {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.2rem;
+  border: 1px solid rgba(210, 162, 78, 0.32);
+  border-radius: 999px;
+  background: rgba(210, 162, 78, 0.08);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.cf-topbar-combo:hover,
+.cf-topbar-combo:focus-within {
+  border-color: var(--cf-gold);
+  background: rgba(210, 162, 78, 0.14);
+}
+
+.cf-topbar .cf-topbar-combo .notif-bell-trigger {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 999px;
+}
+
+.cf-topbar .cf-topbar-combo .notif-bell-trigger:hover,
+.cf-topbar .cf-topbar-combo .notif-bell[open] .notif-bell-trigger {
+  background: rgba(210, 162, 78, 0.18);
+}
+
+.cf-topbar-combo .cf-user {
+  position: relative;
+  margin-left: 0.16rem;
+}
+
+.cf-topbar-combo .cf-user::before {
+  content: "";
+  position: absolute;
+  top: 22%;
+  bottom: 22%;
+  left: -0.09rem;
+  width: 1px;
+  background: rgba(210, 162, 78, 0.28);
+}
+
+.cf-topbar-combo .cf-user-summary {
+  padding: 0.12rem 0.5rem 0.12rem 0.2rem;
+  border-radius: 999px;
+}
+
+.cf-topbar-combo .cf-user-summary:hover {
+  border-color: transparent;
+  background: rgba(210, 162, 78, 0.14);
+}
+
 .cf-site-link {
   display: inline-flex;
   align-items: center;
@@ -334,11 +388,56 @@
 .cf-avatar--xl { width: 82px; height: 82px; font-size: 1.2rem; }
 
 .cf-avatar-link {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
   text-decoration: none;
   color: inherit;
+  cursor: pointer;
+}
+
+.cf-avatar-link:focus-visible {
+  border-radius: 50%;
+  outline: 2px solid var(--cf-gold);
+  outline-offset: 3px;
+}
+
+.cf-avatar-edit {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--cf-panel);
+  border-radius: 50%;
+  background: linear-gradient(145deg, #e8c98d, #b8862f);
+  color: #171226;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  transition: transform 0.15s ease;
+}
+
+.cf-avatar-link:hover .cf-avatar-edit {
+  transform: scale(1.08);
+}
+
+.cf-avatar-edit svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* ---------- Application grid -------------------------------------------- */
@@ -3181,6 +3280,26 @@ a.cf-conversation {
 
   .cf-user-summary {
     padding: 0.15rem;
+  }
+
+  .cf-topbar-combo {
+    padding: 0.12rem 0.16rem;
+  }
+
+  .cf-topbar .cf-topbar-combo .notif-bell-trigger {
+    width: 30px;
+    height: 30px;
+  }
+
+  .cf-topbar-combo .cf-user-summary {
+    padding: 0.1rem;
+  }
+
+  .cf-avatar-edit {
+    right: -2px;
+    bottom: -2px;
+    width: 22px;
+    height: 22px;
   }
 
   .cf-app-shell,

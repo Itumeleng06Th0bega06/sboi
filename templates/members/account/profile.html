@@ -7,15 +7,21 @@
 <section class="cf-profile-page">
     <header class="cf-profile-hero">
         {% if member_avatar_url %}
-        <a href="{% url 'members:account_profile_edit' %}" class="cf-avatar-link" aria-label="Edit profile photo">
+        <button type="button" class="cf-avatar-link" data-account-open="profileModal" aria-label="Edit profile photo" title="Edit profile photo">
             <img src="{{ member_avatar_url }}" alt="{{ member_display_name }}" class="cf-avatar cf-avatar--xl cf-avatar-img">
+            <span class="cf-avatar-edit" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M4 20h4L18.5 9.5a2.12 2.12 0 0 0-3-3L5 17v3Z"/><path d="m13.5 6.5 3 3"/></svg>
+            </span>
             <span class="sr-only">Edit profile photo</span>
-        </a>
+        </button>
         {% else %}
-        <a href="{% url 'members:account_profile_edit' %}" class="cf-avatar-link" aria-label="Add profile photo">
+        <button type="button" class="cf-avatar-link" data-account-open="profileModal" aria-label="Add profile photo" title="Add profile photo">
             <span class="cf-avatar cf-avatar--xl" aria-hidden="true">{{ member_initials|default:'S' }}</span>
+            <span class="cf-avatar-edit" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M4 20h4L18.5 9.5a2.12 2.12 0 0 0-3-3L5 17v3Z"/><path d="m13.5 6.5 3 3"/></svg>
+            </span>
             <span class="sr-only">Add profile photo</span>
-        </a>
+        </button>
         {% endif %}
         <div class="cf-profile-identity">
             <h1>{{ member_display_name|default:request.user.username }}</h1>

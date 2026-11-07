@@ -467,6 +467,20 @@
         if (data.html && name === 'membership') replaceById('membership', data.html);
         if (data.membership_html) replaceById('membership', data.membership_html);
         if (data.form_html && target) target.innerHTML = data.form_html;
+        if (name === 'admin-profile') {
+          // Update admin avatar in topbar and profile view
+          if (data.avatar_url !== undefined) {
+            var avatars = document.querySelectorAll('.cf-avatar-img[src], .sboi-avatar, .cf-avatar-link img, .cf-avatar--xl');
+            avatars.forEach(function (el) {
+              if (el.tagName === 'IMG') {
+                el.src = data.avatar_url;
+                el.alt = data.display_name || '';
+              } else if (el.classList.contains('cf-avatar')) {
+                el.textContent = data.initials || '';
+              }
+            });
+          }
+        }
         closeModal(modal);
         showFlash(data.message || 'Saved.', 'success');
         if (name === 'membership' && document.querySelector('[data-account-children]')) {
@@ -630,6 +644,489 @@
     }, 9000);
   }
 
+  /* ---- Avatar cropper --------------------------------------------------- */
+  var AVATAR_OUTPUT_SIZE = 512;
+
+  function avatarOutputType(type) {
+    type = (type || '').toLowerCase();
+    if (type === 'image/png' || type === 'image/webp') return type;
+    return 'image/jpeg';
+  }
+
+  function avatarCroppedName(name, type) {
+    var base = (name || 'avatar').replace(/\.[^.]+$/, '') || 'avatar';
+    var extension = 'jpg';
+    if (type === 'image/png') extension = 'png';
+    else if (type === 'image/webp') extension = 'webp';
+    return base + '-cropped.' + extension;
+  }
+
+  function getAvatarState(root) {
+    if (!root) return null;
+    if (root.__avatarCropper) return root.__avatarCropper;
+    var input = root.querySelector('[data-avatar-input]');
+    if (!input) return null;
+    root.__avatarCropper = {
+      root: root,
+      input: input,
+      stage: root.querySelector('[data-avatar-stage]'),
+      imageEl: root.querySelector('[data-avatar-crop-image]'),
+      zoomEl: root.querySelector('[data-avatar-zoom]'),
+      statusEl: root.querySelector('[data-avatar-status]'),
+      filenameEl: root.querySelector('[data-avatar-filename]'),
+      previewEl: root.querySelector('[data-avatar-preview]'),
+      cropEl: root.querySelector('[data-avatar-crop]'),
+      sourceUrl: '',
+      previewUrl: '',
+      image: null,
+      file: null,
+      applied: null,
+      pending: false,
+      naturalW: 0,
+      naturalH: 0,
+      stageW: 0,
+      stageH: 0,
+      scale: 1,
+      zoom: 1,
+      x: 0,
+      y: 0,
+      drag: null
+    };
+    return root.__avatarCropper;
+  }
+
+  function avatarStatus(state, message, isError) {
+    if (!state.statusEl) return;
+    state.statusEl.textContent = message || '';
+    state.statusEl.classList.toggle('is-error', !!isError);
+  }
+
+  function avatarFilename(state, name) {
+    if (!state.filenameEl) return;
+    state.filenameEl.textContent = name || 'No photo chosen';
+    state.filenameEl.title = name || '';
+  }
+
+  function replaceAvatarFile(input, file) {
+    if (!input || !file || typeof DataTransfer === 'undefined') return false;
+    try {
+      var transfer = new DataTransfer();
+      transfer.items.add(file);
+      input.files = transfer.files;
+      return !!(
+        input.files &&
+        input.files.length === 1 &&
+        input.files[0].size === file.size
+      );
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function restoreAvatarInput(state) {
+    if (state.applied && replaceAvatarFile(state.input, state.applied)) {
+      avatarFilename(state, state.applied.name);
+      return;
+    }
+    state.input.value = '';
+    avatarFilename(state, '');
+  }
+
+  function clearAvatarCrop(state) {
+    if (state.sourceUrl) {
+      URL.revokeObjectURL(state.sourceUrl);
+      state.sourceUrl = '';
+    }
+    state.image = null;
+    state.file = null;
+    state.pending = false;
+    state.drag = null;
+    if (state.cropEl) state.cropEl.hidden = true;
+    if (state.root) state.root.classList.remove('is-cropping');
+    if (state.stage) state.stage.classList.remove('is-dragging');
+    if (state.zoomEl) state.zoomEl.value = '100';
+    state.zoom = 1;
+    if (state.imageEl) {
+      state.imageEl.removeAttribute('src');
+      state.imageEl.style.width = '';
+      state.imageEl.style.height = '';
+      state.imageEl.style.transform = '';
+    }
+  }
+
+  function cancelAvatarCrop(state) {
+    clearAvatarCrop(state);
+    restoreAvatarInput(state);
+    avatarStatus(
+      state,
+      state.applied
+        ? 'Cropped photo ready. Save your profile to update it.'
+        : ''
+    );
+  }
+
+  function updateAvatarPreview(state, file) {
+    if (!state.previewEl) return;
+    if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
+    state.previewUrl = URL.createObjectURL(file);
+    if (state.previewEl.tagName === 'IMG') {
+      state.previewEl.src = state.previewUrl;
+      state.previewEl.alt = 'New profile photo preview';
+      return;
+    }
+    var image = document.createElement('img');
+    image.className = 'account-avatar-preview-img';
+    image.alt = 'New profile photo preview';
+    image.setAttribute('data-avatar-preview', '');
+    image.src = state.previewUrl;
+    state.previewEl.replaceWith(image);
+    state.previewEl = image;
+  }
+
+  function clampAvatarOffsets(state) {
+    var width = state.naturalW * state.scale;
+    var height = state.naturalH * state.scale;
+    state.x = Math.min(0, Math.max(state.stageW - width, state.x));
+    state.y = Math.min(0, Math.max(state.stageH - height, state.y));
+  }
+
+  function drawAvatarStage(state) {
+    if (!state.imageEl) return;
+    state.imageEl.style.width = state.naturalW * state.scale + 'px';
+    state.imageEl.style.height = state.naturalH * state.scale + 'px';
+    state.imageEl.style.transform =
+      'translate3d(' + state.x + 'px, ' + state.y + 'px, 0)';
+  }
+
+  function layoutAvatarStage(state, keepCenter) {
+    if (!state.stage || !state.naturalW) return;
+    var width = state.stage.clientWidth;
+    var height = state.stage.clientHeight;
+    if (!width || !height) return;
+    var previousScale = state.scale;
+    var base = Math.max(width / state.naturalW, height / state.naturalH);
+    var scale = base * state.zoom;
+    if (keepCenter && previousScale) {
+      var centerX = (width / 2 - state.x) / previousScale;
+      var centerY = (height / 2 - state.y) / previousScale;
+      state.x = width / 2 - centerX * scale;
+      state.y = height / 2 - centerY * scale;
+    } else {
+      state.x = (width - state.naturalW * scale) / 2;
+      state.y = (height - state.naturalH * scale) / 2;
+    }
+    state.stageW = width;
+    state.stageH = height;
+    state.scale = scale;
+    clampAvatarOffsets(state);
+    drawAvatarStage(state);
+  }
+
+  function loadAvatarFile(input) {
+    var state = getAvatarState(closest(input, '[data-avatar-cropper]'));
+    if (!state) return;
+    var file = input.files && input.files[0];
+    clearAvatarCrop(state);
+    if (!file) {
+      restoreAvatarInput(state);
+      avatarStatus(state, '');
+      return;
+    }
+    if (!/^image\//i.test(file.type)) {
+      restoreAvatarInput(state);
+      avatarStatus(state, 'Please choose a JPG, PNG or WebP image.', true);
+      return;
+    }
+
+    var url = URL.createObjectURL(file);
+    state.sourceUrl = url;
+    state.file = file;
+    avatarStatus(state, 'Loading photo…');
+
+    var image = new Image();
+    image.onload = function () {
+      if (state.sourceUrl !== url) return;
+      state.image = image;
+      state.naturalW = image.naturalWidth || image.width;
+      state.naturalH = image.naturalHeight || image.height;
+      if (!state.naturalW || !state.naturalH) {
+        cancelAvatarCrop(state);
+        avatarStatus(state, 'That image could not be read. Please try another.', true);
+        return;
+      }
+      state.pending = true;
+      state.zoom = 1;
+      if (state.zoomEl) state.zoomEl.value = '100';
+      if (state.cropEl) state.cropEl.hidden = false;
+      if (state.imageEl) state.imageEl.src = url;
+      if (state.root) state.root.classList.add('is-cropping');
+      avatarFilename(state, file.name);
+      avatarStatus(state, 'Drag the photo to frame it, then press Crop & use.');
+      window.requestAnimationFrame(function () {
+        if (state.pending) layoutAvatarStage(state, false);
+      });
+    };
+    image.onerror = function () {
+      if (state.sourceUrl !== url) return;
+      clearAvatarCrop(state);
+      restoreAvatarInput(state);
+      avatarStatus(state, 'That image could not be read. Please try another.', true);
+    };
+    image.src = url;
+  }
+
+  function zoomAvatarCrop(state) {
+    if (!state.pending || !state.zoomEl) return;
+    var value = parseInt(state.zoomEl.value, 10);
+    if (isNaN(value)) value = 100;
+    state.zoom = Math.min(300, Math.max(100, value)) / 100;
+    layoutAvatarStage(state, true);
+  }
+
+  function startAvatarDrag(state, event) {
+    if (!state.pending) return;
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    event.preventDefault();
+    if (state.stage.focus) state.stage.focus({ preventScroll: true });
+    state.drag = {
+      id: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      x: state.x,
+      y: state.y
+    };
+    state.stage.classList.add('is-dragging');
+    if (state.stage.setPointerCapture) {
+      try {
+        state.stage.setPointerCapture(event.pointerId);
+      } catch (error) {
+        /* Pointer capture is an enhancement; dragging still works. */
+      }
+    }
+  }
+
+  function moveAvatarDrag(state, event) {
+    var drag = state.drag;
+    if (!drag || drag.id !== event.pointerId) return;
+    state.x = drag.x + event.clientX - drag.startX;
+    state.y = drag.y + event.clientY - drag.startY;
+    clampAvatarOffsets(state);
+    drawAvatarStage(state);
+  }
+
+  function endAvatarDrag(state, event) {
+    var drag = state.drag;
+    if (!drag || drag.id !== event.pointerId) return;
+    state.drag = null;
+    state.stage.classList.remove('is-dragging');
+    if (state.stage.hasPointerCapture && state.stage.hasPointerCapture(event.pointerId)) {
+      try {
+        state.stage.releasePointerCapture(event.pointerId);
+      } catch (error) {
+        /* Nothing to release. */
+      }
+    }
+  }
+
+  function avatarDataUrlToBlob(url) {
+    try {
+      var parts = url.split(',');
+      var mime = (parts[0].match(/:(.*?);/) || [])[1] || 'image/jpeg';
+      var binary = window.atob(parts[1]);
+      var bytes = new Uint8Array(binary.length);
+      for (var index = 0; index < binary.length; index += 1) {
+        bytes[index] = binary.charCodeAt(index);
+      }
+      return new Blob([bytes], { type: mime });
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function applyAvatarCrop(state) {
+    return new Promise(function (resolve) {
+      if (!state.pending || !state.image || !state.stageW) {
+        resolve(null);
+        return;
+      }
+
+      var sourceSize = Math.min(
+        state.stageW / state.scale,
+        state.naturalW,
+        state.naturalH
+      );
+      var sourceX = -state.x / state.scale;
+      var sourceY = -state.y / state.scale;
+      sourceX = Math.min(Math.max(0, sourceX), state.naturalW - sourceSize);
+      sourceY = Math.min(Math.max(0, sourceY), state.naturalH - sourceSize);
+
+      var canvas = document.createElement('canvas');
+      canvas.width = AVATAR_OUTPUT_SIZE;
+      canvas.height = AVATAR_OUTPUT_SIZE;
+      var context = canvas.getContext('2d');
+      if (!context) {
+        avatarStatus(state, 'We could not crop this photo. Please try another.', true);
+        resolve(null);
+        return;
+      }
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = 'high';
+      try {
+        context.drawImage(
+          state.image,
+          sourceX,
+          sourceY,
+          sourceSize,
+          sourceSize,
+          0,
+          0,
+          AVATAR_OUTPUT_SIZE,
+          AVATAR_OUTPUT_SIZE
+        );
+      } catch (error) {
+        avatarStatus(state, 'We could not crop this photo. Please try another.', true);
+        resolve(null);
+        return;
+      }
+
+      var requestedType = avatarOutputType(state.file && state.file.type);
+      var finish = function (blob) {
+        if (!blob) {
+          avatarStatus(state, 'We could not prepare the photo. Please try again.', true);
+          resolve(null);
+          return;
+        }
+        var type = (blob.type || requestedType).toLowerCase();
+        var file;
+        try {
+          file = new File(
+            [blob],
+            avatarCroppedName(state.file && state.file.name, type),
+            { type: type, lastModified: Date.now() }
+          );
+        } catch (error) {
+          file = blob;
+        }
+        if (!replaceAvatarFile(state.input, file)) {
+          avatarStatus(
+            state,
+            'This browser cannot crop before upload. The full photo will still be saved.',
+            true
+          );
+          resolve(null);
+          return;
+        }
+        state.pending = false;
+        state.applied = file;
+        if (state.cropEl) state.cropEl.hidden = true;
+        if (state.root) state.root.classList.remove('is-cropping');
+        if (state.sourceUrl) {
+          URL.revokeObjectURL(state.sourceUrl);
+          state.sourceUrl = '';
+        }
+        updateAvatarPreview(state, file);
+        avatarFilename(state, file.name);
+        avatarStatus(state, 'Cropped photo ready. Save your profile to update it.');
+        resolve(file);
+      };
+
+      if (canvas.toBlob) {
+        canvas.toBlob(
+          finish,
+          requestedType,
+          requestedType === 'image/jpeg' ? 0.9 : undefined
+        );
+      } else {
+        finish(avatarDataUrlToBlob(canvas.toDataURL(requestedType, 0.9)));
+      }
+    });
+  }
+
+  function pendingAvatarCrop(form) {
+    var root = form.querySelector('[data-avatar-cropper]');
+    var state = getAvatarState(root);
+    return state && state.pending ? state : null;
+  }
+
+  document.addEventListener('change', function (event) {
+    if (!event.target.matches('[data-avatar-input]')) return;
+    loadAvatarFile(event.target);
+  });
+
+  document.addEventListener('input', function (event) {
+    if (!event.target.matches('[data-avatar-zoom]')) return;
+    var state = getAvatarState(closest(event.target, '[data-avatar-cropper]'));
+    if (state) zoomAvatarCrop(state);
+  });
+
+  document.addEventListener('click', function (event) {
+    var state;
+    if (closest(event.target, '[data-avatar-apply]')) {
+      event.preventDefault();
+      state = getAvatarState(closest(event.target, '[data-avatar-cropper]'));
+      if (state) applyAvatarCrop(state);
+      return;
+    }
+    if (closest(event.target, '[data-avatar-cancel]')) {
+      event.preventDefault();
+      state = getAvatarState(closest(event.target, '[data-avatar-cropper]'));
+      if (state) cancelAvatarCrop(state);
+    }
+  });
+
+  document.addEventListener('pointerdown', function (event) {
+    var stage = closest(event.target, '[data-avatar-stage]');
+    if (!stage) return;
+    var state = getAvatarState(closest(stage, '[data-avatar-cropper]'));
+    if (state) startAvatarDrag(state, event);
+  });
+
+  document.addEventListener('pointermove', function (event) {
+    var stage = closest(event.target, '[data-avatar-stage]');
+    if (!stage) return;
+    var state = getAvatarState(closest(stage, '[data-avatar-cropper]'));
+    if (state) moveAvatarDrag(state, event);
+  });
+
+  document.addEventListener('pointerup', function (event) {
+    var stage = closest(event.target, '[data-avatar-stage]');
+    if (!stage) return;
+    var state = getAvatarState(closest(stage, '[data-avatar-cropper]'));
+    if (state) endAvatarDrag(state, event);
+  });
+
+  document.addEventListener('pointercancel', function (event) {
+    var stage = closest(event.target, '[data-avatar-stage]');
+    if (!stage) return;
+    var state = getAvatarState(closest(stage, '[data-avatar-cropper]'));
+    if (state) endAvatarDrag(state, event);
+  });
+
+  document.addEventListener('keydown', function (event) {
+    var stage = closest(event.target, '[data-avatar-stage]');
+    if (!stage) return;
+    var state = getAvatarState(closest(stage, '[data-avatar-cropper]'));
+    if (!state || !state.pending) return;
+    var step = event.shiftKey ? 2 : 12;
+    var moved = true;
+    if (event.key === 'ArrowLeft') state.x += step;
+    else if (event.key === 'ArrowRight') state.x -= step;
+    else if (event.key === 'ArrowUp') state.y += step;
+    else if (event.key === 'ArrowDown') state.y -= step;
+    else moved = false;
+    if (!moved) return;
+    event.preventDefault();
+    clampAvatarOffsets(state);
+    drawAvatarStage(state);
+  });
+
+  window.addEventListener('resize', function () {
+    document.querySelectorAll('[data-avatar-cropper]').forEach(function (root) {
+      var state = getAvatarState(root);
+      if (state && state.pending) layoutAvatarStage(state, true);
+    });
+  });
+
   /* ---- Delegated form handling ------------------------------------------ */
   document.addEventListener('submit', function (event) {
     var form = event.target;
@@ -637,6 +1134,17 @@
     var submitter = event.submitter || form.querySelector('[type="submit"]:focus');
     if (form.matches('[data-account-form]')) {
       event.preventDefault();
+      var avatarCrop = pendingAvatarCrop(form);
+      if (avatarCrop) {
+        var saveButton = form.querySelector('[type="submit"]');
+        if (saveButton) saveButton.disabled = true;
+        avatarStatus(avatarCrop, 'Preparing your cropped photo…');
+        applyAvatarCrop(avatarCrop).then(function () {
+          if (saveButton && saveButton.isConnected) saveButton.disabled = false;
+          if (form.isConnected) handleRecordForm(form, submitter);
+        });
+        return;
+      }
       handleRecordForm(form, submitter);
     } else if (form.matches('[data-account-child-form]')) {
       event.preventDefault();

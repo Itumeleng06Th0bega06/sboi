@@ -1,0 +1,43 @@
+<div class="account-form-field account-form-field--wide account-avatar-field" data-avatar-cropper>
+    <label for="{{ profile_form.avatar.id_for_label }}">{{ profile_form.avatar.label }}</label>
+    <div class="account-avatar-editor">
+        <span class="account-avatar-preview">
+            {% if member_avatar_url %}
+            <img src="{{ member_avatar_url }}" alt="Current profile photo" class="account-avatar-preview-img" data-avatar-preview>
+            {% else %}
+            <span class="account-avatar-preview-img account-avatar-preview-img--initials" aria-hidden="true" data-avatar-preview>{{ member_initials|default:'S' }}</span>
+            {% endif %}
+        </span>
+        <div class="account-avatar-picker">
+            <div class="account-avatar-file">
+                {{ profile_form.avatar }}
+                <label class="account-avatar-choose" for="{{ profile_form.avatar.id_for_label }}">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/></svg>
+                    Choose photo
+                </label>
+                <span class="account-avatar-filename" data-avatar-filename>No photo chosen</span>
+            </div>
+            {% if profile_form.avatar.help_text %}<small class="account-help">{{ profile_form.avatar.help_text }}</small>{% endif %}
+        </div>
+    </div>
+
+    <div class="account-avatar-crop" data-avatar-crop hidden>
+        <div class="account-avatar-stage" data-avatar-stage tabindex="0" role="application" aria-label="Photo crop area. Drag to reposition, or use the arrow keys.">
+            <img alt="" class="account-avatar-stage-img" data-avatar-crop-image draggable="false">
+            <span class="account-avatar-stage-mask" aria-hidden="true"></span>
+        </div>
+        <div class="account-avatar-crop-side">
+            <label class="account-avatar-zoom">
+                <span>Zoom</span>
+                <input type="range" min="100" max="300" step="1" value="100" data-avatar-zoom>
+            </label>
+            <p class="account-avatar-crop-tip">Drag to move the photo. Use the arrow keys to fine-tune.</p>
+            <div class="account-avatar-crop-actions">
+                <button type="button" class="btn btn-gold" data-avatar-apply>Crop &amp; use</button>
+                <button type="button" class="btn btn-ghost" data-avatar-cancel>Cancel</button>
+            </div>
+            <p class="account-avatar-status" data-avatar-status role="status" aria-live="polite"></p>
+        </div>
+    </div>
+    {% for error in profile_form.avatar.errors %}<p class="account-error">{{ error }}</p>{% endfor %}
+</div>

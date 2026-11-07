@@ -78,4 +78,5 @@ urlpatterns = [
         views.download_attachment,
         name='download_attachment',
     ),
+    path('profile/edit/', views.admin_profile_edit, name='admin_profile_edit'),
 ]

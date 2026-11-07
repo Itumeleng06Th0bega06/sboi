@@ -198,6 +198,54 @@ button:focus, a:focus, .btn:focus { outline: none; }
 }
 .nav-subtab:hover, .nav-subtab.active { color: var(--gold-2); border-color: var(--gold-2); }
 .nav-auth { display: flex; align-items: center; gap: 0.7rem; }
+/* Signed-in header: the bell and the account menu read as one control. */
+.nav-auth-combo {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.2rem;
+  border: 1px solid rgba(247, 245, 238, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.035);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.nav-auth-combo:hover,
+.nav-auth-combo:focus-within {
+  border-color: rgba(210, 162, 78, 0.65);
+  background: rgba(210, 162, 78, 0.08);
+}
+.nav-auth-combo .notif-bell > summary {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: transparent;
+}
+.nav-auth-combo .notif-bell > summary:hover,
+.nav-auth-combo .notif-bell[open] > summary {
+  background: rgba(210, 162, 78, 0.16);
+}
+.nav-auth-combo .nav-account {
+  position: relative;
+  margin-left: 0.16rem;
+}
+.nav-auth-combo .nav-account::before {
+  content: "";
+  position: absolute;
+  top: 22%;
+  bottom: 22%;
+  left: -0.09rem;
+  width: 1px;
+  background: rgba(247, 245, 238, 0.2);
+}
+.nav-auth-combo .nav-account-toggle {
+  padding: 0.14rem 0.5rem 0.14rem 0.2rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+}
+.nav-auth-combo .nav-account-toggle:hover,
+.nav-auth-combo .nav-account[open] .nav-account-toggle {
+  background: rgba(210, 162, 78, 0.16);
+}
 .nav-user { color: var(--cream); font-size: 0.85rem; }
 
 /* ---------- Mobile bottom navigation ---------- */
@@ -467,8 +515,18 @@ body.sheet-open { overflow: hidden; }
 /* Fit image utility */
 .fit-img { width: 100%; height: auto; object-fit: cover; }
 
-/* PNG transparency: never crop the subject, keep frames clear behind transparency */
-img[src$=".png" i] { object-fit: contain !important; }
+/* PNG transparency: never crop the subject, keep frames clear behind transparency.
+   Avatar photos are the exception: uploads must fill their circular frames. */
+img[src$=".png" i]:not(.nav-avatar):not(.cf-avatar-img):not(.cf-tab-avatar):not(.account-hero-avatar):not(.comms-avatar--img):not(.cm-avatar-img):not(.cm-profile-avatar-img):not(.account-avatar-preview-img):not(.account-avatar-stage-img) { object-fit: contain !important; }
+img.nav-avatar,
+img.cf-avatar-img,
+img.cf-tab-avatar,
+img.account-hero-avatar,
+img.comms-avatar--img,
+img.cm-avatar-img,
+img.cm-profile-avatar-img,
+img.account-avatar-preview-img,
+img.account-avatar-stage-img { object-fit: cover !important; }
 .card-media:has(img[src$=".png" i]) { background: transparent; }
 .leader-media:has(img[src$=".png" i]) { background: transparent; }
 .list-media:has(img[src$=".png" i]) { background: transparent; }
@@ -635,7 +693,7 @@ img[src$=".png" i] { object-fit: contain !important; }
 .social-list svg { width: 20px; height: 20px; flex-shrink: 0; }
 
 /* Contact page: plum to match the site, translucent so the backdrop shows */
-section.section-green.contact-page { background: linear-gradient(160deg, rgba(18, 17, 30, 0.84), rgba(54, 41, 57, 0.78)); }
+section.section-green.contact-page { background: linear-gradient(160deg, rgba(18, 17, 30, 0.58), rgba(54, 41, 57, 0.42)); }
 .contact-page .method-card,
 .contact-page .form-card,
 .contact-page .info-card {
@@ -703,6 +761,9 @@ select.input option {
   stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
 }
 .password-toggle.is-visible { color: var(--gold); }
+.password-toggle .password-toggle-icon--hide { display: none; }
+.password-toggle.is-visible .password-toggle-icon--show { display: none; }
+.password-toggle.is-visible .password-toggle-icon--hide { display: block; }
 .form-error { color: #a03030; font-size: 0.85rem; margin-top: 0.3rem; }
 .form-help { color: var(--muted); font-size: 0.8rem; }
 .mt-2 { margin-top: 1.2rem; }
@@ -863,7 +924,7 @@ select.input option {
     linear-gradient(160deg, rgba(6, 4, 16, 0.84), rgba(6, 4, 16, 0.62)),
     url("../images/site-bg3.jpg") center / cover no-repeat;
 }
-.auth-wrap { display: flex; justify-content: center; align-items: center; min-height: calc(100vh - 160px); padding: 3rem 0; }
+.auth-wrap { display: flex; justify-content: center; align-items: center; min-height: calc(100vh - 160px); padding: 6rem 0 3rem; }
 .auth-card {
   position: relative;
   background: transparent;

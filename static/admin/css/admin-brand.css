@@ -2447,6 +2447,18 @@ body.sboi-auth {
   color: #d2a24e;
 }
 
+.password-toggle .password-toggle-icon--hide {
+  display: none;
+}
+
+.password-toggle.is-visible .password-toggle-icon--show {
+  display: none;
+}
+
+.password-toggle.is-visible .password-toggle-icon--hide {
+  display: block;
+}
+
 .sboi-auth .callout {
   margin: 0;
   padding: 0.65rem 0.8rem;

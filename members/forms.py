@@ -563,7 +563,15 @@ class AccountProfileForm(forms.Form):
     )
     avatar = forms.ImageField(
         label='Profile photo', required=False,
-        help_text='JPG, PNG or WebP. The image is resized automatically.',
+        widget=forms.ClearableFileInput(attrs={
+            'class': 'account-avatar-input',
+            'accept': 'image/*',
+            'data-avatar-input': '',
+        }),
+        help_text=(
+            'JPG, PNG or WebP. Drag to frame your photo, then crop it '
+            'before saving.'
+        ),
     )
     phone = forms.CharField(
         label='Phone number', max_length=30, required=False,
