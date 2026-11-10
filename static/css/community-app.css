@@ -14,10 +14,8 @@
   --cf-gold: #d2a24e;
   --cf-gold-soft: rgba(210, 162, 78, 0.12);
   --cf-danger: #ffaaa4;
-  background:
-    radial-gradient(1100px 460px at 8% -10%, rgba(210, 162, 78, 0.10), transparent 62%),
-    radial-gradient(900px 500px at 100% 0%, rgba(47, 62, 100, 0.34), transparent 58%),
-    var(--base, #0c091b);
+  /* Keep the canvas transparent so the shared site artwork shows through. */
+  background: transparent;
   color: var(--cf-ink);
 }
 
@@ -65,6 +63,57 @@
   height: 100%;
   margin: 0 auto;
   padding: 0 1.5rem;
+}
+
+/* Phones get their own bottom tab bar; desktop uses the rail. */
+.cf-dock {
+  display: none;
+}
+
+.cf-topbar-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: var(--cf-muted);
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.cf-topbar-tab:hover {
+  background: rgba(210, 162, 78, 0.1);
+  color: var(--cf-ink);
+}
+
+.cf-topbar-tab.active {
+  background: rgba(210, 162, 78, 0.16);
+  color: var(--cf-gold);
+}
+
+.cf-topbar-tab.active::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  width: 18px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--cf-gold);
+  transform: translateX(-50%);
+}
+
+.cf-topbar-tab svg {
+  width: 21px;
+  height: 21px;
+  fill: currentColor;
+}
+
+.cf-topbar-tab .cf-tab-icon {
+  position: relative;
+  display: inline-flex;
 }
 
 .cf-brand {
@@ -1362,6 +1411,46 @@
   border-top: 1px solid var(--cf-line-soft);
 }
 
+.cf-post-shared-note {
+  color: var(--cf-muted);
+  font-size: 0.65rem;
+}
+
+.cf-post-share-form {
+  display: flex;
+  margin-left: auto;
+}
+
+.cf-post-share-form .cf-post-action {
+  margin-left: 0;
+}
+
+.cf-post-share-form button[disabled] {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.cf-shared-post {
+  margin-top: 0.65rem;
+  padding: 0.6rem 0.65rem;
+  border: 1px solid var(--cf-line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.cf-shared-post .cf-post-content {
+  margin-top: 0.45rem;
+}
+
+.cf-shared-post .cf-post-attachment {
+  margin-top: 0.5rem;
+}
+
+.cf-shared-post-missing {
+  color: var(--cf-muted);
+  font-size: 0.78rem;
+}
+
 .cf-reactions {
   position: relative;
   display: flex;
@@ -2419,24 +2508,45 @@
   line-height: 1.5;
 }
 
+/* Conversation rows are flat list items: no card or pill chrome around each
+   thread, just a divider between neighbours and a light hover/active tint. */
 .cf-conversation {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  box-sizing: border-box;
   width: 100%;
-  margin-top: 0.8rem;
-  padding: 0.7rem 0.6rem;
-  border: 1px solid rgba(210, 162, 78, 0.22);
-  border-radius: 13px;
-  background: linear-gradient(100deg, rgba(210, 162, 78, 0.12), rgba(210, 162, 78, 0.02));
+  margin-top: 0;
+  padding: 0.55rem 0.35rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--cf-ink);
   font: inherit;
   text-align: left;
   cursor: pointer;
 }
 
+.cf-conversation + .cf-conversation {
+  border-top: 1px solid rgba(210, 162, 78, 0.12);
+}
+
 .cf-conversation:hover {
-  border-color: rgba(210, 162, 78, 0.42);
+  background: rgba(210, 162, 78, 0.08);
+}
+
+/* Unread threads read a little brighter than a thread that has been opened. */
+.cf-conversation.is-unread {
+  background: rgba(210, 162, 78, 0.06);
+}
+
+.cf-conversation.is-unread:hover {
+  background: rgba(210, 162, 78, 0.12);
+}
+
+.cf-conversation.is-unread .cf-conversation-copy strong {
+  color: #ffffff;
+  font-weight: 700;
 }
 
 .cf-conversation-avatar {
@@ -2494,8 +2604,10 @@
 }
 
 .cf-conversation time {
+  flex: 0 0 auto;
   color: rgba(244, 239, 228, 0.4);
   font-size: 0.58rem;
+  white-space: nowrap;
 }
 
 .cf-conversation-dot {
@@ -2511,12 +2623,11 @@ a.cf-conversation {
 }
 
 .cf-inbox-scroll .cf-conversation {
-  margin-top: 0.3rem;
+  margin-top: 0;
 }
 
 .cf-conversation.is-active {
-  border-color: rgba(210, 162, 78, 0.55);
-  background: linear-gradient(100deg, rgba(210, 162, 78, 0.22), rgba(210, 162, 78, 0.05));
+  background: rgba(210, 162, 78, 0.14);
 }
 
 .cf-conversation-avatar--person {
@@ -2553,8 +2664,10 @@ a.cf-conversation {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
   min-width: 18px;
   height: 18px;
+  white-space: nowrap;
   padding: 0 5px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 999px;
@@ -3229,10 +3342,7 @@ a.cf-conversation {
   margin-top: 0.75rem;
 }
 
-/* ---------- Mobile tab bar ---------------------------------------------- */
-.cf-tabbar {
-  display: none;
-}
+
 
 /* ---------- Responsive --------------------------------------------------- */
 @media (max-width: 1180px) {
@@ -3318,60 +3428,93 @@ a.cf-conversation {
     max-width: none;
   }
 
-  .cf-tabbar {
-    position: static;
-    display: flex;
-    align-items: stretch;
-    justify-content: space-around;
-    height: 48px;
-    padding: 0.1rem 0.5rem 0.2rem;
+  /* Phones: a fixed, labelled tab bar of the five community sections. */
+  .cf-dock {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 110;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.15rem;
+    padding: 0.35rem 0.35rem calc(0.4rem + env(safe-area-inset-bottom));
     border-top: 1px solid var(--cf-line-soft);
-    background: rgba(17, 13, 33, 0.55);
+    background: rgba(12, 9, 27, 0.96);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
   }
 
-  .cf-tab {
+  .cf-dock-item {
     position: relative;
     display: flex;
-    flex: 1;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.1rem;
-    min-width: 0;
-    border-radius: 9px;
-    color: rgba(244, 239, 228, 0.55);
-    font-size: 0.56rem;
+    gap: 0.12rem;
+    min-height: 46px;
+    padding: 0.25rem 0.1rem;
+    border-radius: 10px;
+    color: var(--cf-muted);
+    font-size: 0.55rem;
     font-weight: 600;
     text-decoration: none;
   }
 
-  .cf-tab .account-nav-label {
-    font-size: 0.56rem;
-    white-space: nowrap;
-  }
-
-  .cf-tab.active {
-    color: var(--cf-gold);
-  }
-
-  .cf-tab.active::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    width: 18px;
-    height: 2px;
-    border-radius: 2px;
-    background: var(--cf-gold);
-  }
-
-  .cf-tab svg {
-    width: 17px;
-    height: 17px;
+  .cf-dock-item svg {
+    width: 19px;
+    height: 19px;
     fill: none;
     stroke: currentColor;
     stroke-width: 1.7;
     stroke-linecap: round;
     stroke-linejoin: round;
+  }
+
+  .cf-dock-item.active {
+    background: rgba(210, 162, 78, 0.12);
+    color: var(--cf-gold);
+  }
+
+  .cf-dock-badge {
+    position: absolute;
+    top: 2px;
+    right: calc(50% - 22px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #f5f1e8;
+    color: #171226;
+    font-size: 0.5rem;
+    font-weight: 800;
+    line-height: 1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .cf-dock-badge[hidden] {
+    display: none !important;
+  }
+
+  .cf-site-link {
+    display: none;
+  }
+
+  .account-page main {
+    padding-bottom: calc(5.4rem + env(safe-area-inset-bottom));
+  }
+
+  .cf-topbar-tab {
+    width: 36px;
+    height: 36px;
+  }
+
+  .cf-topbar-tab svg {
+    width: 19px;
+    height: 19px;
   }
 
   .cf-tab-icon {
@@ -3386,24 +3529,6 @@ a.cf-conversation {
     min-width: 14px;
     height: 14px;
     font-size: 0.48rem;
-  }
-
-  .cf-tab-avatar {
-    width: 18px;
-    height: 18px;
-    border: 1px solid rgba(210, 162, 78, 0.3);
-    border-radius: 50%;
-    object-fit: cover;
-  }
-
-  .cf-tab-avatar--initials {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(145deg, #e8c98d, #b8862f);
-    color: #171226;
-    font-size: 0.42rem;
-    font-weight: 800;
   }
 
   .cf-feed-page {
@@ -3465,7 +3590,7 @@ a.cf-conversation {
   .cf-composer {
     position: fixed;
     right: 0.65rem;
-    bottom: calc(12px + env(safe-area-inset-bottom));
+    bottom: calc(72px + env(safe-area-inset-bottom));
     left: 0.65rem;
     z-index: 95;
     padding: 0.38rem 0.45rem 0.3rem;
@@ -3728,12 +3853,8 @@ a.cf-conversation {
     resize: none;
   }
 
-  body.cf-thread-open .cf-tabbar {
-    display: none;
-  }
-
   .cf-toast {
-    bottom: calc(16px + env(safe-area-inset-bottom));
+    bottom: calc(80px + env(safe-area-inset-bottom));
   }
 
   .cf-report-dialog {
@@ -3766,10 +3887,6 @@ a.cf-conversation {
 /* Keyboard-aware composer and thread positioning (JS sets the custom props). */
 body.cf-keyboard-open .cf-composer {
   bottom: calc(var(--cf-keyboard-offset, 0px) + env(safe-area-inset-bottom) + 6px);
-}
-
-body.cf-keyboard-open .cf-tabbar {
-  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

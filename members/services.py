@@ -333,7 +333,7 @@ def _notify_member_decision(change):
             'source_id': change.pk,
             'title': title,
             'body': body,
-            'url': reverse('members:account') + '#membership',
+            'url': reverse('members:account_profile') + '#membership',
             'icon': 'id-card',
             'tone': (
                 Notification.TONE_INFO
@@ -446,7 +446,7 @@ def notify_member_admin_update(membership, changed_fields):
                 'The church office updated your membership record: '
                 f'{detail}. Please review your profile to confirm the details.'
             ),
-            'url': reverse('members:account') + '#membership',
+            'url': reverse('members:account_profile') + '#membership',
             'icon': 'id-card',
             'tone': Notification.TONE_INFO,
             'permission': '',
@@ -913,18 +913,28 @@ def notify_direct_message(message):
     recipient = thread.other_user(message.sender)
     if recipient is None:
         return None
-    inbox_url = reverse('members:account_messages')
+    from communications.services import can_use_portal
+
+    if recipient.is_staff and can_use_portal(recipient):
+        inbox_url = (
+            f"{reverse('communications:inbox')}?view=chat"
+            f"&filter=chats&thread={thread.pk}"
+        )
+        audience = Notification.AUDIENCE_STAFF
+    else:
+        inbox_url = f"{reverse('members:account_messages')}?thread={thread.pk}"
+        audience = Notification.AUDIENCE_MEMBER
     return Notification.objects.update_or_create(
         source_key=f'direct_message:{message.pk}',
         defaults={
             'recipient': recipient,
-            'audience': Notification.AUDIENCE_MEMBER,
+            'audience': audience,
             'category': 'direct_message',
             'source_type': 'direct_message',
             'source_id': message.pk,
             'title': f'New message from {message.sender_name}',
             'body': (message.body or '')[:180],
-            'url': f'{inbox_url}?thread={thread.pk}',
+            'url': inbox_url,
             'icon': 'message',
             'tone': Notification.TONE_INFO,
             'permission': '',

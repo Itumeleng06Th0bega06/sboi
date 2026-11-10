@@ -135,17 +135,19 @@ class PdfMaterial(models.Model):
 
 
 class MemberProfile(models.Model):
+    STATUS_PENDING = 'pending'
     STATUS_ACTIVE = 'active'
     STATUS_SUSPENDED = 'suspended'
     STATUS_BLOCKED = 'blocked'
     STATUS_CHOICES = [
+        (STATUS_PENDING, 'Pending'),
         (STATUS_ACTIVE, 'Active'),
         (STATUS_SUSPENDED, 'Suspended'),
         (STATUS_BLOCKED, 'Blocked'),
     ]
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='member_profile')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
     suspended_until = models.DateField(blank=True, null=True)
     blocked_reason = models.CharField(max_length=300, blank=True)
     # Optional account photo for the member portal. It is intentionally on the

@@ -1,0 +1,63 @@
+{% load i18n %}
+<header class="cf-thread-head">
+    <a class="cf-thread-back"
+       href="{% url 'communications:inbox' %}?view=chat&amp;filter=chats"
+       aria-label="{% translate 'Back to conversations' %}">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m15 5-7 7 7 7"/></svg>
+    </a>
+    <span class="cf-conversation-avatar cf-conversation-avatar--sm cf-conversation-avatar--person{% if admin_thread_online %} is-online{% endif %}">
+        {% if admin_thread_avatar_url %}
+        <img src="{{ admin_thread_avatar_url }}" alt="" class="cf-avatar cf-avatar-img">
+        {% else %}
+        <span class="cf-avatar" aria-hidden="true">{{ admin_thread_initials }}</span>
+        {% endif %}
+        {% if admin_thread_online %}<span class="cf-presence-dot" title="{% translate 'Online now' %}"></span>{% endif %}
+    </span>
+    <div class="cf-thread-title">
+        <strong>{{ admin_thread_other.get_full_name|default:admin_thread_other.get_username }}</strong>
+        <span>{% if admin_thread_online %}{% translate 'Online now' %}{% else %}{% translate 'Community member' %}{% endif %}</span>
+    </div>
+    <details class="cf-thread-menu">
+        <summary aria-label="{% translate 'Conversation options' %}">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        </summary>
+        <div class="cf-thread-menu-panel">
+            <a href="{% url 'admin:auth_user_change' admin_thread_other.pk %}">{% translate 'View account' %}</a>
+        </div>
+    </details>
+</header>
+
+<div class="account-thread cf-thread"
+     id="adminDirectThread"
+     data-cf-dm-thread
+     data-thread-id="{{ admin_thread.pk }}"
+     data-after="{% if admin_thread_messages %}{{ admin_thread_messages.last.pk }}{% endif %}"
+     data-poll-url="{% url 'communications:member_direct_poll' admin_thread.pk %}"
+     aria-live="polite">
+    {% for message in admin_thread_messages %}
+    {% include 'members/account/_direct_message_bubble.html' with message=message %}
+    {% empty %}
+    <div class="account-thread-empty cf-thread-empty" data-cf-dm-empty>
+        <span class="cf-thread-empty-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/></svg>
+        </span>
+        <h2>{% translate 'Say hello' %}</h2>
+        <p>{% translate 'This conversation is private between you and this member. Write the first message below.' %}</p>
+    </div>
+    {% endfor %}
+</div>
+
+<form method="post"
+      action="{% url 'communications:send_member_direct' admin_thread.pk %}"
+      class="cf-thread-composer"
+      data-cf-dm-form>
+    {% csrf_token %}
+    <label class="cf-thread-input-wrap">
+        <span class="sr-only">{% translate 'Message' %}</span>
+        <textarea name="body" rows="1" maxlength="2000" placeholder="{% translate 'Message…' %}" required class="cf-thread-input" data-cf-dm-input></textarea>
+    </label>
+    <button type="submit" class="cf-thread-send" aria-label="{% translate 'Send message' %}" title="{% translate 'Send' %}">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m4 12 16-8-5 16-3-7-8-1Z"/></svg>
+    </button>
+    <div class="cf-thread-status" data-cf-dm-status role="status" aria-live="polite"></div>
+</form>

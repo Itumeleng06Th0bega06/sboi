@@ -40,8 +40,9 @@
   .search-form, #changelist-search { flex-direction: column; gap: 0.4rem; }
   .search-form input[type="text"], #changelist-search input[type="text"] { width: 100%; }
   .actions { flex-direction: column; align-items: stretch; gap: 0.4rem; }
-  .actions select { width: 100%; }
-  .actions button, .actions input[type="submit"] { width: 100%; }
+  .actions select { width: 100%; min-height: 40px; }
+  .actions button, .actions input[type="submit"] { width: 100%; min-height: 40px; }
+  .actions label { min-height: 40px; }
   .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .tabs::-webkit-scrollbar { display: none; }
   .tabs a { white-space: nowrap; font-size: 0.8rem; }

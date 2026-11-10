@@ -8,11 +8,24 @@
   }
 
   function buildThreeDotMenu(row) {
-    var lastCell = row.querySelector('td:last-child');
-    if (!lastCell) return null;
-
-    var links = lastCell.querySelectorAll('a, button');
+    // Search ALL cells for action links, not just last child (devotion rows
+    // have action-relevant content in various columns)
+    var cells = row.querySelectorAll('td, th');
+    var links = [];
+    cells.forEach(function (cell) {
+      if (cell.classList.contains('action-checkbox')) return;
+      cell.querySelectorAll('a, button').forEach(function (link) {
+        // Skip edit links that are in the first column (used for row click)
+        if (!cell.closest('th') && links.length >= 0) {
+          links.push(link);
+        }
+      });
+    });
     if (links.length === 0) return null;
+
+    // Find the primary edit/change link to use for row click
+    var changeLink = row.querySelector('td a[href], th a[href]');
+    var changeHref = changeLink ? changeLink.href : null;
 
     var container = document.createElement('div');
     container.className = 'sboi-mobile-actions';
@@ -34,6 +47,7 @@
 
     container.appendChild(btn);
     container.appendChild(menu);
+    container.dataset.changeHref = changeHref || '';
 
     btn.addEventListener('click', function (e) {
       e.preventDefault();
@@ -51,10 +65,28 @@
     return container;
   }
 
+  function makeRowClickable(row) {
+    // Make entire row clickable to the edit page, except when clicking links/buttons/checkboxes
+    var changeLink = row.querySelector('th a[href], td a[href]');
+    if (!changeLink) return;
+    var changeHref = changeLink.href;
+
+    row.addEventListener('click', function (e) {
+      // Ignore clicks on links, buttons, inputs, or the three-dot menu
+      if (e.target.closest('a, button, input, select, textarea, .sboi-mobile-actions, .sboi-three-dot, .sboi-mobile-menu')) {
+        return;
+      }
+      window.location.href = changeHref;
+    });
+    row.style.cursor = 'pointer';
+    row.style.position = 'relative';
+  }
+
   function enhanceChangelist() {
-    if (!isMobile()) return;
     var rows = document.querySelectorAll('#result_list tbody tr');
     rows.forEach(function (row) {
+      makeRowClickable(row);
+      if (!isMobile()) return;
       if (row.querySelector('.sboi-mobile-actions')) return;
       var menu = buildThreeDotMenu(row);
       if (menu) {

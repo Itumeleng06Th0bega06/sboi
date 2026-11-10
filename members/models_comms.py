@@ -52,6 +52,15 @@ class CommsPost(models.Model):
         null=True,
         related_name='comms_posts',
     )
+    # A share/repost points at the original post. Reposts are one level deep:
+    # sharing a repost stores the root post, so content is never nested twice.
+    shared_from = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='shares',
+    )
     audience = models.CharField(
         max_length=10, choices=AUDIENCE_CHOICES, default=AUDIENCE_ALL,
     )
@@ -66,6 +75,13 @@ class CommsPost(models.Model):
 
     class Meta:
         ordering = ['-created_at', '-pk']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'shared_from'],
+                condition=models.Q(shared_from__isnull=False),
+                name='unique_feed_share_per_member',
+            ),
+        ]
 
     def __str__(self):
         return self.title or (self.body or '')[:60] or f'Post #{self.pk}'

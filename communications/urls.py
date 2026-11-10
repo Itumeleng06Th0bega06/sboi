@@ -74,6 +74,21 @@ urlpatterns = [
     path('groups/create/', views.create_group_view, name='create_group'),
     path('direct/start/', views.start_direct_view, name='start_direct'),
     path(
+        'member-direct/start/',
+        views.start_member_direct_view,
+        name='start_member_direct',
+    ),
+    path(
+        'member-direct/<int:pk>/send/',
+        views.send_member_direct_view,
+        name='send_member_direct',
+    ),
+    path(
+        'member-direct/<int:pk>/poll/',
+        views.member_direct_poll,
+        name='member_direct_poll',
+    ),
+    path(
         'attachments/<int:pk>/download/',
         views.download_attachment,
         name='download_attachment',

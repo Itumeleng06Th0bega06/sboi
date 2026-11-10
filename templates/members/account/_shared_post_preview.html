@@ -1,0 +1,66 @@
+{% load i18n %}
+{# Embedded original content shown inside a shared/reposted post. #}
+<article class="cf-shared-post">
+    {% if shared_post_visible %}
+    <header class="cf-post-head">
+        {% if post.author %}
+        <a class="cf-post-avatar" href="{% url 'members:member_profile' post.author.username %}" aria-label="View {{ post.author_name }}'s profile">
+            {% if post.author_avatar_url %}
+            <img src="{{ post.author_avatar_url }}" alt="" class="cf-avatar cf-avatar--md cf-avatar-img" loading="lazy">
+            {% else %}
+            <span class="cf-avatar cf-avatar--md" aria-hidden="true">{{ post.author_initials }}</span>
+            {% endif %}
+        </a>
+        {% else %}
+        <span class="cf-post-avatar">
+            <span class="cf-avatar cf-avatar--md" aria-hidden="true">{{ post.author_initials }}</span>
+        </span>
+        {% endif %}
+        <div class="cf-post-meta">
+            {% if post.author %}
+            <a class="cf-post-author" href="{% url 'members:member_profile' post.author.username %}">{{ post.author_name }}</a>
+            {% else %}
+            <span class="cf-post-author">{{ post.author_name }}</span>
+            {% endif %}
+            {% if post.is_staff_post %}<span class="cf-badge">Church admin</span>{% endif %}
+            <span class="cf-post-time">
+                <time datetime="{{ post.created_at|date:'c' }}" title="{{ post.created_at|date:'d M Y, H:i' }}">{{ post.created_at|date:"j M, H:i" }}</time>
+            </span>
+        </div>
+    </header>
+
+    {% if post.title or post.body %}
+    <div class="cf-post-content">
+        {% if post.title %}<h3 class="cf-post-title">{{ post.title }}</h3>{% endif %}
+        {% if post.body %}<p class="cf-post-body">{{ post.body|linebreaksbr }}</p>{% endif %}
+    </div>
+    {% endif %}
+
+    {% for attachment in post.attachments_list %}
+    <div class="cf-post-attachment cf-post-attachment--{{ attachment.kind }}">
+        {% if attachment.kind == 'image' %}
+        <a class="cf-post-media" href="{% url 'members:feed_attachment_download' attachment.pk %}" target="_blank" rel="noopener">
+            <img src="{% url 'members:feed_attachment_download' attachment.pk %}?inline=1" alt="{{ attachment.original_name }}" loading="lazy">
+        </a>
+        {% elif attachment.kind == 'video' %}
+        <video controls preload="metadata" playsinline>
+            <source src="{% url 'members:feed_attachment_download' attachment.pk %}?inline=1" type="{{ attachment.content_type|default:'video/mp4' }}">
+        </video>
+        {% else %}
+        <a class="cf-post-file" href="{% url 'members:feed_attachment_download' attachment.pk %}">
+            <span class="cf-post-file-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+            </span>
+            <span class="cf-post-file-copy">
+                <strong>{{ attachment.original_name }}</strong>
+                <span>{{ attachment.size|filesizeformat }} · {{ attachment.extension|upper }}</span>
+            </span>
+            <span class="cf-post-file-download" aria-hidden="true">↓</span>
+        </a>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="cf-shared-post-missing">{% translate 'This post is no longer available.' %}</p>
+    {% endif %}
+</article>

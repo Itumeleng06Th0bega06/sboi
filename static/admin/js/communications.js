@@ -353,6 +353,19 @@
     });
 
     root.addEventListener('click', function (event) {
+        // Close dotted menu on item click
+        var dottedItem = event.target.closest('.sboi-dotted-menu__item');
+        if (dottedItem) {
+            var dottedMenu = dottedItem.closest('.sboi-dotted-menu');
+            if (dottedMenu) dottedMenu.removeAttribute('open');
+        }
+        // Close dotted menu when clicking outside
+        if (!event.target.closest('.sboi-dotted-menu')) {
+            root.querySelectorAll('.sboi-dotted-menu[open]').forEach(function (m) {
+                m.removeAttribute('open');
+            });
+        }
+
         var openButton = event.target.closest('[data-comms-dialog-open]');
         if (openButton) {
             var dialog = qs('[data-comms-dialog="' + openButton.getAttribute('data-comms-dialog-open') + '"]');

@@ -301,6 +301,51 @@ def archive(notification, request):
         state.save(update_fields=['archived_at', 'updated_at'])
 
 
+def mark_all_read(request, scope=None):
+    """Mark every notification currently visible to this user as read.
+
+    Only rows the user can actually see are touched, so a staff member using
+    the admin bell never marks a public/member row they cannot see.
+    """
+    notifications = list(visible_notifications(request.user, scope))
+    if _is_anonymous(request):
+        for notification in notifications:
+            _add_session_id(request, SESSION_READ, notification.pk)
+        return len(notifications)
+
+    now = timezone.now()
+    marked = 0
+    for notification in notifications:
+        state = _state_for(notification, request.user)
+        if state.read_at is None:
+            state.read_at = now
+            state.save(update_fields=['read_at', 'updated_at'])
+            marked += 1
+    return marked
+
+
+def dismiss_many(request, pks, scope=None):
+    """Dismiss (remove from the bell) the user's own visible notifications.
+
+    ``pks`` may contain arbitrary ids; anything outside the user's visible set
+    is silently ignored.  The notification records themselves are kept for the
+    history page, matching the single-row dismiss behaviour.
+    """
+    try:
+        pks = [int(pk) for pk in pks]
+    except (TypeError, ValueError):
+        return 0
+    if not pks:
+        return 0
+
+    notifications = list(
+        visible_notifications(request.user, scope).filter(pk__in=pks)
+    )
+    for notification in notifications:
+        dismiss(notification, request)
+    return len(notifications)
+
+
 # ---------------------------------------------------------------------------
 # History (separate page; never mixed into the active dropdown)
 # ---------------------------------------------------------------------------
@@ -552,7 +597,7 @@ def sync_member_profile(profile):
             category='new_member',
             source_type='new_member',
             source_id=profile.pk,
-            title='New members (7 days)',
+            title='New members',
             body=f'{profile.user.get_username()} created a member profile.',
             url=_safe_reverse(
                 'admin:blackboard_memberprofile_change', args=[profile.pk],
@@ -666,7 +711,7 @@ def sync_membership(membership, notify_member=False):
             category='membership',
             source_type='membership_new',
             source_id=membership.pk,
-            title='New church memberships (7 days)',
+            title='New church memberships',
             body=f'{membership.full_name} joined the church membership records.',
             url=_safe_reverse(
                 'admin:members_churchmembership_profile',
@@ -709,7 +754,7 @@ def sync_membership(membership, notify_member=False):
                 'Your church membership record is now '
                 f'{membership.get_status_display().lower()}.'
             ),
-            url=_safe_reverse('members:account'),
+            url=_safe_reverse('members:account_profile') + '#membership',
             icon='id-card',
             tone=(
                 Notification.TONE_ATTENTION

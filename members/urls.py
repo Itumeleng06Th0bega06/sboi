@@ -43,6 +43,7 @@ urlpatterns = [
     # Members-only community feed. Every view requires a signed-in account.
     path('feed/post/create/', views_comms.feed_post_create, name='feed_post_create'),
     path('feed/post/<int:pk>/edit/', views_comms.feed_post_edit, name='feed_post_edit'),
+    path('feed/post/<int:pk>/share/', views_comms.feed_post_share, name='feed_post_share'),
     path('feed/post/<int:pk>/react/', views_comms.feed_post_react, name='feed_post_react'),
     path('feed/post/<int:pk>/comment/', views_comms.feed_post_comment, name='feed_post_comment'),
     path('feed/post/<int:pk>/save/', views_comms.feed_post_save, name='feed_post_save'),

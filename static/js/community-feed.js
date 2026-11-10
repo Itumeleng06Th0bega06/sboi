@@ -471,6 +471,48 @@
         });
     }
 
+    function submitCommunityShare(form) {
+        if (form.getAttribute('data-busy') === '1') return;
+        var post = form.closest('[data-cf-post]');
+        var button = qs('button[type="submit"]', form);
+        var label = qs('[data-cf-share-label]', form);
+        form.setAttribute('data-busy', '1');
+        if (button) button.disabled = true;
+
+        jsonRequest(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function (data) {
+            var root = form.closest('[data-cf-feed]') || document;
+            var list = qs('[data-cf-feed-list]', root);
+            var savedView = form.closest('[data-cf-saved-view]');
+            if (data.created && data.html && list && !savedView) {
+                var empty = qs('[data-feed-empty]', list);
+                if (empty) empty.remove();
+                list.insertAdjacentHTML('afterbegin', data.html);
+                setLatestId(root, data.post_id);
+                var sharedPost = list.firstElementChild;
+                if (sharedPost && sharedPost.scrollIntoView) {
+                    sharedPost.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+            if (label) label.textContent = 'Shared';
+            if (post) {
+                qsa('[data-cf-share] button[type="submit"]', post).forEach(function (shareButton) {
+                    shareButton.disabled = true;
+                });
+            }
+            showToast(data.message || 'Post shared to your feed.');
+        }).catch(function (error) {
+            if (button) button.disabled = false;
+            showToast(error.message, true);
+        }).finally(function () {
+            form.removeAttribute('data-busy');
+        });
+    }
+
     function submitCommunitySave(form) {
         var post = form.closest('[data-cf-post]');
         if (!post || form.getAttribute('data-busy') === '1') return;
@@ -986,6 +1028,11 @@
         if (form.matches('[data-cf-composer]')) {
             event.preventDefault();
             submitCommunityComposer(form);
+            return;
+        }
+        if (form.matches('[data-cf-share]')) {
+            event.preventDefault();
+            submitCommunityShare(form);
             return;
         }
         if (form.matches('[data-cf-save]')) {

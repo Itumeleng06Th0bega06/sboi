@@ -1,0 +1,119 @@
+{% load i18n admin_menu %}
+<section class="cf-inbox sboi-admin-inbox{% if admin_thread or office_member or dm_thread %} is-thread-open{% endif %}" data-cf-inbox>
+    <aside class="cf-inbox-list" aria-label="{% translate 'Conversations' %}">
+        <header class="cf-inbox-head">
+            <div>
+                <p class="cf-eyebrow">{% translate 'Private' %}</p>
+                <h1>{% translate 'Inbox' %}</h1>
+            </div>
+            {% if admin_inbox_count %}<span class="cf-inbox-count" aria-hidden="true">{{ admin_inbox_count }}</span>{% endif %}
+        </header>
+
+        <div class="cf-inbox-scroll">
+            <p class="cf-inbox-label">{% translate 'Church office' %}</p>
+            {% for row in office_rows %}
+            <a class="cf-conversation{% if row.unread %} is-unread{% endif %}{% if office_member.pk == row.user.pk %} is-active{% endif %}"
+               href="{% url 'communications:inbox' %}?view=chat&amp;filter=chats&amp;channel=office&amp;member={{ row.user.pk }}"
+               aria-label="{% translate 'Open church-office conversation with' %} {{ row.display_name }}">
+                <span class="cf-conversation-avatar cf-conversation-avatar--person">
+                    {% if row.avatar_url %}
+                    <img src="{{ row.avatar_url }}" alt="" class="cf-avatar cf-avatar-img" loading="lazy">
+                    {% else %}
+                    <span class="cf-avatar" aria-hidden="true">{{ row.initials }}</span>
+                    {% endif %}
+                </span>
+                <span class="cf-conversation-copy">
+                    <strong>{{ row.display_name }}</strong>
+                    <span>{{ row.latest.message|striptags|truncatechars:68 }}</span>
+                </span>
+                <time datetime="{{ row.latest.created_at|date:'c' }}">{{ row.latest.created_at|date:"j M" }}</time>
+                {% if row.unread %}<span class="cf-conversation-unread">{{ row.unread }}</span>{% endif %}
+            </a>
+            {% empty %}
+            <p class="cf-inbox-hint">{% translate 'No church-office messages yet.' %}</p>
+            {% endfor %}
+
+            <p class="cf-inbox-label">{% translate 'Members you have messaged' %}</p>
+            {% for row in admin_thread_rows %}
+            <a class="cf-conversation{% if row.unread %} is-unread{% endif %}{% if admin_thread.pk == row.thread.pk %} is-active{% endif %}"
+               href="{% url 'communications:inbox' %}?view=chat&amp;filter=chats&amp;thread={{ row.thread.pk }}"
+               aria-label="{% translate 'Open conversation with' %} {{ row.display_name }}">
+                <span class="cf-conversation-avatar cf-conversation-avatar--person{% if row.online %} is-online{% endif %}">
+                    {% if row.avatar_url %}
+                    <img src="{{ row.avatar_url }}" alt="" class="cf-avatar cf-avatar-img" loading="lazy">
+                    {% else %}
+                    <span class="cf-avatar" aria-hidden="true">{{ row.initials }}</span>
+                    {% endif %}
+                    {% if row.online %}<span class="cf-presence-dot" title="{% translate 'Online now' %}"></span>{% endif %}
+                </span>
+                <span class="cf-conversation-copy">
+                    <strong>{{ row.display_name }}</strong>
+                    {% if row.last_body %}
+                    <span>{{ row.last_body|striptags|truncatechars:68 }}</span>
+                    {% else %}
+                    <span>{% translate 'Say hello privately' %}</span>
+                    {% endif %}
+                </span>
+                {% if row.last_at %}<time datetime="{{ row.last_at|date:'c' }}">{{ row.last_at|date:"j M" }}</time>{% endif %}
+                {% if row.unread %}<span class="cf-conversation-unread">{{ row.unread }}</span>{% endif %}
+            </a>
+            {% empty %}
+            <p class="cf-inbox-hint">{% translate 'No private member conversations yet. Choose someone online below to say hello.' %}</p>
+            {% endfor %}
+
+            {% if admin_online_rows %}
+            <p class="cf-inbox-label">{% translate 'Online now' %} <span>{{ admin_online_rows|length }}</span></p>
+            <ul class="cf-online-list">
+                {% for row in admin_online_rows %}
+                <li>
+                    <span class="cf-conversation-avatar cf-conversation-avatar--xs cf-conversation-avatar--person is-online">
+                        {% if row.avatar_url %}
+                        <img src="{{ row.avatar_url }}" alt="" class="cf-avatar cf-avatar-img" loading="lazy">
+                        {% else %}
+                        <span class="cf-avatar" aria-hidden="true">{{ row.initials }}</span>
+                        {% endif %}
+                    </span>
+                    <span class="cf-online-copy">
+                        <strong>{{ row.display_name }}</strong>
+                        <span>@{{ row.member.username }}</span>
+                    </span>
+                    {% if row.thread %}
+                    <a class="cf-online-action"
+                       href="{% url 'communications:inbox' %}?view=chat&amp;filter=chats&amp;thread={{ row.thread.pk }}"
+                       aria-label="{% translate 'Message' %} {{ row.display_name }}">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/></svg>
+                    </a>
+                    {% else %}
+                    <form method="post" action="{% url 'communications:start_member_direct' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="username" value="{{ row.member.username }}">
+                        <button type="submit" class="cf-online-action" aria-label="{% translate 'Message' %} {{ row.display_name }}">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/></svg>
+                        </button>
+                    </form>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+    </aside>
+
+    <section class="cf-thread-panel" aria-label="{% translate 'Conversation' %}">
+        {% if admin_thread %}
+        {% include "admin/communications/_admin_direct_thread.html" %}
+        {% elif office_member %}
+        {% include "admin/communications/_office_thread.html" %}
+        {% elif dm_thread %}
+        {% include "admin/communications/_dm_thread.html" %}
+        {% else %}
+        <div class="cf-thread-empty sboi-admin-inbox__empty">
+            <span class="cf-thread-empty-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/></svg>
+            </span>
+            <h2>{% translate 'Your inbox' %}</h2>
+            <p>{% translate 'Open a church-office message or start a private conversation with a member who is online now.' %}</p>
+        </div>
+        {% endif %}
+    </section>
+</section>

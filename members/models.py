@@ -158,7 +158,7 @@ class ChurchMembership(models.Model):
         max_length=20, choices=MEMBERSHIP_CATEGORY_CHOICES, blank=True,
     )
     status = models.CharField(
-        max_length=12, choices=MEMBERSHIP_STATUS_CHOICES, default='active',
+        max_length=12, choices=MEMBERSHIP_STATUS_CHOICES, default='pending',
     )
     date_joined_church = models.DateField(null=True, blank=True)
     baptism_status = models.CharField(

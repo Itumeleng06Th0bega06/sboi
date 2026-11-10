@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/style.css' %}?v=86">
-  <link rel="stylesheet" href="{% static 'css/notifications.css' %}?v=4">
+  <link rel="stylesheet" href="{% static 'css/notifications.css' %}?v=5">
   {% block extra_head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -81,9 +81,9 @@
                                 <button type="submit" class="nav-account-link nav-account-request-link">Request church membership</button>
                             </form>
                             {% elif member_membership_status == 'pending' %}
-                            <a href="{% url 'members:account' %}#membership" class="nav-account-link">Membership request pending</a>
+                            <a href="{% url 'members:account_profile' %}#membership" class="nav-account-link">Membership request pending</a>
                             {% endif %}
-                            <a href="{% url 'members:account_messages' %}" class="nav-account-link">
+                            <a href="{% url 'members:account' %}" class="nav-account-link">
                                 <span>iChat</span>
                                 {% if member_unread_messages %}<span class="nav-menu-badge">{{ member_unread_messages }}</span>{% endif %}
                             </a>
@@ -141,7 +141,12 @@
             <div class="bnav-auth">
                 {% if request.user.is_authenticated %}
                 <button type="button" class="bnav-item{% if request.resolver_match.namespace == 'members' %} active{% endif %}" id="bottomAccountBtn" aria-haspopup="true" aria-expanded="false">
+                    {% if member_avatar_url %}
+                    <img src="{{ member_avatar_url }}" alt="" class="bnav-avatar bnav-avatar-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span class="bnav-avatar" aria-hidden="true" style="display:none;">{{ member_initials|default:'S' }}</span>
+                    {% else %}
                     <span class="bnav-avatar" aria-hidden="true">{{ member_initials|default:'S' }}</span>
+                    {% endif %}
                     <span>Account</span>
                 </button>
                 {% else %}
@@ -183,9 +188,9 @@
                     </form>
                 </li>
                 {% elif member_membership_status == 'pending' %}
-                <li><a href="{% url 'members:account' %}#membership">Membership request pending</a></li>
+                <li><a href="{% url 'members:account_profile' %}#membership">Membership request pending</a></li>
                 {% endif %}
-                <li><a href="{% url 'members:account_messages' %}">iChat</a></li>
+                <li><a href="{% url 'members:account' %}">iChat</a></li>
                 <li><a href="{% url 'members:account_settings' %}">Account settings</a></li>
                 {% if request.user.is_staff %}
                 <li><a href="{% url 'admin:index' %}">Admin console</a></li>
@@ -265,7 +270,7 @@
 
     <script src="{% static 'js/script.js' %}?v=13"></script>
     <script src="{% static 'js/ajax-forms.js' %}"></script>
-    <script src="{% static 'js/notifications.js' %}?v=3"></script>
+    <script src="{% static 'js/notifications.js' %}?v=4"></script>
     {% block extra_scripts %}{% endblock %}
     {# Ensures the CSRF cookie exists for bell actions on pages without a form. #}
     <div hidden aria-hidden="true">{% csrf_token %}</div>

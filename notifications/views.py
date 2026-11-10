@@ -99,6 +99,40 @@ def dismiss_notification(request, pk):
     return redirect(request.META.get('HTTP_REFERER') or notification.url or 'home:home')
 
 
+def _action_scope(request):
+    """Scope sent by the bell that triggered the bulk action.
+
+    The member bell always targets public/member rows; only staff may ask for
+    the staff scope, so a member can never touch a staff-only notification.
+    """
+    requested = request.POST.get('scope')
+    if requested == services.STAFF_SCOPE and request.user.is_staff:
+        return services.STAFF_SCOPE
+    if requested == services.PUBLIC_SCOPE:
+        return services.PUBLIC_SCOPE
+    return None
+
+
+@login_required
+@require_POST
+def mark_all_read(request):
+    """Bulk action for the admin bell: mark every visible row as read."""
+    scope = _action_scope(request)
+    services.mark_all_read(request, scope)
+    return JsonResponse(_bell_context(request, scope))
+
+
+@login_required
+@require_POST
+def delete_selected(request):
+    """Bulk action for the admin bell: remove the ticked rows from the bell."""
+    scope = _action_scope(request)
+    removed = services.dismiss_many(request, request.POST.getlist('ids'), scope)
+    payload = _bell_context(request, scope)
+    payload['removed'] = removed
+    return JsonResponse(payload)
+
+
 @require_POST
 def archive_notification(request, pk):
     notification = services.get_visible_notification(pk, request)

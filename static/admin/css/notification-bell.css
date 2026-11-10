@@ -105,19 +105,73 @@
   box-shadow: 0 14px 34px rgba(0, 31, 28, 0.22);
 }
 
-.sboi-bell-more-panel a {
+.sboi-bell-more-panel button {
   display: block;
+  width: 100%;
   padding: 0.6rem 0.75rem;
+  border: 0;
+  background: transparent;
   color: #002f2b;
+  font-family: inherit;
   font-size: 0.78rem;
   font-weight: 600;
-  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
 }
 
-.sboi-bell-more-panel a:hover {
+.sboi-bell-more-panel button:hover,
+.sboi-bell-more-panel button:focus-visible {
   background: rgba(210, 162, 78, 0.14);
   color: #002f2b;
-  text-decoration: none;
+  outline: none;
+}
+
+.sboi-bell-more-panel button:disabled {
+  color: #9aa7a0;
+  cursor: default;
+}
+
+.sboi-bell-more-panel button:disabled:hover {
+  background: transparent;
+}
+
+.sboi-bell-more-panel .sboi-bell-more-danger {
+  color: #a33a3a;
+}
+
+.sboi-bell-more-panel .sboi-bell-more-danger:hover,
+.sboi-bell-more-panel .sboi-bell-more-danger:focus-visible {
+  background: rgba(163, 58, 58, 0.1);
+  color: #8a2f2f;
+}
+
+/* ---------- Rows and selection ---------- */
+.sboi-bell-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.32rem;
+}
+
+.sboi-bell-row.is-selected .sboi-bell-item {
+  border-color: rgba(210, 162, 78, 0.55);
+}
+
+.sboi-bell-select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 34px;
+  cursor: pointer;
+}
+
+.sboi-bell-select input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: #b07f3a;
+  cursor: pointer;
 }
 
 /* ---------- Items ---------- */
@@ -135,6 +189,8 @@
 .sboi-bell-item {
   display: flex;
   align-items: flex-start;
+  flex: 1 1 auto;
+  min-width: 0;
   gap: 0.6rem;
   padding: 0.65rem 0.7rem;
   border: 1px solid transparent;

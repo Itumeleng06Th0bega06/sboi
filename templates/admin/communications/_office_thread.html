@@ -1,7 +1,7 @@
 {% load i18n admin_menu %}
 <section class="comms-chat sboi-office" data-comms-chat>
     <header class="comms-chat__head sboi-office__head">
-        <a class="comms-iconbtn sboi-office__back" href="{% url 'communications:inbox' %}?view=chat" aria-label="{% translate 'Back to conversations' %}">
+        <a class="comms-iconbtn sboi-office__back" href="{% url 'communications:inbox' %}?view=chat&amp;filter=chats" aria-label="{% translate 'Back to conversations' %}">
             {% admin_icon 'arrow-left' %}
         </a>
         {% if office_member.member_profile.avatar %}

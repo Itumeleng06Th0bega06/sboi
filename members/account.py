@@ -260,89 +260,13 @@ def _feed_context(request, section, posts, has_more=False, next_before=''):
 @login_required
 def account_home(request):
     posts, has_more, next_before = feed_page(request.user)
-
-    timeline_filter = (request.GET.get('filter') or 'all').strip().lower()
-    if timeline_filter not in {'all', 'posts', 'chats'}:
-        timeline_filter = 'all'
-    timeline_items = _member_timeline_items(request.user, posts, timeline_filter)
-
     context = _feed_context(
         request, 'account', posts, has_more, next_before,
     )
-    context['timeline_items'] = timeline_items
-    context['timeline_filter'] = timeline_filter
+    # Home is the post feed only; chats live on the Inbox page.
+    context['timeline_items'] = None
+    context['timeline_filter'] = 'posts'
     return _render_account(request, 'members/account/dashboard.html', context)
-
-
-def _member_timeline_items(user, posts, timeline_filter):
-    """Merge community posts with the member's own conversations.
-
-    Privacy: only threads the member participates in ever appear here, and
-    only on the member's own timeline — everyone else sees posts only.
-    """
-    from contact.models import ContactMessage
-
-    items = []
-    if timeline_filter in {'all', 'posts'}:
-        for post in posts:
-            items.append({
-                'kind': 'post',
-                'sort': post.created_at,
-                'post': post,
-            })
-
-    if timeline_filter in {'all', 'chats'}:
-        office_latest = (
-            services.member_thread(user)
-            .order_by('-created_at', '-pk')
-            .first()
-        )
-        if office_latest is not None:
-            office_unread = ContactMessage.objects.filter(
-                user=user, is_from_admin=True, read_by_member=False,
-            ).count()
-            preview = (office_latest.message or '').strip().replace('\n', ' ')
-            items.append({
-                'kind': 'chat',
-                'sort': office_latest.created_at,
-                'kind_label': 'Church office',
-                'name': 'Church office',
-                'initials': 'SB',
-                'avatar_url': '',
-                'preview': preview or 'Church office reply',
-                'time': office_latest.created_at,
-                'unread': office_unread,
-                'url': reverse('members:account_messages'),
-            })
-
-        for row in _direct_thread_rows(user):
-            last_at = row['last_at']
-            preview = (row['last_body'] or '').strip().replace('\n', ' ')
-            items.append({
-                'kind': 'chat',
-                'sort': last_at,
-                'kind_label': 'Direct message',
-                'name': row['display_name'],
-                'initials': row['initials'],
-                'avatar_url': row['avatar_url'],
-                'preview': preview or 'No messages yet',
-                'time': last_at,
-                'unread': row['unread'],
-                'url': (
-                    reverse('members:account_messages')
-                    + f'?thread={row["thread"].pk}'
-                ),
-            })
-
-    items.sort(
-        key=lambda item: item['sort'] or timezone.now(),
-        reverse=True,
-    )
-    if timeline_filter == 'posts':
-        items = [item for item in items if item['kind'] == 'post']
-    elif timeline_filter == 'chats':
-        items = [item for item in items if item['kind'] == 'chat']
-    return items
 
 
 @login_required
@@ -580,7 +504,7 @@ def account_membership_request(request):
         messages.success(request, message)
     else:
         messages.error(request, message)
-    return redirect(reverse('members:account') + '#membership')
+    return redirect(reverse('members:account_profile') + '#membership')
 
 
 @login_required
@@ -594,7 +518,7 @@ def account_membership_edit(request):
                 'message': MEMBERSHIP_LOCKED_MESSAGE,
             }, status=403)
         messages.error(request, MEMBERSHIP_LOCKED_MESSAGE)
-        return redirect(reverse('members:account') + '#membership')
+        return redirect(reverse('members:account_profile') + '#membership')
 
     previous_status = membership.status if membership else 'pending'
     previous_exists = membership is not None
@@ -634,7 +558,7 @@ def account_membership_edit(request):
             request,
             'Your membership details were submitted for review.',
         )
-        return redirect(reverse('members:account') + '#membership')
+        return redirect(reverse('members:account_profile') + '#membership')
 
     if _is_ajax(request):
         html = _form_fragment(
@@ -644,7 +568,7 @@ def account_membership_edit(request):
         )
         return JsonResponse({'ok': False, 'html': html}, status=400)
     messages.error(request, 'Please correct the errors below and try again.')
-    return redirect(reverse('members:account') + '#membership')
+    return redirect(reverse('members:account_profile') + '#membership')
 
 
 # ---------------------------------------------------------------------------
@@ -813,12 +737,6 @@ def account_messages(request):
     _purge_chat_retention()
     services.mark_member_messages_read(request.user)
 
-    thread_rows = _direct_thread_rows(request.user)
-    thread_by_member = {
-        row['other'].pk: row['thread'] for row in thread_rows
-    }
-    online_rows = _online_rows(request.user, thread_by_member)
-
     active_thread = None
     active_other = None
     direct_messages = []
@@ -841,12 +759,21 @@ def account_messages(request):
             .order_by('created_at', 'pk')[:300]
         )
 
+    # Build the list after the selected thread has been marked read so its
+    # unread badge and the header count drop on the page load that opened it.
+    thread_rows = _direct_thread_rows(request.user)
+    thread_by_member = {
+        row['other'].pk: row['thread'] for row in thread_rows
+    }
+    online_rows = _online_rows(request.user, thread_by_member)
+
     context = _account_context(request, 'messages')
     context.update({
         'thread': list(services.member_thread(request.user)),
         'message_form': MemberMessageForm(),
         'unread_messages': services.unread_message_count(request.user),
         'direct_threads': thread_rows,
+        'inbox_unread_count': sum(1 for row in thread_rows if row['unread']),
         'online_rows': online_rows,
         'blocked_members': services.blocked_members(request.user),
         'dm_thread': active_thread,

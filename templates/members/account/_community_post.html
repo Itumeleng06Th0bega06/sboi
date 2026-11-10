@@ -22,6 +22,7 @@
             {% endif %}
             {% if post.is_staff_post %}<span class="cf-badge">Church admin</span>{% endif %}
             {% if post.audience == 'staff' %}<span class="cf-badge cf-badge--staff">Staff only</span>{% endif %}
+            {% if post.shared_from %}<span class="cf-post-shared-note">shared a post</span>{% endif %}
             <span class="cf-post-time">
                 <time datetime="{{ post.created_at|date:'c' }}" title="{{ post.created_at|date:'d M Y, H:i' }}">{{ post.created_at|date:"j M, H:i" }}</time>
                 {% if post.edited_at %}<span class="cf-post-edited">· Edited</span>{% endif %}
@@ -73,10 +74,16 @@
         </details>
     </header>
 
+    {% if post.title or post.body %}
     <div class="cf-post-content">
         {% if post.title %}<h3 class="cf-post-title">{{ post.title }}</h3>{% endif %}
         {% if post.body %}<p class="cf-post-body">{{ post.body|linebreaksbr }}</p>{% endif %}
     </div>
+    {% endif %}
+
+    {% if post.shared_from %}
+    {% include 'members/account/_shared_post_preview.html' with post=post.shared_from shared_post_visible=post.shared_from_visible %}
+    {% endif %}
 
     {% for attachment in post.attachments_list %}
     <div class="cf-post-attachment cf-post-attachment--{{ attachment.kind }}">
@@ -135,7 +142,13 @@
             <span data-cf-comment-count>{{ post.comment_count }}</span>
             <span class="cf-action-label">Comments</span>
         </button>
-        <button type="button" class="cf-post-action cf-post-action--right" aria-label="Share post" title="Share" onclick="navigator.clipboard.writeText(window.location.href);this.textContent='Copied';setTimeout(()=>this.textContent='Share',1200);">Share</button>
+        <form method="post" action="{% url 'members:feed_post_share' post.pk %}" class="cf-post-share-form" data-cf-share>
+            {% csrf_token %}
+            <input type="hidden" name="surface" value="{% if admin_community %}admin_feed{% else %}community{% endif %}">
+            <button type="submit" class="cf-post-action cf-post-action--right" aria-label="Share post" title="Share"{% if post.shared_by_me %} disabled{% endif %}>
+                <span data-cf-share-label>{% if post.shared_by_me %}Shared{% else %}Share{% endif %}</span>
+            </button>
+        </form>
 
     </footer>
 

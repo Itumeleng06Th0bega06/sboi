@@ -466,7 +466,7 @@ a:not([role='button'], #header a, #content-main.app-list a, .object-tools a):hov
 }
 
 .sboi-comms-link .sboi-ico {
-  color: var(--sboi-gold);
+  color: #ffffff;
 }
 
 .sboi-comms-badge {
@@ -1163,6 +1163,7 @@ ul.messagelist li.error::before {
   gap: 0.4rem;
   color: var(--sboi-muted);
   font-weight: 500;
+  min-height: 34px;
 }
 
 .actions select {

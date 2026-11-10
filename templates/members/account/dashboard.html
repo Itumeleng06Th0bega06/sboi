@@ -1,33 +1,9 @@
 {% extends account_base|default:'members/account/base_account.html' %}
-{% load static %}
 
 {% block title %}Community · {{ site_profile.church_name|default:'Shekinah Blaze' }}{% endblock %}
 
 {% block account_content %}
-<section class="cf-feed-page">
-    <div id="membership" class="cf-anchor" tabindex="-1" aria-hidden="true"></div>
-    <header class="cf-page-head cf-page-head--feed">
-        <div>
-            <p class="cf-eyebrow">Community</p>
-            <h1>iChat</h1>
-        </div>
-        <a class="cf-head-link" href="{% url 'members:account_messages' %}">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/></svg>
-            Message admin
-        </a>
-    </header>
-
-    <div class="cf-membership-strip" role="note" aria-label="Church membership">
-        <span class="cf-membership-strip-mark" aria-hidden="true">{{ member_initials|default:'S' }}</span>
-        <span class="cf-membership-strip-copy">
-            <strong>Church membership</strong>
-            <span>{% if membership %}{{ membership.get_status_display }}{% else %}Visitor{% endif %}{% if membership.membership_category %} · {{ membership.get_membership_category_display }}{% endif %}</span>
-        </span>
-        <a class="cf-membership-strip-manage" href="{% url 'members:account_profile' %}#membership">
-            {% if membership %}Manage{% else %}Join{% endif %}
-        </a>
-    </div>
-
-    {% include 'members/account/_post_feed.html' %}
+<section class="cf-feed-page cf-feed-page--posts">
+    {% include 'members/account/_post_feed.html' with timeline_items=None timeline_filter='posts' %}
 </section>
 {% endblock %}

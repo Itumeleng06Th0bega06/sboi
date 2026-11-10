@@ -290,6 +290,93 @@ class NotificationFilteringTests(TestCase):
             reverse('notifications:open', args=[notification.pk]),
         )
 
+    def test_mark_all_read_clears_the_visible_rows_badge(self):
+        informational = self.make(title='Informational row')
+        actionable = self.make(
+            title='Actionable row',
+            status=Notification.STATUS_PENDING,
+            requires_action=True,
+        )
+
+        self.client.force_login(self.member)
+        response = self.client.post(
+            reverse('notifications:mark_all_read'),
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['badge'], 0)
+        self.assertNotIn(
+            'Informational row', [item['title'] for item in data['items']],
+        )
+        self.assertIn(
+            'Actionable row', [item['title'] for item in data['items']],
+        )
+        for notification in (informational, actionable):
+            self.assertTrue(
+                NotificationState.objects.filter(
+                    notification=notification,
+                    user=self.member,
+                    read_at__isnull=False,
+                ).exists()
+            )
+
+    def test_delete_selected_dismisses_only_ticked_rows_for_current_user(self):
+        keep = self.make(title='Keep this')
+        remove = self.make(title='Delete this')
+        other_member = self.make(
+            title='Another member row',
+            audience=Notification.AUDIENCE_MEMBER,
+            recipient=self.other_member,
+        )
+
+        self.client.force_login(self.member)
+        response = self.client.post(
+            reverse('notifications:delete_selected'),
+            {'ids': [remove.pk, other_member.pk]},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['removed'], 1)
+        titles = [item['title'] for item in data['items']]
+        self.assertIn('Keep this', titles)
+        self.assertNotIn('Delete this', titles)
+
+        self.assertTrue(
+            NotificationState.objects.filter(
+                notification=remove,
+                user=self.member,
+                dismissed_at__isnull=False,
+            ).exists()
+        )
+        # The row is kept for history, just like the single-row dismiss.
+        self.assertTrue(Notification.objects.filter(pk=remove.pk).exists())
+        self.assertFalse(
+            NotificationState.objects.filter(
+                notification=other_member, user=self.member,
+            ).exists()
+        )
+
+    def test_bulk_actions_require_a_signed_in_user(self):
+        notification = self.make(title='Protected row')
+
+        response = self.client.post(
+            reverse('notifications:mark_all_read'),
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.post(
+            reverse('notifications:delete_selected'),
+            {'ids': [notification.pk]},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(NotificationState.objects.exists())
+
 
 class NotificationSourceSyncTests(TestCase):
     def setUp(self):

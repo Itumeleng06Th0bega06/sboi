@@ -144,19 +144,75 @@
   box-shadow: 0 14px 34px rgba(0, 31, 28, 0.22);
 }
 
-.notif-bell-more-panel a {
+.notif-bell-more-panel button {
   display: block;
+  width: 100%;
   padding: 0.6rem 0.75rem;
+  border: 0;
+  background: transparent;
   color: #002f2b;
+  font-family: inherit;
   font-size: 0.78rem;
   font-weight: 600;
+  text-align: left;
   text-decoration: none;
+  cursor: pointer;
 }
 
-.notif-bell-more-panel a:hover {
+.notif-bell-more-panel button:hover,
+.notif-bell-more-panel button:focus-visible {
   background: rgba(210, 162, 78, 0.14);
   color: #002f2b;
   text-decoration: none;
+  outline: none;
+}
+
+.notif-bell-more-panel button:disabled {
+  color: #9aa7a0;
+  cursor: default;
+}
+
+.notif-bell-more-panel button:disabled:hover {
+  background: transparent;
+}
+
+.notif-bell-more-panel .notif-bell-more-danger {
+  color: #a33a3a;
+}
+
+.notif-bell-more-panel .notif-bell-more-danger:hover,
+.notif-bell-more-panel .notif-bell-more-danger:focus-visible {
+  background: rgba(163, 58, 58, 0.1);
+  color: #8a2f2f;
+}
+
+/* ---------- Rows and selection ---------- */
+.notif-bell-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.32rem;
+}
+
+.notif-bell-row.is-selected .notif-item {
+  border-color: rgba(210, 162, 78, 0.55);
+}
+
+.notif-bell-select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 34px;
+  cursor: pointer;
+}
+
+.notif-bell-select input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: #b07f3a;
+  cursor: pointer;
 }
 
 /* ---------- Items ---------- */
@@ -173,6 +229,8 @@
 
 .notif-item {
   display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
   flex-direction: column;
   gap: 0.18rem;
   padding: 0.7rem 0.75rem;

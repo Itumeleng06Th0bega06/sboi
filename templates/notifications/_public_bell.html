@@ -4,8 +4,9 @@
   The server renders the current active items; static/js/notifications.js
   refreshes the same payload from notifications:feed so the badge and list stay
   current without a full page reload. Opening an item marks it read and follows
-  its internal link, so there is no separate "mark read" control. Read and
-  dismiss state is per user (or per session for visitors), never global.
+  its internal link. The options menu mirrors the admin bell: mark every visible
+  row read, or remove the ticked rows from the bell while keeping the record in
+  history. Read and dismiss state is per user, never global.
 {% endcomment %}
 <details class="notif-bell" data-sboi-public-bell data-api-url="{{ notification_feed_url }}">
     <summary class="notif-bell-trigger" title="Notifications" aria-label="Notifications">
@@ -23,17 +24,28 @@
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>
                 </summary>
                 <div class="notif-bell-more-panel">
-                    <a href="{{ notification_history_url }}">Notification history</a>
+                    <input type="hidden" value="{{ csrf_token }}" data-sboi-public-csrf>
+                    <button type="button" data-sboi-public-mark-all data-url="{% url 'notifications:mark_all_read' %}" data-scope="public"{% if not notification_items %} disabled{% endif %}>
+                        Mark all as read
+                    </button>
+                    <button type="button" class="notif-bell-more-danger" data-sboi-public-delete-selected data-url="{% url 'notifications:delete_selected' %}" data-scope="public" disabled>
+                        Delete selected
+                    </button>
                 </div>
             </details>
         </div>
         <div class="notif-bell-list" data-sboi-public-list>
             {% for item in notification_items %}
-                <a class="notif-item{% if item.unread %} is-unread{% endif %} tone-{{ item.tone }}" href="{{ item.open_url|default:item.url }}" data-notification-id="{{ item.id }}">
-                    <span class="notif-item-title">{{ item.title }}</span>
-                    {% if item.body %}<span class="notif-item-desc">{{ item.body|truncatechars:100 }}</span>{% endif %}
-                    <span class="notif-item-date">{{ item.date }}</span>
-                </a>
+                <div class="notif-bell-row">
+                    <label class="notif-bell-select" title="Select notification">
+                        <input type="checkbox" value="{{ item.id }}" data-sboi-public-check aria-label="Select {{ item.title }}">
+                    </label>
+                    <a class="notif-item{% if item.unread %} is-unread{% endif %} tone-{{ item.tone }}" href="{{ item.open_url|default:item.url }}" data-notification-id="{{ item.id }}">
+                        <span class="notif-item-title">{{ item.title }}</span>
+                        {% if item.body %}<span class="notif-item-desc">{{ item.body|truncatechars:100 }}</span>{% endif %}
+                        <span class="notif-item-date">{{ item.date }}</span>
+                    </a>
+                </div>
             {% empty %}
                 <div class="notif-empty">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">

@@ -430,6 +430,15 @@ class MembershipIdUniquenessTests(TestCase):
         self.assertEqual(len(ids), 5)
 
 
+class MembershipStatusDefaultTests(TestCase):
+    def test_new_membership_defaults_to_pending(self):
+        user = User.objects.create_user(
+            'newmember', 'newmember@example.com', STRONG,
+        )
+        membership = ChurchMembership.objects.create(user=user)
+        self.assertEqual(membership.status, 'pending')
+
+
 class AdminAccessTests(TestCase):
     def test_directory_requires_staff(self):
         response = self.client.get(reverse('admin:members_churchmembership_changelist'))
@@ -1097,6 +1106,23 @@ class AccountPortalTests(TestCase):
         self.assertContains(member_home, 'cf-topbar-combo')
         self.assertContains(member_home, 'data-sboi-public-bell')
 
+    def test_home_shows_only_the_post_feed(self):
+        response = self.client.get(reverse('members:account'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="comms-feed"')
+        for marker in (
+            'cf-page-head',
+            'cf-membership-strip',
+            'sboi-ichat__filters',
+            'placeholder="Share something',
+            'placeholder="Share an update',
+        ):
+            self.assertNotContains(response, marker)
+        self.assertNotContains(
+            response,
+            f'href="{reverse("members:account_profile")}" class="cf-tab',
+        )
+
     def test_profile_avatar_opens_the_edit_modal(self):
         response = self.client.get(reverse('members:account_profile'))
         self.assertEqual(response.status_code, 200)
@@ -1129,8 +1155,8 @@ class AccountPortalTests(TestCase):
         response = self.client.get(reverse('home:home'))
         self.assertContains(response, 'Admin console')
 
-    def test_dashboard_shows_status_and_no_self_approval(self):
-        response = self.client.get(reverse('members:account'))
+    def test_profile_shows_status_and_no_self_approval(self):
+        response = self.client.get(reverse('members:account_profile'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Active')
         self.assertContains(response, 'Church membership')
@@ -1494,7 +1520,7 @@ class AccountPortalTests(TestCase):
             source_key='open-scope-test',
             title='Membership details approved',
             body='Your details were approved.',
-            url=reverse('members:account') + '#membership',
+            url=reverse('members:account_profile') + '#membership',
         )
         response = self.client.get(
             reverse('members:account_notification_open', args=[notification.pk]),
@@ -1503,7 +1529,7 @@ class AccountPortalTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()['ok'])
         self.assertEqual(
-            response.json()['url'], reverse('members:account') + '#membership',
+            response.json()['url'], reverse('members:account_profile') + '#membership',
         )
 
         other = User.objects.create_user('otherreader', 'otherreader@example.com', STRONG)
@@ -1677,6 +1703,65 @@ class CommunityFeedTests(TestCase):
         self._publish('For everyone', audience=CommsPost.AUDIENCE_STAFF)
         self.assertEqual(
             CommsPost.objects.get().audience, CommsPost.AUDIENCE_ALL,
+        )
+
+    def test_member_can_repost_a_post_to_the_feed(self):
+        original = CommsPost.objects.create(
+            author=self.other, body='Original testimony',
+        )
+        url = reverse('members:feed_post_share', args=[original.pk])
+        response = self.client.post(
+            url, {'surface': 'community'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['created'])
+        shared = CommsPost.objects.get(pk=data['post_id'])
+        self.assertEqual(shared.author, self.member)
+        self.assertEqual(shared.shared_from, original)
+        self.assertEqual(shared.audience, CommsPost.AUDIENCE_ALL)
+        self.assertIn('Original testimony', data['html'])
+        self.assertIn('cf-shared-post', data['html'])
+        self.assertIn('shared a post', data['html'])
+
+        # A second click is idempotent and does not duplicate the repost.
+        again = self.client.post(
+            url, {'surface': 'community'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(again.status_code, 200)
+        self.assertFalse(again.json()['created'])
+        self.assertEqual(
+            CommsPost.objects.filter(shared_from=original).count(), 1,
+        )
+
+        feed = self.client.get(reverse('members:account'))
+        self.assertContains(feed, 'Original testimony')
+        self.assertContains(feed, 'cf-shared-post')
+        self.assertContains(feed, 'name="surface" value="community"')
+
+    def test_hidden_and_staff_only_posts_cannot_be_shared_by_members(self):
+        hidden = CommsPost.objects.create(
+            author=self.staff, body='Hidden note', is_hidden=True,
+        )
+        response = self.client.post(
+            reverse('members:feed_post_share', args=[hidden.pk]),
+        )
+        self.assertEqual(response.status_code, 404)
+
+        staff_post = CommsPost.objects.create(
+            author=self.staff,
+            audience=CommsPost.AUDIENCE_STAFF,
+            body='Staff retreat notes',
+        )
+        response = self.client.post(
+            reverse('members:feed_post_share', args=[staff_post.pk]),
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(CommsPost.objects.filter(shared_from=hidden).exists())
+        self.assertFalse(
+            CommsPost.objects.filter(shared_from=staff_post).exists()
         )
 
     def test_staff_only_post_is_hidden_from_members(self):

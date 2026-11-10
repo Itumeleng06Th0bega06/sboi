@@ -13,6 +13,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from contact.models import ContactMessage
 from members.models_comms import (
@@ -20,6 +21,7 @@ from members.models_comms import (
     CommsDirectMessage,
     CommsDirectThread,
     CommsPost,
+    CommunityPresence,
 )
 from notifications.models import Notification
 
@@ -136,10 +138,22 @@ class PortalAccessTests(CommunicationsBase):
         self.assertContains(response, 'communications.js')
         # The merged default view is the unified iChat timeline.
         self.assertContains(response, 'iChat')
-        self.assertContains(response, 'sboi-ichat__filters')
+        self.assertNotContains(response, 'sboi-ichat__filters')
         self.assertContains(response, 'data-cf-composer')
         self.assertTrue(response.context['has_permission'])
         self.assertIn('admin_dashboard', response.context)
+        # The Inbox view mirrors the member inbox with the private composer.
+        inbox = self.client.get(
+            reverse('communications:inbox'),
+            {'view': 'chat', 'filter': 'chats'},
+        )
+        self.assertEqual(inbox.status_code, 200)
+        self.assertContains(inbox, 'sboi-admin-inbox')
+        # Nobody is online in the test, so the whole "Online now" block is
+        # left out rather than shown with an empty count.
+        self.assertNotContains(inbox, 'Online now')
+        self.assertNotContains(inbox, 'data-cf-composer')
+        self.assertNotContains(inbox, 'Community information')
         # The three-column conversation workspace lives behind a selection.
         group = self.make_group(members=[self.member])
         response = self.client.get(
@@ -175,6 +189,71 @@ class PortalAccessTests(CommunicationsBase):
         self.assertIn(self.owner, users)
         self.assertNotIn(self.staff_without_permission, users)
         self.assertNotIn(self.ordinary_member, users)
+
+    def test_admin_inbox_lists_only_online_members_for_new_chats(self):
+        CommunityPresence.objects.create(
+            user=self.ordinary_member,
+            last_seen_at=timezone.now(),
+        )
+        offline = self.make_user('offline', staff=False, allowed=False)
+        response = self.client.get(
+            reverse('communications:inbox'),
+            {'view': 'chat', 'filter': 'chats'},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.ordinary_member.get_full_name())
+        self.assertNotContains(response, offline.get_full_name())
+
+    def test_admin_can_start_and_send_a_private_member_conversation(self):
+        response = self.client.post(
+            reverse('communications:start_member_direct'),
+            {'username': self.ordinary_member.username},
+        )
+        self.assertEqual(response.status_code, 302)
+        thread = CommsDirectThread.objects.get()
+        self.assertIn(f'filter=chats&thread={thread.pk}', response['Location'])
+
+        response = self.client.post(
+            reverse('communications:send_member_direct', args=[thread.pk]),
+            {'body': 'Hello from the church office'},
+        )
+        self.assertEqual(response.status_code, 302)
+        message = CommsDirectMessage.objects.get(thread=thread)
+        notification = Notification.objects.get(
+            recipient=self.ordinary_member,
+            source_type='direct_message',
+            source_id=message.pk,
+        )
+        self.assertEqual(notification.audience, Notification.AUDIENCE_MEMBER)
+        self.assertEqual(
+            notification.url,
+            f"{reverse('members:account_messages')}?thread={thread.pk}",
+        )
+
+        # The member sees the same conversation in their own inbox.
+        member_client = self.login(self.ordinary_member)
+        member_response = member_client.get(reverse('members:account_messages'))
+        self.assertContains(member_response, 'Hello from the church office')
+        self.assertContains(member_response, f'thread={thread.pk}')
+
+    def test_member_reply_notifies_the_admin_inbox(self):
+        thread = CommsDirectThread.for_users(self.owner, self.ordinary_member)
+        member_client = self.login(self.ordinary_member)
+        response = member_client.post(
+            reverse('members:account_direct_send', args=[thread.pk]),
+            {'body': 'A reply for the office'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        message = CommsDirectMessage.objects.get(thread=thread)
+        notification = Notification.objects.get(
+            recipient=self.owner,
+            source_type='direct_message',
+            source_id=message.pk,
+        )
+        self.assertEqual(notification.audience, Notification.AUDIENCE_STAFF)
+        self.assertIn('view=chat&filter=chats', notification.url)
+        self.assertIn(f'thread={thread.pk}', notification.url)
 
 
 class CsrfAndSendingTests(CommunicationsBase):
@@ -805,7 +884,25 @@ class AdminCommunityTests(CommunicationsBase):
             self.assertEqual(response.status_code, 200, view)
             self.assertContains(response, 'Admin Communications')
             self.assertContains(response, heading)
-            self.assertContains(response, 'sboi-community-dock')
+            self.assertContains(response, 'sboi-community__rail')
+            # Phones get a simple bottom tab bar instead of the cropped rail.
+            self.assertContains(response, 'cf-dock')
+
+    def test_online_section_is_hidden_until_someone_is_online(self):
+        url = reverse('communications:inbox') + '?view=chat&filter=chats'
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Online now')
+
+        CommunityPresence.objects.create(
+            user=self.ordinary_member,
+            last_seen_at=timezone.now(),
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Online now')
+        self.assertContains(response, self.ordinary_member.get_username())
 
     def test_members_directory_lists_accounts_and_can_be_searched(self):
         response = self.client.get(

@@ -10,7 +10,7 @@
     {% include 'members/account/_feed_composer.html' %}
     {% endif %}
 
-    {% if timeline_items is not None %}
+    {% if timeline_items is not None and timeline_filter != 'posts' %}
     <nav class="sboi-ichat__filters" aria-label="{% translate 'Timeline filter' %}">
         <a class="sboi-chip{% if timeline_filter == 'all' %} is-active{% endif %}" href="{{ request.path }}?filter=all">{% translate 'All' %}</a>
         <a class="sboi-chip{% if timeline_filter == 'posts' %} is-active{% endif %}" href="{{ request.path }}?filter=posts">{% translate 'Posts' %}</a>
@@ -27,7 +27,7 @@
         {% for item in timeline_items %}
         {% if item.kind == 'post' %}
         {% include 'members/account/_community_post.html' with post=item.post %}
-        {% else %}
+        {% elif item.kind != 'post' and timeline_filter != 'posts' %}
         {% include 'members/account/_thread_card.html' with item=item %}
         {% endif %}
         {% empty %}

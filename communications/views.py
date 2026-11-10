@@ -26,7 +26,14 @@ from members.models_comms import (
     CommsPost,
     CommsReaction,
 )
-from members.services import notify_member_reply
+from members.services import (
+    direct_threads_for,
+    interaction_blocked,
+    is_user_online,
+    notify_direct_message,
+    notify_member_reply,
+    online_members,
+)
 from members.views_comms import feed_page_for, feed_posts_for, serialize_posts
 
 from .forms import (
@@ -154,6 +161,51 @@ def _member_directory(query='', limit=240):
     return rows
 
 
+def _admin_direct_rows(user):
+    """Private admin ↔ member conversations, newest first."""
+    rows = []
+    for thread in direct_threads_for(user)[:40]:
+        other = thread.other_user(user)
+        if other is None:
+            continue
+        last = (
+            thread.messages
+            .select_related('sender')
+            .order_by('-created_at', '-pk')
+            .first()
+        )
+        display_name = other.get_full_name() or other.get_username()
+        rows.append({
+            'thread': thread,
+            'other': other,
+            'display_name': display_name,
+            'avatar_url': _admin_avatar_url(other),
+            'initials': name_initials(display_name),
+            'online': is_user_online(other),
+            'last_body': last.body if last else '',
+            'last_at': last.created_at if last else None,
+            'unread': thread.unread_count(user),
+        })
+    return rows
+
+
+def _admin_online_rows(user, thread_by_member):
+    """Active member accounts online right now, with any existing thread."""
+    rows = []
+    for person in online_members(user, limit=24):
+        if person.is_staff:
+            continue
+        display_name = person.get_full_name() or person.get_username()
+        rows.append({
+            'member': person,
+            'display_name': display_name,
+            'avatar_url': _admin_avatar_url(person),
+            'initials': name_initials(display_name),
+            'thread': thread_by_member.get(person.pk),
+        })
+    return rows
+
+
 def _inbox_context(request, group_form=None, direct_form=None, open_dialog=''):
     user = request.user
     community_view = _community_view(request)
@@ -244,6 +296,32 @@ def _inbox_context(request, group_form=None, direct_form=None, open_dialog=''):
                 .order_by('created_at', 'pk')[:500]
             )
 
+    # The signed-in admin's own private conversations live in the same
+    # CommsDirectThread model as member DMs, so a message started here shows
+    # up in both the admin inbox and the member's inbox.
+    admin_thread = None
+    admin_thread_other = None
+    admin_thread_messages = []
+    if community_view == 'chat' and channel != 'dm':
+        thread_key = (request.GET.get('thread') or '').strip()
+        if thread_key.isdigit():
+            admin_thread = get_object_or_404(
+                direct_threads_for(user),
+                pk=int(thread_key),
+            )
+            admin_thread_other = admin_thread.other_user(user)
+            if (
+                admin_thread_other is None
+                or interaction_blocked(user, admin_thread_other)
+            ):
+                raise Http404('Conversation not found.')
+            admin_thread.mark_read(user)
+            admin_thread_messages = list(
+                admin_thread.messages
+                .select_related('sender')
+                .order_by('created_at', 'pk')[:300]
+            )
+
     # Build the staff list after the selected thread has been marked read so
     # its unread badge does not survive the page load that opened it.
     rows = conversation_summaries(user, query)
@@ -251,6 +329,16 @@ def _inbox_context(request, group_form=None, direct_form=None, open_dialog=''):
     office_rows = office_conversation_rows(query)
     office_unread = office_unread_total()
     dm_rows = dm_moderation_rows(query) if user.is_superuser else []
+
+    admin_thread_rows = _admin_direct_rows(user) if community_view == 'chat' else []
+    admin_thread_by_member = {
+        row['other'].pk: row['thread'] for row in admin_thread_rows
+    }
+    admin_online_rows = (
+        _admin_online_rows(user, admin_thread_by_member)
+        if community_view == 'chat' else []
+    )
+    admin_dm_unread = sum(row['unread'] for row in admin_thread_rows)
 
     timeline_filter = (request.GET.get('filter') or 'all').strip().lower()
     if timeline_filter not in {'all', 'posts', 'chats'}:
@@ -362,22 +450,28 @@ def _inbox_context(request, group_form=None, direct_form=None, open_dialog=''):
     )
 
     context = admin.site.each_context(request)
+    inbox_mode = community_view == 'chat' and timeline_filter == 'chats'
     context.update({
         'title': 'Admin Communications',
         'section_label': 'communications',
         'community_view': community_view,
-        'community_heading': {
-            'feed': 'iChat',
-            'chat': 'iChat',
-            'members': 'Members',
-            'profile': 'Profile',
-        }.get(community_view, 'iChat'),
-        'community_lead': {
-            'feed': 'Community posts and every conversation, in one stream.',
-            'chat': 'Community posts and every conversation, in one stream.',
-            'members': 'Everyone who belongs to the church community.',
-            'profile': 'Your staff account and communication access.',
-        }.get(community_view, ''),
+        'community_heading': (
+            'Inbox' if inbox_mode else {
+                'feed': 'iChat',
+                'chat': 'iChat',
+                'members': 'Members',
+                'profile': 'Profile',
+            }.get(community_view, 'iChat')
+        ),
+        'community_lead': (
+            'Church-office messages and private member conversations.'
+            if inbox_mode else {
+                'feed': 'Community posts and every conversation, in one stream.',
+                'chat': 'Community posts and every conversation, in one stream.',
+                'members': 'Everyone who belongs to the church community.',
+                'profile': 'Your staff account and communication access.',
+            }.get(community_view, '')
+        ),
         'member_display_name': identity['display_name'],
         'member_initials': identity['initials'],
         'member_avatar_url': identity['avatar_url'],
@@ -407,7 +501,32 @@ def _inbox_context(request, group_form=None, direct_form=None, open_dialog=''):
         'dm_thread': dm_thread,
         'dm_messages': dm_messages,
         'can_moderate_dms': user.is_superuser,
-        'chat_unread_total': unread_total(user) + office_unread,
+        'chat_unread_total': unread_total(user) + office_unread + admin_dm_unread,
+        'inbox_mode': inbox_mode,
+        'admin_thread': admin_thread,
+        'admin_thread_other': admin_thread_other,
+        'admin_thread_messages': admin_thread_messages,
+        'admin_thread_online': (
+            is_user_online(admin_thread_other)
+            if admin_thread_other is not None else False
+        ),
+        'admin_thread_avatar_url': (
+            _admin_avatar_url(admin_thread_other)
+            if admin_thread_other is not None else ''
+        ),
+        'admin_thread_initials': (
+            name_initials(
+                admin_thread_other.get_full_name()
+                or admin_thread_other.get_username()
+            )
+            if admin_thread_other is not None else ''
+        ),
+        'admin_thread_rows': admin_thread_rows,
+        'admin_online_rows': admin_online_rows,
+        'admin_inbox_count': (
+            sum(1 for row in office_rows if row['unread'])
+            + sum(1 for row in admin_thread_rows if row['unread'])
+        ),
         'member_directory': member_directory,
         'member_query': query,
         'member_total': member_total,
@@ -924,6 +1043,127 @@ def start_direct_view(request):
         open_dialog='direct',
     )
     return render(request, 'admin/communications/portal.html', context, status=400)
+
+
+def _member_thread_url(thread):
+    return (
+        f"{reverse('communications:inbox')}?view=chat"
+        f"&filter=chats&thread={thread.pk}"
+    )
+
+
+@portal_view
+@require_POST
+def start_member_direct_view(request):
+    """Open (or create) a private conversation between staff and a member.
+
+    The thread uses the member inbox model, so it appears in the member's own
+    inbox and in the admin inbox at the same time.
+    """
+    username = (request.POST.get('username') or '').strip()
+    member = get_object_or_404(
+        get_user_model().objects.filter(is_active=True),
+        username=username,
+    )
+    inbox_url = f"{reverse('communications:inbox')}?view=chat&filter=chats"
+    if member.pk == request.user.pk:
+        return redirect(inbox_url)
+    if interaction_blocked(request.user, member):
+        messages.error(
+            request,
+            'You cannot start a conversation with this account.',
+        )
+        return redirect(inbox_url)
+
+    thread = CommsDirectThread.for_users(request.user, member)
+    return redirect(_member_thread_url(thread))
+
+
+@portal_view
+@require_POST
+def send_member_direct_view(request, pk):
+    """Send one message in the admin's private conversation with a member."""
+    thread = get_object_or_404(
+        direct_threads_for(request.user).select_related('user_a', 'user_b'),
+        pk=pk,
+    )
+    other = thread.other_user(request.user)
+    if other is None or interaction_blocked(request.user, other):
+        raise Http404('Conversation not found.')
+
+    body = (request.POST.get('body') or '').replace('\x00', '').strip()[:2000]
+    if not body:
+        if _is_ajax(request):
+            return JsonResponse({
+                'ok': False,
+                'message': 'Write a message before sending.',
+            }, status=400)
+        messages.error(request, 'Write a message before sending.')
+        return redirect(_member_thread_url(thread))
+
+    message = CommsDirectMessage.objects.create(
+        thread=thread,
+        sender=request.user,
+        body=body,
+    )
+    thread.last_message_at = message.created_at
+    thread.save(update_fields=['last_message_at', 'updated_at'])
+    thread.mark_read(request.user)
+    notify_direct_message(message)
+
+    if _is_ajax(request):
+        html = render_to_string(
+            'members/account/_direct_message_bubble.html',
+            {'message': message, 'is_own': True},
+            request=request,
+        )
+        return JsonResponse({
+            'ok': True,
+            'id': message.pk,
+            'message': 'Message sent.',
+            'html': html,
+        })
+    return redirect(_member_thread_url(thread))
+
+
+@portal_view
+@require_GET
+def member_direct_poll(request, pk):
+    """Poll the admin's private thread for new member messages."""
+    thread = get_object_or_404(
+        direct_threads_for(request.user),
+        pk=pk,
+    )
+    other = thread.other_user(request.user)
+    if other is None or interaction_blocked(request.user, other):
+        raise Http404('Conversation not found.')
+
+    after = (request.GET.get('after') or '').strip()
+    queryset = (
+        thread.messages
+        .select_related('sender')
+        .order_by('created_at', 'pk')
+    )
+    if after.isdigit():
+        queryset = queryset.filter(pk__gt=int(after))
+    if request.GET.get('read') == '1':
+        thread.mark_read(request.user)
+
+    payload = [
+        {
+            'id': message.pk,
+            'html': render_to_string(
+                'members/account/_direct_message_bubble.html',
+                {
+                    'message': message,
+                    'is_own': message.sender_id == request.user.pk,
+                },
+                request=request,
+            ),
+        }
+        for message in queryset
+    ]
+    return JsonResponse({'ok': True, 'messages': payload})
 
 
 @portal_view

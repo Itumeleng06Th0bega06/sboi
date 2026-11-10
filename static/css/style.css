@@ -1885,6 +1885,13 @@ body.page-home::before {
   font-size: 0.58rem;
   font-weight: 700;
 }
+
+.bnav-avatar-img {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  object-fit: cover;
+}
 @media (max-width: 960px) {
   .nav-account-name { display: none; }
 }

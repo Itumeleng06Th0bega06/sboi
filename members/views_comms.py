@@ -80,12 +80,21 @@ def feed_posts_for(user):
     queryset = (
         CommsPost.objects
         .filter(is_published=True, is_hidden=False)
-        .select_related('author', 'author__member_profile')
+        .select_related(
+            'author',
+            'author__member_profile',
+            'shared_from',
+            'shared_from__author',
+            'shared_from__author__member_profile',
+        )
         .prefetch_related(
             'attachments',
+            'shared_from__attachments',
             'comments__author',
             'reactions',
             'saves',
+            'shares',
+            'shared_from__shares',
         )
     )
     hidden_ids = blocked_relationship_ids(user)
@@ -113,6 +122,16 @@ def _reaction_summary(post, user, hidden_ids=None):
     }
 
 
+def _author_avatar_url(post):
+    author_profile = getattr(post.author, 'member_profile', None)
+    if author_profile is not None and author_profile.avatar:
+        try:
+            return author_profile.avatar.url
+        except ValueError:
+            return ''
+    return ''
+
+
 def serialize_posts(posts, user):
     """Add reaction, save and comment summaries so templates stay logic-free."""
     staff = _is_staff_user(user)
@@ -120,16 +139,21 @@ def serialize_posts(posts, user):
     for post in posts:
         post.reaction_summary = _reaction_summary(post, user, hidden_ids)
         post.attachments_list = list(post.attachments.all())
-        post.author_avatar_url = ''
-        author_profile = getattr(post.author, 'member_profile', None)
-        if author_profile is not None and author_profile.avatar:
-            try:
-                post.author_avatar_url = author_profile.avatar.url
-            except ValueError:
-                post.author_avatar_url = ''
+        post.author_avatar_url = _author_avatar_url(post)
         post.saved_by_me = any(
             save.user_id == user.pk for save in post.saves.all()
         )
+        root = post.shared_from if post.shared_from_id else post
+        post.shared_by_me = any(
+            share.author_id == user.pk for share in root.shares.all()
+        )
+        post.shared_from_visible = False
+        if post.shared_from_id:
+            shared = post.shared_from
+            if can_view_post(user, shared):
+                shared.author_avatar_url = _author_avatar_url(shared)
+                shared.attachments_list = list(shared.attachments.all())
+                post.shared_from_visible = True
         post.can_edit = post.author_id == user.pk and not post.is_hidden
         post.can_delete = staff or post.author_id == user.pk
         comments = [
@@ -323,6 +347,44 @@ def feed_post_create(request):
             'post_id': post.pk,
             'html': _render_post(request, post, _surface(request)),
         })
+    return redirect(_feed_redirect(request.user))
+
+
+@login_required
+@require_POST
+def feed_post_share(request, pk):
+    """Repost an existing post to the signed-in member's own feed."""
+    original = get_object_or_404(CommsPost, pk=pk)
+    if not can_view_post(request.user, original):
+        raise Http404('Post not found.')
+
+    # Shares are one level deep: share the root post, never a repost.
+    root = original.shared_from if original.shared_from_id else original
+    if not can_view_post(request.user, root):
+        raise Http404('Post not found.')
+
+    post, created = CommsPost.objects.get_or_create(
+        author=request.user,
+        shared_from=root,
+        defaults={'audience': root.audience},
+    )
+    message = (
+        'Post shared to your feed.'
+        if created
+        else 'You already shared this post.'
+    )
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'ok': True,
+            'created': created,
+            'post_id': post.pk,
+            'message': message,
+            'html': _render_post(request, post, _surface(request)) if created else '',
+        })
+    if created:
+        messages.success(request, message)
+    else:
+        messages.info(request, message)
     return redirect(_feed_redirect(request.user))
 
 
