@@ -1,0 +1,45 @@
+{% load static %}
+{% comment %}
+  Site-wide media rule: images and videos stay hidden until they have loaded,
+  and a failed file is removed instead of showing a broken icon.
+
+  The inline snippet runs before the page paints, so media is masked from the
+  first frame. It also hides failures and reveals everything if the loader
+  script cannot run, which keeps the page usable with a broken deploy.
+{% endcomment %}
+<script>
+  (function () {
+    var root = document.documentElement;
+    root.classList.add('js-media');
+
+    // Hide a failed image or video even if media-loader.js never runs.
+    document.addEventListener('error', function (event) {
+      var el = event.target;
+      if (!el || !el.tagName) return;
+      if (el.tagName === 'IMG' || el.tagName === 'VIDEO') {
+        el.classList.remove('is-media-ready');
+        el.classList.add('is-media-broken');
+        return;
+      }
+      // Chrome reports a failed <source> on the source, not the video.
+      if (el.tagName !== 'SOURCE' || !el.parentNode
+          || el.parentNode.tagName !== 'VIDEO') return;
+      var video = el.parentNode;
+      window.setTimeout(function () {
+        if (video.networkState === 3) {
+          video.classList.remove('is-media-ready');
+          video.classList.add('is-media-broken');
+        }
+      }, 0);
+    }, true);
+
+    // Safety net: never hide the page if the external script fails to start.
+    window.setTimeout(function () {
+      if (root.getAttribute('data-media-loader') !== 'ready') {
+        root.classList.add('media-timeout');
+      }
+    }, 8000);
+  })();
+</script>
+<link rel="stylesheet" href="{% static 'css/media-loader.css' %}?v=1">
+<script src="{% static 'js/media-loader.js' %}?v=3" defer></script>

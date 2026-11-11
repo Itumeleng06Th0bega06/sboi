@@ -1,0 +1,45 @@
+/* Media loader -------------------------------------------------------------
+   Every image and video stays invisible until the browser has decoded it, so
+   half-drawn or blank boxes never appear. Anything that fails to load is
+   removed instead of showing a broken-image icon or alt text.
+
+   `html.js-media` is added by an inline head script, so the rule is active
+   from the first paint. Without JavaScript the class is never added and media
+   behaves normally (progressive enhancement).
+
+   The reveal is an animation rather than a transition so images keep their
+   own hover transitions (the gallery zoom) untouched. */
+
+html.js-media:not(.media-timeout) img:not(.is-media-ready),
+html.js-media:not(.media-timeout) video:not(.is-media-ready) {
+  opacity: 0;
+}
+
+html.js-media img.is-media-broken,
+html.js-media video.is-media-broken {
+  display: none !important;
+}
+
+html.js-media img.is-media-ready,
+html.js-media video.is-media-ready {
+  animation: media-reveal 0.2s ease;
+}
+
+@keyframes media-reveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* If the loader script itself cannot run, the inline guard adds
+   `.media-timeout` so content is never hidden forever. */
+html.js-media.media-timeout img,
+html.js-media.media-timeout video {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.js-media img.is-media-ready,
+  html.js-media video.is-media-ready {
+    animation: none;
+  }
+}

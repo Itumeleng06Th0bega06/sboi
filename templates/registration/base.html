@@ -9,6 +9,7 @@
     <title>{% block title %}{{ title }} | Shekinah Blaze Admin{% endblock %}</title>
 
     <link rel="shortcut icon" href="{% static 'icons/favicon.ico' %}" type="image/x-icon">
+    {% include 'partials/_media_loader.html' %}
     <link rel="stylesheet" href="{% static 'admin/css/admin-brand.css' %}?v=42">
     {% block extrastyle %}{% endblock %}
     {% block extrahead %}{% endblock %}

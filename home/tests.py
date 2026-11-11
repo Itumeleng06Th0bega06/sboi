@@ -29,6 +29,15 @@ class SiteSmokeTests(TestCase):
             response = self.client.get(reverse(url))
             self.assertEqual(response.status_code, 200, url)
 
+    def test_media_loader_is_loaded_on_public_and_auth_shells(self):
+        for url in [reverse('home:home'), reverse('admin:login')]:
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200, url)
+            self.assertContains(response, 'css/media-loader.css')
+            self.assertContains(response, 'js/media-loader.js')
+            # The inline guard masks media before the first paint.
+            self.assertContains(response, "classList.add('js-media')")
+
     def test_blackboard_is_publicly_viewable(self):
         response = self.client.get(reverse('blackboard:blackboard'))
         self.assertEqual(response.status_code, 200)

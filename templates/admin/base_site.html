@@ -20,6 +20,7 @@
 
 {% block extrahead %}
     {{ block.super }}
+    {% include 'partials/_media_loader.html' %}
     <link rel="icon" href="{% static 'icons/favicon.ico' %}">
     <script src="{% static 'admin/js/sidebar-nav.js' %}?v=20" defer></script>
     <script src="{% static 'admin/js/notification-bell.js' %}?v=6" defer></script>
