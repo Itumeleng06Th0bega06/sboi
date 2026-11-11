@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.db import DatabaseError
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -22,7 +23,7 @@ def _bell_context(request, scope=None):
             'items': items,
             'notifications': items,
         }
-    except Exception:
+    except DatabaseError:
         return {
             'ok': True,
             'badge': 0,
@@ -175,16 +176,4 @@ def history_staff(request):
 def render_template(request, context):
     from django.shortcuts import render
 
-    template = 'notifications/history.html'
-    try:
-        return render(request, template, context)
-    except Exception:
-        from django.http import HttpResponse
-
-        rows = ''.join(
-            f"<li><a href='{item['url']}'>{item['title']}</a> - {item['date']}</li>"
-            for item in context.get('notifications', [])
-        )
-        return HttpResponse(
-            f"<html><body><h1>Notifications</h1><ul>{rows or '<li>None</li>'}</ul></body></html>"
-        )
+    return render(request, 'notifications/history.html', context)

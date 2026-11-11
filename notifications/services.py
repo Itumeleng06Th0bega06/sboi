@@ -14,7 +14,12 @@ Visibility rules
 """
 
 from datetime import datetime, time, timedelta
+import smtplib
+import urllib.error
+import urllib.request
 
+from django.core.mail.message import BadHeaderError
+from django.db import DatabaseError, transaction
 from django.db.models import DateTimeField, F, OuterRef, Q, Subquery
 from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
@@ -434,7 +439,6 @@ def _close_missing(source_type, open_source_ids, status=Notification.STATUS_RESO
 
 def _notify_admin_contact(message):
     """Best-effort email + WhatsApp notice to admin for a new contact message."""
-    import urllib.request
     from django.conf import settings as _settings
     from django.core.mail import send_mail
 
@@ -453,7 +457,7 @@ def _notify_admin_contact(message):
             recipient_list=[admin_email],
             fail_silently=True,
         )
-    except Exception:
+    except (BadHeaderError, OSError, smtplib.SMTPException):
         pass
 
     # WhatsApp doorbell
@@ -489,7 +493,7 @@ def _notify_admin_contact(message):
                 )
                 with urllib.request.urlopen(request, timeout=10):
                     pass
-            except Exception:
+            except (urllib.error.URLError, TimeoutError, OSError):
                 pass
 
 
@@ -843,10 +847,13 @@ def sync_admin_message(message, user):
         return
     try:
         from communications.services import can_use_portal
-
-        if not can_use_portal(user):
-            return
-    except Exception:
+    except ImportError:
+        return
+    try:
+        with transaction.atomic():
+            if not can_use_portal(user):
+                return
+    except DatabaseError:
         return
     source_key = f'admin_message:{message.pk}:{user.pk}'
     sender = message.sender_name if message.sender_id else 'Staff'
@@ -904,7 +911,7 @@ def sync_admin_messages_for_user(user):
     try:
         from communications.models import ConversationParticipant, Message
         from communications.services import can_use_portal
-    except Exception:
+    except ImportError:
         return
 
     if not can_use_portal(user):
@@ -953,7 +960,7 @@ def sync_admin_messages_for_user(user):
             resolved_at=timezone.now(),
             updated_at=timezone.now(),
         )
-    except Exception:
+    except DatabaseError:
         # The portal is optional on a fresh install; a missing table must never
         # break the rest of the admin console.
         return

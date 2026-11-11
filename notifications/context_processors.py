@@ -1,4 +1,5 @@
-from django.urls import reverse
+from django.db import DatabaseError, transaction
+from django.urls import NoReverseMatch, reverse
 
 from . import services
 
@@ -7,15 +8,16 @@ def notification_bell(request):
     """Context for the public/member bell (skipped inside the admin console)."""
     try:
         admin_path = reverse('admin:index')
-    except Exception:
+    except NoReverseMatch:
         admin_path = '/admin/'
     if request.path.startswith(admin_path):
         return {}
 
     try:
-        items = services.notification_items(request, services.PUBLIC_SCOPE)
-        badge = services.unread_count(request, services.PUBLIC_SCOPE)
-    except Exception:
+        with transaction.atomic():
+            items = services.notification_items(request, services.PUBLIC_SCOPE)
+            badge = services.unread_count(request, services.PUBLIC_SCOPE)
+    except DatabaseError:
         items, badge = [], 0
 
     return {

@@ -64,7 +64,7 @@ Manager), ignore this file and follow steps 3–7 below.
 
 1. cPanel → **Setup Python App** → **Create Application**.
 2. Fill in:
-   - **Python version:** 3.11 or newer (3.13 preferred).
+   - **Python version:** 3.12 or newer (3.13 preferred; Django 6.1 requires Python 3.12+).
    - **Application root:** `repositories/sboi` (where Git Version Control
      cloned the repo — the folder containing `manage.py`).
    - **Application URL:** your domain (e.g. `shekinahblaze.org`).

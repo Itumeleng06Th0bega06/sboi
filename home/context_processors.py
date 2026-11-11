@@ -1,4 +1,5 @@
-from django.urls import reverse
+from django.db import DatabaseError, transaction
+from django.urls import NoReverseMatch, reverse
 
 from about.models import ChurchProfile
 from contact.models import ContactInfo
@@ -64,7 +65,7 @@ def admin_notifications(request):
     """Navbar shortcuts and notification counts for signed-in staff."""
     try:
         admin_path = reverse('admin:index')
-    except Exception:
+    except NoReverseMatch:
         admin_path = '/admin/'
     if not request.path.startswith(admin_path) or not request.user.is_authenticated:
         return {}
@@ -116,20 +117,21 @@ def admin_notifications(request):
     badge = services.unread_count(request, services.STAFF_SCOPE)
     communications = {'allowed': False, 'url': '', 'unread': 0}
     try:
-        from communications.services import can_use_portal, unread_summary
+        with transaction.atomic():
+            from communications.services import can_use_portal, unread_summary
 
-        if can_use_portal(request.user):
-            total, latest_conversation = unread_summary(request.user)
-            inbox_url = reverse('communications:inbox')
-            communications = {
-                'allowed': True,
-                'url': (
-                    f'{inbox_url}?conversation={latest_conversation}'
-                    if latest_conversation else inbox_url
-                ),
-                'unread': total,
-            }
-    except Exception:
+            if can_use_portal(request.user):
+                total, latest_conversation = unread_summary(request.user)
+                inbox_url = reverse('communications:inbox')
+                communications = {
+                    'allowed': True,
+                    'url': (
+                        f'{inbox_url}?conversation={latest_conversation}'
+                        if latest_conversation else inbox_url
+                    ),
+                    'unread': total,
+                }
+    except DatabaseError:
         # The portal is optional on a fresh install; the rest of the admin
         # console must still render if its tables have not been migrated yet.
         pass

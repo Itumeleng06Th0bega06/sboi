@@ -78,7 +78,6 @@ class CommsPost(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['author', 'shared_from'],
-                condition=models.Q(shared_from__isnull=False),
                 name='unique_feed_share_per_member',
             ),
         ]
@@ -320,12 +319,10 @@ class CommsReport(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['post', 'reporter'],
-                condition=models.Q(comment__isnull=True),
                 name='unique_post_report',
             ),
             models.UniqueConstraint(
                 fields=['comment', 'reporter'],
-                condition=models.Q(post__isnull=True),
                 name='unique_comment_report',
             ),
         ]

@@ -7,6 +7,7 @@ from django.core import mail
 from django.core.exceptions import PermissionDenied
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
+from django.db import IntegrityError, transaction
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -1056,6 +1057,28 @@ class AccountPortalTests(TestCase):
             children_names='Lerato\nKagiso',
         )
         self.client.force_login(self.member)
+
+    def test_only_one_pending_membership_request_is_allowed(self):
+        request = MembershipChangeRequest.objects.create(
+            membership=self.membership,
+            submitted_by=self.member,
+            kind=MembershipChangeRequest.KIND_UPDATE,
+        )
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                MembershipChangeRequest.objects.create(
+                    membership=self.membership,
+                    submitted_by=self.member,
+                    kind=MembershipChangeRequest.KIND_UPDATE,
+                )
+
+        request.status = MembershipChangeRequest.STATUS_APPROVED
+        request.save(update_fields=['status', 'updated_at'])
+        MembershipChangeRequest.objects.create(
+            membership=self.membership,
+            submitted_by=self.member,
+            kind=MembershipChangeRequest.KIND_UPDATE,
+        )
 
     def test_account_requires_authentication(self):
         self.client.logout()

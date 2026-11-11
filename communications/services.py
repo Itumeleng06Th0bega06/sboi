@@ -10,7 +10,7 @@ from pathlib import Path
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import DatabaseError, transaction
 from django.db.models import (
     Count,
     IntegerField,
@@ -480,10 +480,11 @@ def mark_conversation_read(conversation, user):
     # deliberately best-effort: the portal must still work if the optional
     # notifications app is unavailable on an older deployment.
     try:
-        from notifications.services import resolve_admin_message_notifications
+        with transaction.atomic():
+            from notifications.services import resolve_admin_message_notifications
 
-        resolve_admin_message_notifications(user, conversation=conversation)
-    except Exception:
+            resolve_admin_message_notifications(user, conversation=conversation)
+    except DatabaseError:
         pass
 
 
@@ -515,16 +516,17 @@ def create_message(conversation, sender, body, reply_to=None, attachment=None,
     ).update(last_read_at=now)
 
     try:
-        from notifications.services import sync_admin_message
+        with transaction.atomic():
+            from notifications.services import sync_admin_message
 
-        recipients = (
-            conversation.participants
-            .select_related('user')
-            .exclude(user=sender)
-        )
-        for participant in recipients:
-            sync_admin_message(message, participant.user)
-    except Exception:
+            recipients = (
+                conversation.participants
+                .select_related('user')
+                .exclude(user=sender)
+            )
+            for participant in recipients:
+                sync_admin_message(message, participant.user)
+    except DatabaseError:
         # Notifications are a convenience; a missing table must not lose the
         # message itself.
         pass

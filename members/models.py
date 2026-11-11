@@ -339,6 +339,18 @@ class MembershipChangeRequest(models.Model):
         ChurchMembership, on_delete=models.CASCADE,
         related_name='change_requests',
     )
+    pending_membership_key = models.GeneratedField(
+        expression=models.Case(
+            models.When(
+                status=STATUS_PENDING,
+                then=models.F('membership_id'),
+            ),
+            default=None,
+            output_field=models.BigIntegerField(),
+        ),
+        output_field=models.BigIntegerField(null=True),
+        db_persist=False,
+    )
     submitted_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
         related_name='membership_change_requests',
@@ -381,8 +393,7 @@ class MembershipChangeRequest(models.Model):
             # At most one open request per membership, so repeated edits update
             # the same review item instead of spamming the administrators.
             models.UniqueConstraint(
-                fields=['membership'],
-                condition=models.Q(status='pending'),
+                fields=['pending_membership_key'],
                 name='one_pending_membership_change',
             ),
         ]
